@@ -3,13 +3,10 @@
 import { useState, useCallback, useTransition, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
-import type { Route, SportType, WeatherSegment, StravaSegment } from "@/types";
+import type { Route, SportType, StravaSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
-import { SegmentList } from "./route/SegmentList";
 import { useWeather } from "@/hooks/useWeather";
 import clsx from "clsx";
-
-type SegmentMode = "weather" | "strava";
 
 const RouteMap = dynamic(
   () => import("./map/RouteMap").then((m) => m.RouteMap),
@@ -28,10 +25,8 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
     d.setMinutes(0, 0, 0);
     return d;
   });
-  const [activeSegment, setActiveSegment] = useState<number | null>(null);
-  const [sport, setSport] = useState<SportType>(initialSport);
+  const [sport] = useState<SportType>(initialSport);
   const [reversed, setReversed] = useState(false);
-  const [segmentMode, setSegmentMode] = useState<SegmentMode>("weather");
   const [activeStravaId, setActiveStravaId] = useState<number | null>(null);
   const [, startTransition] = useTransition();
 
@@ -40,13 +35,13 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
     [route.coordinates]
   );
 
-  const { segments, isLoading, error } = useWeather(
+  const { segments } = useWeather(
     route.id,
     startTime,
     reversed ? reversedCoords : undefined
   );
 
-  const stravaSegKey = segmentMode === "strava" && stravaConnected
+  const stravaSegKey = stravaConnected
     ? `/api/strava/segments?routeId=${route.id}&sport=${sport}&rev=${reversed}`
     : null;
   const { data: stravaSegData, isLoading: stravaLoading, error: stravaError } = useSWR<{ segments: StravaSegment[] }>(
@@ -70,10 +65,10 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           <RouteMap
             route={route}
             segments={segments}
-            activeSegmentIndex={activeSegment}
-            onSegmentClick={setActiveSegment}
+            activeSegmentIndex={null}
+            onSegmentClick={() => {}}
             sport={sport}
-            stravaSegments={segmentMode === "strava" ? stravaSegments : []}
+            stravaSegments={stravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={setActiveStravaId}
             reversed={reversed}
@@ -81,23 +76,15 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         </div>
         <MobileBottomSheet
           route={route}
-          sport={sport}
+          isSkiing={isSkiing}
           startTime={startTime}
           onTimeChange={handleTimeChange}
-          segments={segments}
-          activeSegment={activeSegment}
-          onSegmentChange={setActiveSegment}
-          isLoading={isLoading}
-          error={error ?? null}
-          isSkiing={isSkiing}
           reversed={reversed}
           onToggleReverse={() => setReversed((v) => !v)}
-          segmentMode={segmentMode}
-          onSegmentModeChange={setSegmentMode}
           stravaConnected={stravaConnected}
           stravaSegments={stravaSegments}
           stravaLoading={stravaLoading}
-          stravaError={stravaError instanceof Error ? stravaError.message : (stravaError as { error?: string } | null)?.error ?? null}
+          stravaError={(stravaError as { error?: string } | null)?.error ?? (stravaError instanceof Error ? stravaError.message : null)}
           activeStravaId={activeStravaId}
           onStravaSegmentClick={setActiveStravaId}
         />
@@ -109,16 +96,17 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           <RouteMap
             route={route}
             segments={segments}
-            activeSegmentIndex={activeSegment}
-            onSegmentClick={setActiveSegment}
+            activeSegmentIndex={null}
+            onSegmentClick={() => {}}
             sport={sport}
-            stravaSegments={segmentMode === "strava" ? stravaSegments : []}
+            stravaSegments={stravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={setActiveStravaId}
             reversed={reversed}
           />
         </div>
         <aside className="w-80 overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
+          {/* Header */}
           <div className="p-4 border-b border-gray-200 bg-white">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -132,44 +120,41 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
               <ReverseButton reversed={reversed} onToggle={() => setReversed((v) => !v)} />
             </div>
           </div>
+
+          {/* Time picker */}
           <div className="p-4 border-b border-gray-200 bg-white">
             <TimeSlider value={startTime} onChange={handleTimeChange} />
           </div>
-          {/* Segment mode toggle */}
-          <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
-              <button onClick={() => setSegmentMode("weather")} className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "weather" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500")}>Vær</button>
-              {stravaConnected && (
-                <button onClick={() => setSegmentMode("strava")} className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "strava" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500")}>Strava-seg.</button>
-              )}
-            </div>
-            {segmentMode === "weather" && (
-              <div className="flex items-center gap-2 text-xs flex-wrap">
-                {isSkiing ? (
-                  <><LegendItem color="#10b981" label="Perfekt" /><LegendItem color="#f59e0b" label="Overgang" /><LegendItem color="#ef4444" label="Dårlig" /></>
-                ) : (
-                  <><LegendItem color="#10b981" label="Med" /><LegendItem color="#f59e0b" label="Side" /><LegendItem color="#ef4444" label="Mot" /></>
-                )}
-              </div>
+
+          {/* Legend */}
+          <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
+            {isSkiing ? (
+              <><LegendItem color="#10b981" label="Perfekt" /><LegendItem color="#f59e0b" label="Overgang" /><LegendItem color="#ef4444" label="Dårlig" /></>
+            ) : (
+              <><LegendItem color="#10b981" label="Medvind" /><LegendItem color="#f59e0b" label="Sidevind" /><LegendItem color="#ef4444" label="Motvind" /></>
             )}
           </div>
-          {segmentMode === "weather" && isLoading && (
-            <div className="flex items-center justify-center gap-2 p-4 text-sm text-blue-500 animate-pulse">Henter værdata…</div>
-          )}
-          {segmentMode === "weather" && error && (
-            <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>
-          )}
-          {segmentMode === "strava" && stravaLoading && (
-            <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">Henter Strava-segmenter…</div>
-          )}
-          {segmentMode === "strava" && stravaError && (
-            <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{stravaError instanceof Error ? stravaError.message : String(stravaError)}</div>
-          )}
-          {segmentMode === "weather" && (
-            <SegmentList segments={segments} activeIndex={activeSegment} sport={sport} onActiveChange={setActiveSegment} />
-          )}
-          {segmentMode === "strava" && (
-            <StravaSegmentList segments={stravaSegments} activeId={activeStravaId} onSelect={setActiveStravaId} />
+
+          {/* Strava segments */}
+          {stravaConnected && (
+            <>
+              <div className="px-4 py-2 border-b border-gray-200 bg-white">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava-segmenter</p>
+              </div>
+              {stravaLoading && (
+                <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">
+                  Henter segmenter…
+                </div>
+              )}
+              {stravaError && (
+                <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                  {String(stravaError)}
+                </div>
+              )}
+              {!stravaLoading && (
+                <StravaSegmentList segments={stravaSegments} activeId={activeStravaId} onSelect={setActiveStravaId} />
+              )}
+            </>
           )}
         </aside>
       </div>
@@ -182,23 +167,15 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 type SheetState = "hidden" | "peek" | "expanded";
 
 const HIDDEN_HEIGHT = 32;
-const PEEK_HEIGHT   = 210;
+const PEEK_HEIGHT   = 170;
 
 interface SheetProps {
   route: Route;
-  sport: SportType;
+  isSkiing: boolean;
   startTime: Date;
   onTimeChange: (d: Date) => void;
-  segments: WeatherSegment[];
-  activeSegment: number | null;
-  onSegmentChange: (i: number) => void;
-  isLoading: boolean;
-  error: string | null;
-  isSkiing: boolean;
   reversed: boolean;
   onToggleReverse: () => void;
-  segmentMode: SegmentMode;
-  onSegmentModeChange: (m: SegmentMode) => void;
   stravaConnected: boolean;
   stravaSegments: StravaSegment[];
   stravaLoading: boolean;
@@ -209,19 +186,11 @@ interface SheetProps {
 
 function MobileBottomSheet({
   route,
-  sport,
+  isSkiing,
   startTime,
   onTimeChange,
-  segments,
-  activeSegment,
-  onSegmentChange,
-  isLoading,
-  error,
-  isSkiing,
   reversed,
   onToggleReverse,
-  segmentMode,
-  onSegmentModeChange,
   stravaConnected,
   stravaSegments,
   stravaLoading,
@@ -295,93 +264,48 @@ function MobileBottomSheet({
         )}
       </div>
 
-      {/* Time slider — always visible when not hidden */}
+      {/* Time slider */}
       {visible && (
         <div className="flex-shrink-0 px-4 pb-2 border-b border-gray-100">
           <TimeSlider value={startTime} onChange={onTimeChange} />
         </div>
       )}
 
-      {/* Segment mode toggle + legend — only when expanded */}
-      {state === "expanded" && (
-        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-100 flex items-center justify-between gap-2 flex-wrap">
-          {/* Mode toggle */}
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
-            <button
-              onClick={() => onSegmentModeChange("weather")}
-              className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "weather" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500")}
-            >
-              Vær
-            </button>
-            {stravaConnected && (
-              <button
-                onClick={() => onSegmentModeChange("strava")}
-                className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "strava" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500")}
-              >
-                Strava-seg.
-              </button>
-            )}
-          </div>
-          {/* Legend (weather mode only) */}
-          {segmentMode === "weather" && (
-            <div className="flex items-center gap-2 text-xs flex-wrap">
-              {isSkiing ? (
-                <>
-                  <LegendItem color="#10b981" label="Perfekt" />
-                  <LegendItem color="#f59e0b" label="Overgang" />
-                  <LegendItem color="#ef4444" label="Dårlig" />
-                </>
-              ) : (
-                <>
-                  <LegendItem color="#10b981" label="Med" />
-                  <LegendItem color="#f59e0b" label="Side" />
-                  <LegendItem color="#ef4444" label="Mot" />
-                </>
-              )}
-            </div>
+      {/* Legend */}
+      {visible && (
+        <div className="flex-shrink-0 px-4 py-2 flex items-center gap-3 text-xs border-b border-gray-100">
+          {isSkiing ? (
+            <><LegendItem color="#10b981" label="Perfekt" /><LegendItem color="#f59e0b" label="Overgang" /><LegendItem color="#ef4444" label="Dårlig" /></>
+          ) : (
+            <><LegendItem color="#10b981" label="Medvind" /><LegendItem color="#f59e0b" label="Sidevind" /><LegendItem color="#ef4444" label="Motvind" /></>
           )}
         </div>
       )}
 
-      {state === "expanded" && segmentMode === "weather" && isLoading && (
-        <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-blue-500 animate-pulse">
-          Henter værdata…
-        </div>
-      )}
-      {state === "expanded" && segmentMode === "weather" && error && (
-        <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
-          {error}
-        </div>
-      )}
-      {state === "expanded" && segmentMode === "strava" && stravaLoading && (
-        <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-orange-500 animate-pulse">
-          Henter Strava-segmenter…
-        </div>
-      )}
-      {state === "expanded" && segmentMode === "strava" && stravaError && (
-        <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
-          {stravaError}
-        </div>
+      {/* Strava segments — only when expanded */}
+      {state === "expanded" && stravaConnected && (
+        <>
+          {stravaLoading && (
+            <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-orange-500 animate-pulse">
+              Henter Strava-segmenter…
+            </div>
+          )}
+          {stravaError && (
+            <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
+              {stravaError}
+            </div>
+          )}
+          {!stravaLoading && (
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <StravaSegmentList segments={stravaSegments} activeId={activeStravaId} onSelect={onStravaSegmentClick} />
+            </div>
+          )}
+        </>
       )}
 
-      {/* Segment list — only when expanded */}
-      {state === "expanded" && segmentMode === "weather" && (
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <SegmentList
-            segments={segments}
-            activeIndex={activeSegment}
-            sport={sport}
-            onActiveChange={onSegmentChange}
-          />
-        </div>
-      )}
-      {state === "expanded" && segmentMode === "strava" && (
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <StravaSegmentList
-            segments={stravaSegments}
-            activeId={activeStravaId}
-            onSelect={onStravaSegmentClick}
-          />
+      {state === "expanded" && !stravaConnected && (
+        <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-6 text-center">
+          Koble til Strava fra forsiden for å se segmenter langs ruten
         </div>
       )}
     </div>

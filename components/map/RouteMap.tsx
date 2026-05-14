@@ -83,7 +83,7 @@ export function RouteMap({
   onStravaSegmentClick,
   reversed = false,
 }: Props) {
-  const [basemap, setBasemap] = useState<Basemap>("topo");
+  const [basemap, setBasemap] = useState<Basemap>("outdoors");
 
   const containerRef       = useRef<HTMLDivElement>(null);
   const mapRef             = useRef<mapboxgl.Map | null>(null);
@@ -116,7 +116,7 @@ export function RouteMap({
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: buildStyle("topo"),
+      style: buildStyle("outdoors"),
       center: [route.coordinates[0].lon, route.coordinates[0].lat],
       zoom: 11,
       pitch: 30,

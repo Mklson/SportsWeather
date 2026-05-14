@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, useRef } from "react";
+import { useState, useCallback, useTransition, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import type { Route, SportType, WeatherSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
@@ -27,9 +27,19 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
   });
   const [activeSegment, setActiveSegment] = useState<number | null>(null);
   const [sport, setSport] = useState<SportType>(initialSport);
+  const [reversed, setReversed] = useState(false);
   const [, startTransition] = useTransition();
 
-  const { segments, isLoading, error } = useWeather(route.id, startTime);
+  const reversedCoords = useMemo(
+    () => [...route.coordinates].reverse(),
+    [route.coordinates]
+  );
+
+  const { segments, isLoading, error } = useWeather(
+    route.id,
+    startTime,
+    reversed ? reversedCoords : undefined
+  );
 
   const handleTimeChange = useCallback((date: Date) => {
     startTransition(() => setStartTime(date));
@@ -62,6 +72,8 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
           isLoading={isLoading}
           error={error ?? null}
           isSkiing={isSkiing}
+          reversed={reversed}
+          onToggleReverse={() => setReversed((v) => !v)}
         />
       </div>
 
@@ -78,12 +90,17 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
         </div>
         <aside className="w-80 overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
           <div className="p-4 border-b border-gray-200 bg-white">
-            <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
-            <p className="text-gray-500 text-sm mt-0.5">
-              {route.distanceKm.toFixed(1)} km
-              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m stigning` : ""}
-            </p>
-            <SourceBadge source={route.source} />
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
+                <p className="text-gray-500 text-sm mt-0.5">
+                  {route.distanceKm.toFixed(1)} km
+                  {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m stigning` : ""}
+                </p>
+                <SourceBadge source={route.source} />
+              </div>
+              <ReverseButton reversed={reversed} onToggle={() => setReversed((v) => !v)} />
+            </div>
           </div>
           <div className="p-3 border-b border-gray-200 bg-white">
             <SportTypeSelector value={sport} onChange={setSport} />
@@ -147,6 +164,8 @@ interface SheetProps {
   isLoading: boolean;
   error: string | null;
   isSkiing: boolean;
+  reversed: boolean;
+  onToggleReverse: () => void;
 }
 
 function MobileBottomSheet({
@@ -161,6 +180,8 @@ function MobileBottomSheet({
   isLoading,
   error,
   isSkiing,
+  reversed,
+  onToggleReverse,
 }: SheetProps) {
   const [state, setState] = useState<SheetState>("peek");
   const touchStartY = useRef(0);
@@ -215,12 +236,15 @@ function MobileBottomSheet({
           <div className="w-9 h-1 bg-gray-300 rounded-full" />
         </div>
         {visible && (
-          <div className="px-4 pb-1.5 flex items-center justify-between">
+          <div className="px-4 pb-1.5 flex items-center justify-between gap-2">
             <span className="font-semibold text-gray-900 text-sm truncate">{route.name}</span>
-            <span className="text-gray-400 text-xs ml-2 shrink-0">
-              {route.distanceKm.toFixed(1)} km
-              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-gray-400 text-xs">
+                {route.distanceKm.toFixed(1)} km
+                {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
+              </span>
+              <ReverseButton reversed={reversed} onToggle={onToggleReverse} />
+            </div>
           </div>
         )}
       </div>
@@ -285,6 +309,29 @@ function MobileBottomSheet({
 }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
+
+function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      title={reversed ? "Vis original retning" : "Snu ruten"}
+      className={clsx(
+        "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border transition-colors",
+        reversed
+          ? "bg-blue-600 text-white border-blue-600"
+          : "bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+      )}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 1l4 4-4 4" />
+        <path d="M3 11V9a4 4 0 014-4h14" />
+        <path d="M7 23l-4-4 4-4" />
+        <path d="M21 13v2a4 4 0 01-4 4H3" />
+      </svg>
+      {reversed ? "Snudd" : "Snu"}
+    </button>
+  );
+}
 
 function SourceBadge({ source }: { source: Route["source"] }) {
   const labels: Record<Route["source"], string> = {

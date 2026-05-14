@@ -109,6 +109,27 @@ export async function getStravaRoute(
   return res.json();
 }
 
+export async function getStarredSegments(token: string): Promise<StravaSegment[]> {
+  const res = await fetch(`${STRAVA_API}/segments/starred?per_page=100`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Strava segments/starred failed: ${res.status}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any[] = await res.json();
+  return data.map((s): StravaSegment => ({
+    id: s.id,
+    name: s.name,
+    distanceM: s.distance,
+    avgGrade: s.average_grade,
+    elevDifference: s.total_elevation_gain ?? 0,
+    climbCategory: s.climb_category ?? 0,
+    startLatLng: s.start_latlng,
+    endLatLng: s.end_latlng,
+    coordinates: s.map?.polyline ? decodePolyline(s.map.polyline) : [],
+    starred: true,
+  }));
+}
+
 export async function exploreSegments(
   token: string,
   bounds: { minLat: number; minLon: number; maxLat: number; maxLon: number },

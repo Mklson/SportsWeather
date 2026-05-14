@@ -1,11 +1,60 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import type { Route, WeatherSegment, SportType, StravaSegment } from "@/types";
 import { classifySkiConditions } from "@/lib/ski-conditions";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+
+// ─── Basemap ──────────────────────────────────────────────────────────────────
+
+type Basemap = "topo" | "outdoors" | "satellite";
+
+function buildStyle(basemap: Basemap): mapboxgl.Style | string {
+  if (basemap === "outdoors") return "mapbox://styles/mapbox/outdoors-v12";
+  if (basemap === "satellite") {
+    return {
+      version: 8,
+      glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+      sources: { sat: { type: "raster", url: "mapbox://mapbox.satellite", tileSize: 256 } },
+      layers: [{ id: "bg", type: "raster", source: "sat" }],
+    } as mapboxgl.Style;
+  }
+  // topo: Kartverket topografisk (Norway)
+  return {
+    version: 8,
+    glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+    sources: {
+      "kv-topo": {
+        type: "raster" as const,
+        tiles: ["https://opencache.statkart.no/gatekeeper/gk/cache.vc/tms/1.0.0/topo4/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        scheme: "tms" as const,
+        attribution: "© Kartverket",
+      },
+    },
+    layers: [{ id: "bg", type: "raster" as const, source: "kv-topo" }],
+  } as unknown as mapboxgl.Style;
+}
+
+function addTerrain(map: mapboxgl.Map) {
+  if (!map.getSource("terrain-dem")) {
+    map.addSource("terrain-dem", {
+      type: "raster-dem",
+      url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+      tileSize: 512,
+      maxzoom: 14,
+    });
+  }
+  map.setTerrain({ source: "terrain-dem", exaggeration: 1.5 });
+  if (!map.getLayer("sky")) {
+    map.addLayer({
+      id: "sky", type: "sky",
+      paint: { "sky-type": "atmosphere", "sky-atmosphere-sun": [0, 90], "sky-atmosphere-sun-intensity": 15 },
+    } as mapboxgl.SkyLayer);
+  }
+}
 
 interface Props {
   route: Route;
@@ -30,14 +79,31 @@ export function RouteMap({
   onStravaSegmentClick,
   reversed = false,
 }: Props) {
+  const [basemap, setBasemap] = useState<Basemap>("topo");
+
   const containerRef       = useRef<HTMLDivElement>(null);
   const mapRef             = useRef<mapboxgl.Map | null>(null);
   const popupRef           = useRef<mapboxgl.Popup | null>(null);
   const windMarkersRef     = useRef<mapboxgl.Marker[]>([]);
   const wxMarkersRef       = useRef<mapboxgl.Marker[]>([]);
   const stravaMarkersRef   = useRef<mapboxgl.Marker[]>([]);
-  // Store the latest segments/sport so the map-load callback can use them
-  const pendingRef     = useRef<(() => void) | null>(null);
+  const pendingRef         = useRef<(() => void) | null>(null);
+
+  // Latest-value refs so style-reload callbacks see current props without deps
+  const latestSegmentsRef         = useRef(segments);
+  const latestSportRef            = useRef(sport);
+  const latestReversedRef         = useRef(reversed);
+  const latestStravaRef           = useRef(stravaSegments);
+  const latestActiveStravaIdRef   = useRef(activeStravaSegmentId);
+  const latestOnSegmentClickRef   = useRef(onSegmentClick);
+  const latestOnStravaClickRef    = useRef(onStravaSegmentClick);
+  latestSegmentsRef.current         = segments;
+  latestSportRef.current            = sport;
+  latestReversedRef.current         = reversed;
+  latestStravaRef.current           = stravaSegments;
+  latestActiveStravaIdRef.current   = activeStravaSegmentId;
+  latestOnSegmentClickRef.current   = onSegmentClick;
+  latestOnStravaClickRef.current    = onStravaSegmentClick;
   const mapReadyRef    = useRef(false);
 
   // ── Initialise map once ────────────────────────────────────────────────
@@ -46,9 +112,10 @@ export function RouteMap({
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: buildStyle("topo"),
       center: [route.coordinates[0].lon, route.coordinates[0].lat],
       zoom: 11,
+      pitch: 30,
       attributionControl: false,
     });
 
@@ -57,6 +124,7 @@ export function RouteMap({
     mapRef.current = map;
 
     map.on("load", () => {
+      addTerrain(map);
       mapReadyRef.current = true;
       loadDirectionArrowImage(map, () => {
         addRouteLayers(map, route);
@@ -109,6 +177,44 @@ export function RouteMap({
     src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
   }, [reversed, route.coordinates]);
 
+  // ── Swap basemap ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+
+    mapReadyRef.current = false;
+    // Remove all markers – they are DOM nodes and survive setStyle()
+    [windMarkersRef, wxMarkersRef, stravaMarkersRef].forEach((r) => {
+      r.current.forEach((m) => m.remove());
+      r.current = [];
+    });
+
+    map.setStyle(buildStyle(basemap));
+    map.once("style.load", () => {
+      addTerrain(map);
+      mapReadyRef.current = true;
+      loadDirectionArrowImage(map, () => {
+        addRouteLayers(map, route);
+        // Restore reversed state
+        if (latestReversedRef.current) {
+          const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
+          if (src) {
+            const coords = [...route.coordinates].reverse().map((c) => [c.lon, c.lat] as [number, number]);
+            src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+          }
+        }
+        addStravaSegmentLayers(map);
+        // Re-populate all data layers
+        updateWeatherLine(map, latestSegmentsRef.current, latestSportRef.current);
+        updatePrecipitationLine(map, latestSegmentsRef.current);
+        updateWindMarkers(map, latestSegmentsRef.current, windMarkersRef, latestOnSegmentClickRef.current);
+        updateWeatherMarkers(map, latestSegmentsRef.current, wxMarkersRef, latestSportRef.current, latestOnSegmentClickRef.current);
+        updateStravaSegments(map, latestStravaRef.current ?? [], latestActiveStravaIdRef.current ?? null, stravaMarkersRef, latestOnStravaClickRef.current);
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [basemap]);
+
   // ── Update Strava segments layer ───────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
@@ -149,11 +255,29 @@ export function RouteMap({
       .addTo(map);
   }, [activeSegmentIndex, segments, sport]);
 
+  const basemapOptions: { key: Basemap; label: string }[] = [
+    { key: "topo",      label: "Topo (NO)" },
+    { key: "outdoors",  label: "Globalt"   },
+    { key: "satellite", label: "🛰"        },
+  ];
+
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full"
-    />
+    <div ref={containerRef} className="w-full h-full relative">
+      <div className="absolute top-2 left-2 z-10 flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
+        {basemapOptions.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setBasemap(key)}
+            className={`px-2.5 py-1.5 transition-colors ${
+              basemap === key ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+            title={key === "topo" ? "Kartverket topografisk (Norge)" : key === "outdoors" ? "Mapbox Outdoors (global)" : "Satellittbilde"}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

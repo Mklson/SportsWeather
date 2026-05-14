@@ -375,7 +375,10 @@ function StravaSegmentList({
             }}
           >
             <div className="flex items-start justify-between gap-2">
-              <span className="font-medium text-gray-900 text-sm leading-tight">{seg.name}</span>
+              <span className="font-medium text-gray-900 text-sm leading-tight flex items-center gap-1">
+                {seg.starred && <span className="text-amber-400" title="Stjernemarket segment">★</span>}
+                {seg.name}
+              </span>
               {seg.climbCategory > 0 && (
                 <span className="shrink-0 text-xs font-bold text-white bg-blue-900 px-1.5 py-0.5 rounded">
                   {seg.climbCategory === 5 ? "HC" : `Cat ${seg.climbCategory}`}

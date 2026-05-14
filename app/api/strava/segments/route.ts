@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRoute } from "@/lib/db/client";
-import { exploreSegments } from "@/lib/strava";
+import { exploreSegments, getStarredSegments } from "@/lib/strava";
 import type { Coordinate, StravaSegment } from "@/types";
 
 export const runtime = "nodejs";
 
 type ActivityType = "riding" | "running";
+type BoundingBox = { minLat: number; maxLat: number; minLon: number; maxLon: number };
 
-function boundingBox(coords: Coordinate[]) {
+function boundingBox(coords: Coordinate[]): BoundingBox {
   let minLat = Infinity, maxLat = -Infinity;
   let minLon = Infinity, maxLon = -Infinity;
   for (const { lat, lon } of coords) {
@@ -16,9 +17,23 @@ function boundingBox(coords: Coordinate[]) {
     if (lon < minLon) minLon = lon;
     if (lon > maxLon) maxLon = lon;
   }
-  // Add small padding
-  const padLat = 0.005, padLon = 0.005;
-  return { minLat: minLat - padLat, maxLat: maxLat + padLat, minLon: minLon - padLon, maxLon: maxLon + padLon };
+  const pad = 0.005;
+  return { minLat: minLat - pad, maxLat: maxLat + pad, minLon: minLon - pad, maxLon: maxLon + pad };
+}
+
+// Split route coordinates into overlapping chunks so each chunk gets its own
+// bounding box query. Strava returns max 10 segments per call, so chunking a
+// long route multiplies the total segments we can discover.
+function routeChunks(coords: Coordinate[], maxChunks = 12): Coordinate[][] {
+  if (coords.length < 20) return [coords];
+  const step = Math.ceil(coords.length / maxChunks);
+  const stride = Math.ceil(step * 0.85); // 15% overlap between chunks
+  const chunks: Coordinate[][] = [];
+  for (let i = 0; i < coords.length; i += stride) {
+    chunks.push(coords.slice(i, Math.min(i + step, coords.length)));
+    if (i + step >= coords.length) break;
+  }
+  return chunks;
 }
 
 function nearRoute(segCoord: [number, number], coords: Coordinate[], thresholdKm = 0.4): boolean {
@@ -49,19 +64,46 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const activityType: ActivityType = sport === "cycling" ? "riding" : "running";
-  const bounds = boundingBox(dbRoute.coordinates);
+  const chunks = routeChunks(dbRoute.coordinates);
 
   try {
-    const all = await exploreSegments(token, bounds, activityType);
+    // Query all chunks + starred segments in parallel
+    const [exploreBatches, starred] = await Promise.all([
+      Promise.all(chunks.map((chunk) => exploreSegments(token, boundingBox(chunk), activityType))),
+      getStarredSegments(token),
+    ]);
 
-    // Keep only segments whose start AND end are reasonably close to the route
-    const filtered: StravaSegment[] = all.filter(
+    // Starred segments near the route go first, marked with starred: true
+    const starredNearRoute = starred.filter(
+      (s) =>
+        nearRoute(s.startLatLng, dbRoute.coordinates) &&
+        nearRoute(s.endLatLng, dbRoute.coordinates)
+    );
+    const starredIds = new Set(starredNearRoute.map((s) => s.id));
+
+    // Deduplicate explore results by ID, skip any already covered by starred
+    const seen = new Set<number>(starredIds);
+    const exploreSegments_: StravaSegment[] = [];
+    for (const batch of exploreBatches) {
+      for (const seg of batch) {
+        if (!seen.has(seg.id)) {
+          seen.add(seg.id);
+          exploreSegments_.push(seg);
+        }
+      }
+    }
+
+    // Keep only explore segments whose start AND end are close to the route
+    const filteredExplore = exploreSegments_.filter(
       (s) =>
         nearRoute(s.startLatLng, dbRoute.coordinates) &&
         nearRoute(s.endLatLng, dbRoute.coordinates)
     );
 
-    return NextResponse.json({ segments: filtered });
+    // Starred first, then remaining explore results
+    const segments = [...starredNearRoute, ...filteredExplore];
+
+    return NextResponse.json({ segments });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });

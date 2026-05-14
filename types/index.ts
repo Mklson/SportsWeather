@@ -165,6 +165,7 @@ export interface StravaSegment {
   startLatLng: [number, number];
   endLatLng: [number, number];
   coordinates: Coordinate[]; // decoded from Strava's encoded polyline
+  starred?: boolean;
 }
 
 export interface DbWeatherCache {

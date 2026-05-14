@@ -357,10 +357,10 @@ function updateWeatherMarkers(
   ref.current = [];
   if (!segments.length) return;
 
-  // One marker per ~2.5 km
-  let lastKm = -2.5;
+  const spacingKm = sport === "cycling" ? 5 : 2;
+  let lastKm = -spacingKm;
   segments.forEach((seg) => {
-    if (seg.endKm - lastKm < 2.5) return;
+    if (seg.endKm - lastKm < spacingKm) return;
     lastKm = seg.endKm;
 
     const el = makeWeatherEl(seg, sport);
@@ -378,10 +378,11 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
   const wrap = document.createElement("div");
   wrap.style.cssText = "cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;pointer-events:auto";
 
+  const windColor = windClassColor(seg.windClass);
   const pill = document.createElement("div");
   pill.style.cssText = [
     "background:white",
-    "border:1.5px solid rgba(0,0,0,0.15)",
+    `border:2px solid ${windColor}`,
     "border-radius:999px",
     "padding:4px 9px",
     "display:flex",
@@ -391,7 +392,7 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
     "font-weight:700",
     "font-family:system-ui,sans-serif",
     "white-space:nowrap",
-    "box-shadow:0 2px 8px rgba(0,0,0,0.18)",
+    `box-shadow:0 2px 8px rgba(0,0,0,0.18),0 0 0 1px ${windColor}22`,
     "line-height:1",
   ].join(";");
 

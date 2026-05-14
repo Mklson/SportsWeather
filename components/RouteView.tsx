@@ -3,7 +3,7 @@
 import { useState, useCallback, useTransition, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
-import type { Route, SportType, StravaSegment } from "@/types";
+import type { Route, SportType, StravaSegment, WeatherSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
 import { useWeather } from "@/hooks/useWeather";
 import clsx from "clsx";
@@ -83,6 +83,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           onToggleReverse={() => setReversed((v) => !v)}
           stravaConnected={stravaConnected}
           stravaSegments={stravaSegments}
+          weatherSegments={segments}
           stravaLoading={stravaLoading}
           stravaError={(stravaError as { error?: string } | null)?.error ?? (stravaError instanceof Error ? stravaError.message : null)}
           activeStravaId={activeStravaId}
@@ -152,7 +153,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
                 </div>
               )}
               {!stravaLoading && (
-                <StravaSegmentList segments={stravaSegments} activeId={activeStravaId} onSelect={setActiveStravaId} />
+                <StravaSegmentList segments={stravaSegments} weatherSegments={segments} activeId={activeStravaId} onSelect={setActiveStravaId} />
               )}
             </>
           )}
@@ -178,6 +179,7 @@ interface SheetProps {
   onToggleReverse: () => void;
   stravaConnected: boolean;
   stravaSegments: StravaSegment[];
+  weatherSegments: WeatherSegment[];
   stravaLoading: boolean;
   stravaError: string | null;
   activeStravaId: number | null;
@@ -193,6 +195,7 @@ function MobileBottomSheet({
   onToggleReverse,
   stravaConnected,
   stravaSegments,
+  weatherSegments,
   stravaLoading,
   stravaError,
   activeStravaId,
@@ -297,7 +300,7 @@ function MobileBottomSheet({
           )}
           {!stravaLoading && (
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <StravaSegmentList segments={stravaSegments} activeId={activeStravaId} onSelect={onStravaSegmentClick} />
+              <StravaSegmentList segments={stravaSegments} weatherSegments={weatherSegments} activeId={activeStravaId} onSelect={onStravaSegmentClick} />
             </div>
           )}
         </>
@@ -314,12 +317,37 @@ function MobileBottomSheet({
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
+function nearestWindClass(
+  startLatLng: [number, number],
+  weatherSegments: WeatherSegment[]
+): WeatherSegment["windClass"] | null {
+  if (!weatherSegments.length) return null;
+  let nearest = weatherSegments[0];
+  let minDist = Infinity;
+  for (const ws of weatherSegments) {
+    const dlat = startLatLng[0] - ws.coordinate.lat;
+    const dlon = startLatLng[1] - ws.coordinate.lon;
+    const d = dlat * dlat + dlon * dlon;
+    if (d < minDist) { minDist = d; nearest = ws; }
+  }
+  return nearest.windClass;
+}
+
+function windClassBorderColor(wc: WeatherSegment["windClass"] | null): string {
+  if (wc === "tailwind")  return "#10b981";
+  if (wc === "crosswind") return "#f59e0b";
+  if (wc === "headwind")  return "#ef4444";
+  return "#e5e7eb";
+}
+
 function StravaSegmentList({
   segments,
+  weatherSegments,
   activeId,
   onSelect,
 }: {
   segments: StravaSegment[];
+  weatherSegments: WeatherSegment[];
   activeId: number | null;
   onSelect: (id: number) => void;
 }) {
@@ -332,32 +360,36 @@ function StravaSegmentList({
   }
   return (
     <div className="space-y-2 px-3 py-3">
-      {segments.map((seg) => (
-        <button
-          key={seg.id}
-          onClick={() => onSelect(seg.id)}
-          className={clsx(
-            "w-full text-left p-3 rounded-xl border transition-all",
-            activeId === seg.id
-              ? "border-orange-400 bg-orange-50 ring-1 ring-orange-400"
-              : "border-gray-200 bg-white hover:border-orange-300"
-          )}
-        >
-          <div className="flex items-start justify-between gap-2">
-            <span className="font-medium text-gray-900 text-sm leading-tight">{seg.name}</span>
-            {seg.climbCategory > 0 && (
-              <span className="shrink-0 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">
-                {seg.climbCategory === 5 ? "HC" : `Cat ${seg.climbCategory}`}
-              </span>
-            )}
-          </div>
-          <div className="mt-1 flex gap-3 text-xs text-gray-500">
-            <span>{(seg.distanceM / 1000).toFixed(1)} km</span>
-            {seg.avgGrade !== 0 && <span>{seg.avgGrade.toFixed(1)}% snitt</span>}
-            {seg.elevDifference > 0 && <span>+{Math.round(seg.elevDifference)} m</span>}
-          </div>
-        </button>
-      ))}
+      {segments.map((seg) => {
+        const wc = nearestWindClass(seg.startLatLng, weatherSegments);
+        const borderColor = activeId === seg.id ? "#f97316" : windClassBorderColor(wc);
+        return (
+          <button
+            key={seg.id}
+            onClick={() => onSelect(seg.id)}
+            className="w-full text-left p-3 rounded-xl bg-white transition-all"
+            style={{
+              border: `2px solid ${borderColor}`,
+              borderLeft: `4px solid ${borderColor}`,
+              boxShadow: activeId === seg.id ? `0 0 0 1px ${borderColor}` : undefined,
+            }}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-medium text-gray-900 text-sm leading-tight">{seg.name}</span>
+              {seg.climbCategory > 0 && (
+                <span className="shrink-0 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">
+                  {seg.climbCategory === 5 ? "HC" : `Cat ${seg.climbCategory}`}
+                </span>
+              )}
+            </div>
+            <div className="mt-1 flex gap-3 text-xs text-gray-500">
+              <span>{(seg.distanceM / 1000).toFixed(1)} km</span>
+              {seg.avgGrade !== 0 && <span>{seg.avgGrade.toFixed(1)}% snitt</span>}
+              {seg.elevDifference > 0 && <span>+{Math.round(seg.elevDifference)} m</span>}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

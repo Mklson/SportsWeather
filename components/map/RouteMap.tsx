@@ -378,11 +378,10 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
   const wrap = document.createElement("div");
   wrap.style.cssText = "cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;pointer-events:auto";
 
-  const windColor = windClassColor(seg.windClass);
   const pill = document.createElement("div");
   pill.style.cssText = [
     "background:white",
-    `border:2px solid ${windColor}`,
+    "border:1.5px solid rgba(0,0,0,0.15)",
     "border-radius:999px",
     "padding:4px 9px",
     "display:flex",
@@ -392,7 +391,7 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
     "font-weight:700",
     "font-family:system-ui,sans-serif",
     "white-space:nowrap",
-    `box-shadow:0 2px 8px rgba(0,0,0,0.18),0 0 0 1px ${windColor}22`,
+    "box-shadow:0 2px 8px rgba(0,0,0,0.18)",
     "line-height:1",
   ].join(";");
 
@@ -491,13 +490,13 @@ function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
   const speed     = seg.weather.windSpeed;
   const direction = (seg.weather.windDirection + 180) % 360;
   const color     = windClassColor(seg.windClass);
-  const SIZE      = 22;
+  const SIZE      = 32;
 
   const el = document.createElement("div");
   el.style.width   = `${SIZE}px`;
   el.style.height  = `${SIZE}px`;
   el.style.cursor  = "pointer";
-  el.style.opacity = "0.82";
+  el.style.opacity = "0.95";
   el.title = `${speed.toFixed(1)} m/s`;
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -510,8 +509,8 @@ function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
   // White halo for contrast against map
   const halo = document.createElementNS("http://www.w3.org/2000/svg", "path");
   halo.setAttribute("d", "M10,17 L10,4 M6,8 L10,4 L14,8");
-  halo.setAttribute("stroke", "rgba(255,255,255,0.85)");
-  halo.setAttribute("stroke-width", "3.5");
+  halo.setAttribute("stroke", "rgba(255,255,255,0.95)");
+  halo.setAttribute("stroke-width", "5");
   halo.setAttribute("stroke-linecap", "round");
   halo.setAttribute("stroke-linejoin", "round");
   halo.setAttribute("fill", "none");
@@ -521,7 +520,7 @@ function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
   const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
   arrow.setAttribute("d", "M10,17 L10,4 M6,8 L10,4 L14,8");
   arrow.setAttribute("stroke", color);
-  arrow.setAttribute("stroke-width", "2");
+  arrow.setAttribute("stroke-width", "3");
   arrow.setAttribute("stroke-linecap", "round");
   arrow.setAttribute("stroke-linejoin", "round");
   arrow.setAttribute("fill", "none");

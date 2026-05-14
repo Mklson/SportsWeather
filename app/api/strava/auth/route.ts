@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { buildStravaAuthUrl } from "@/lib/strava";
 import { nanoid } from "@/lib/nanoid";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(): Promise<NextResponse> {
   // CSRF state token – store in a short-lived cookie
   const state = nanoid(16);

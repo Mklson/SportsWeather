@@ -170,7 +170,7 @@ function addStravaSegmentLayers(map: mapboxgl.Map) {
     id: "strava-segments-line", type: "line", source: "strava-segments",
     layout: { "line-join": "round", "line-cap": "round" },
     paint: {
-      "line-color": ["case", ["get", "active"], "#f97316", "#a855f7"],
+      "line-color": ["case", ["get", "active"], "#f97316", "#1e3a8a"],
       "line-width": ["case", ["get", "active"], 6, 4],
       "line-opacity": 0.9,
     },
@@ -211,7 +211,7 @@ function updateStravaSegments(
   segments.forEach((seg) => {
     const el = document.createElement("div");
     el.style.cssText = [
-      "background:#a855f7",
+      "background:#1e3a8a",
       "color:white",
       "border-radius:999px",
       "padding:3px 7px",

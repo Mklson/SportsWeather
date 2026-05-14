@@ -377,7 +377,7 @@ function StravaSegmentList({
             <div className="flex items-start justify-between gap-2">
               <span className="font-medium text-gray-900 text-sm leading-tight">{seg.name}</span>
               {seg.climbCategory > 0 && (
-                <span className="shrink-0 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">
+                <span className="shrink-0 text-xs font-bold text-white bg-blue-900 px-1.5 py-0.5 rounded">
                   {seg.climbCategory === 5 ? "HC" : `Cat ${seg.climbCategory}`}
                 </span>
               )}

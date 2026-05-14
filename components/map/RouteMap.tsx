@@ -38,20 +38,25 @@ function buildStyle(basemap: Basemap): mapboxgl.Style | string {
 }
 
 function addTerrain(map: mapboxgl.Map) {
-  if (!map.getSource("terrain-dem")) {
-    map.addSource("terrain-dem", {
-      type: "raster-dem",
-      url: "mapbox://mapbox.mapbox-terrain-dem-v1",
-      tileSize: 512,
-      maxzoom: 14,
-    });
-  }
-  map.setTerrain({ source: "terrain-dem", exaggeration: 1.5 });
-  if (!map.getLayer("sky")) {
-    map.addLayer({
-      id: "sky", type: "sky",
-      paint: { "sky-type": "atmosphere", "sky-atmosphere-sun": [0, 90], "sky-atmosphere-sun-intensity": 15 },
-    } as mapboxgl.SkyLayer);
+  try {
+    if (!map.getSource("terrain-dem")) {
+      map.addSource("terrain-dem", {
+        type: "raster-dem",
+        url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+        tileSize: 512,
+        maxzoom: 14,
+      });
+    }
+    map.setTerrain({ source: "terrain-dem", exaggeration: 1.5 });
+    if (!map.getLayer("sky")) {
+      map.addLayer({
+        id: "sky", type: "sky",
+        paint: { "sky-type": "atmosphere", "sky-atmosphere-sun": [0, 90], "sky-atmosphere-sun-intensity": 15 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+    }
+  } catch (e) {
+    console.warn("[RouteMap] terrain/sky setup failed:", e);
   }
 }
 
@@ -260,8 +265,11 @@ export function RouteMap({
     { key: "satellite", label: "🛰"        },
   ];
 
+  // Outer wrapper is React-controlled (for buttons).
+  // Inner div (containerRef) is owned exclusively by Mapbox GL — no React children.
   return (
-    <div ref={containerRef} className="w-full h-full relative">
+    <div className="w-full h-full relative">
+      <div ref={containerRef} className="absolute inset-0" />
       <div className="absolute top-2 left-2 z-10 flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
         {basemapOptions.map(({ key, label }) => (
           <button

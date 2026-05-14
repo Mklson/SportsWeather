@@ -1,5 +1,5 @@
 import polyline from "@mapbox/polyline";
-import type { Coordinate, StravaActivity } from "@/types";
+import type { Coordinate, StravaActivity, StravaSegment } from "@/types";
 
 const STRAVA_API = "https://www.strava.com/api/v3";
 
@@ -73,6 +73,35 @@ export async function getStravaActivity(
   });
   if (!res.ok) throw new Error(`Failed to get Strava activity: ${res.status}`);
   return res.json();
+}
+
+export async function exploreSegments(
+  token: string,
+  bounds: { minLat: number; minLon: number; maxLat: number; maxLon: number },
+  activityType: "riding" | "running"
+): Promise<StravaSegment[]> {
+  const params = new URLSearchParams({
+    bounds: `${bounds.minLat},${bounds.minLon},${bounds.maxLat},${bounds.maxLon}`,
+    activity_type: activityType,
+  });
+  const res = await fetch(`${STRAVA_API}/segments/explore?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Strava segments/explore failed: ${res.status}`);
+  const data = await res.json();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data.segments ?? []).map((s: any): StravaSegment => ({
+    id: s.id,
+    name: s.name,
+    distanceM: s.distance,
+    avgGrade: s.avg_grade,
+    elevDifference: s.elev_difference,
+    climbCategory: s.climb_category,
+    startLatLng: s.start_latlng,
+    endLatLng: s.end_latlng,
+    coordinates: decodePolyline(s.points),
+  }));
 }
 
 /** Decode Google Encoded Polyline to Coordinate array. */

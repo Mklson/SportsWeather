@@ -15,9 +15,13 @@ interface ActivityItem {
   type: string;
 }
 
-export function StravaActivityList({ activities }: { activities: ActivityItem[] }) {
+export function StravaActivityList({ activities: initial }: { activities: ActivityItem[] }) {
   const router = useRouter();
+  const [activities, setActivities] = useState(initial);
   const [importing, setImporting] = useState<number | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initial.length === 30);
   const [error, setError] = useState<string | null>(null);
 
   const importActivity = async (id: number) => {
@@ -38,6 +42,24 @@ export function StravaActivityList({ activities }: { activities: ActivityItem[] 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Feil ved import");
       setImporting(null);
+    }
+  };
+
+  const loadMore = async () => {
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const nextPage = page + 1;
+      const res = await fetch(`/api/strava/activities?page=${nextPage}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { activities: more } = await res.json() as { activities: ActivityItem[] };
+      setActivities((prev) => [...prev, ...more]);
+      setPage(nextPage);
+      setHasMore(more.length === 30);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kunne ikke laste flere");
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -73,6 +95,20 @@ export function StravaActivityList({ activities }: { activities: ActivityItem[] 
           </span>
         </button>
       ))}
+
+      {hasMore && (
+        <button
+          onClick={loadMore}
+          disabled={loadingMore || importing !== null}
+          className={clsx(
+            "w-full p-3 rounded-xl border border-gray-700 text-gray-400",
+            "hover:border-gray-500 hover:text-gray-200 transition-colors text-sm",
+            loadingMore && "opacity-60 animate-pulse"
+          )}
+        >
+          {loadingMore ? "Laster…" : "Last inn flere aktiviteter"}
+        </button>
+      )}
     </div>
   );
 }

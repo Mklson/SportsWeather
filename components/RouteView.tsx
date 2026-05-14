@@ -2,12 +2,15 @@
 
 import { useState, useCallback, useTransition, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
-import type { Route, SportType, WeatherSegment } from "@/types";
+import useSWR from "swr";
+import type { Route, SportType, WeatherSegment, StravaSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
 import { SegmentList } from "./route/SegmentList";
 import { SportTypeSelector } from "./SportTypeSelector";
 import { useWeather } from "@/hooks/useWeather";
 import clsx from "clsx";
+
+type SegmentMode = "weather" | "strava";
 
 const RouteMap = dynamic(
   () => import("./map/RouteMap").then((m) => m.RouteMap),
@@ -17,9 +20,10 @@ const RouteMap = dynamic(
 interface Props {
   route: Route;
   initialSport?: SportType;
+  stravaConnected?: boolean;
 }
 
-export function RouteView({ route, initialSport = "cycling" }: Props) {
+export function RouteView({ route, initialSport = "cycling", stravaConnected = false }: Props) {
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -28,6 +32,8 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
   const [activeSegment, setActiveSegment] = useState<number | null>(null);
   const [sport, setSport] = useState<SportType>(initialSport);
   const [reversed, setReversed] = useState(false);
+  const [segmentMode, setSegmentMode] = useState<SegmentMode>("weather");
+  const [activeStravaId, setActiveStravaId] = useState<number | null>(null);
   const [, startTransition] = useTransition();
 
   const reversedCoords = useMemo(
@@ -40,6 +46,16 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
     startTime,
     reversed ? reversedCoords : undefined
   );
+
+  const stravaSegKey = segmentMode === "strava" && stravaConnected
+    ? `/api/strava/segments?routeId=${route.id}&sport=${sport}`
+    : null;
+  const { data: stravaSegData, isLoading: stravaLoading, error: stravaError } = useSWR<{ segments: StravaSegment[] }>(
+    stravaSegKey,
+    (url: string) => fetch(url).then((r) => r.json()),
+    { revalidateOnFocus: false }
+  );
+  const stravaSegments = stravaSegData?.segments ?? [];
 
   const handleTimeChange = useCallback((date: Date) => {
     startTransition(() => setStartTime(date));
@@ -54,10 +70,13 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
         <div className="absolute inset-0">
           <RouteMap
             route={route}
-            segments={segments}
+            segments={segmentMode === "weather" ? segments : []}
             activeSegmentIndex={activeSegment}
             onSegmentClick={setActiveSegment}
             sport={sport}
+            stravaSegments={segmentMode === "strava" ? stravaSegments : []}
+            activeStravaSegmentId={activeStravaId}
+            onStravaSegmentClick={setActiveStravaId}
           />
         </div>
         <MobileBottomSheet
@@ -74,6 +93,14 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
           isSkiing={isSkiing}
           reversed={reversed}
           onToggleReverse={() => setReversed((v) => !v)}
+          segmentMode={segmentMode}
+          onSegmentModeChange={setSegmentMode}
+          stravaConnected={stravaConnected}
+          stravaSegments={stravaSegments}
+          stravaLoading={stravaLoading}
+          stravaError={stravaError instanceof Error ? stravaError.message : (stravaError as { error?: string } | null)?.error ?? null}
+          activeStravaId={activeStravaId}
+          onStravaSegmentClick={setActiveStravaId}
         />
       </div>
 
@@ -82,10 +109,13 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
         <div className="flex-1 min-h-0">
           <RouteMap
             route={route}
-            segments={segments}
+            segments={segmentMode === "weather" ? segments : []}
             activeSegmentIndex={activeSegment}
             onSegmentClick={setActiveSegment}
             sport={sport}
+            stravaSegments={segmentMode === "strava" ? stravaSegments : []}
+            activeStravaSegmentId={activeStravaId}
+            onStravaSegmentClick={setActiveStravaId}
           />
         </div>
         <aside className="w-80 overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
@@ -108,37 +138,42 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
           <div className="p-4 border-b border-gray-200 bg-white">
             <TimeSlider value={startTime} onChange={handleTimeChange} />
           </div>
-          <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
-            {isSkiing ? (
-              <>
-                <LegendItem color="#10b981" label="Perfekte forhold" />
-                <LegendItem color="#f59e0b" label="Overgang" />
-                <LegendItem color="#ef4444" label="Dårlige forhold" />
-              </>
-            ) : (
-              <>
-                <LegendItem color="#10b981" label="Medvind" />
-                <LegendItem color="#f59e0b" label="Sidevind" />
-                <LegendItem color="#ef4444" label="Motvind" />
-              </>
+          {/* Segment mode toggle */}
+          <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+              <button onClick={() => setSegmentMode("weather")} className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "weather" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500")}>Vær</button>
+              {stravaConnected && (
+                <button onClick={() => setSegmentMode("strava")} className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "strava" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500")}>Strava-seg.</button>
+              )}
+            </div>
+            {segmentMode === "weather" && (
+              <div className="flex items-center gap-2 text-xs flex-wrap">
+                {isSkiing ? (
+                  <><LegendItem color="#10b981" label="Perfekt" /><LegendItem color="#f59e0b" label="Overgang" /><LegendItem color="#ef4444" label="Dårlig" /></>
+                ) : (
+                  <><LegendItem color="#10b981" label="Med" /><LegendItem color="#f59e0b" label="Side" /><LegendItem color="#ef4444" label="Mot" /></>
+                )}
+              </div>
             )}
           </div>
-          {isLoading && (
-            <div className="flex items-center justify-center gap-2 p-4 text-sm text-blue-500 animate-pulse">
-              Henter værdata…
-            </div>
+          {segmentMode === "weather" && isLoading && (
+            <div className="flex items-center justify-center gap-2 p-4 text-sm text-blue-500 animate-pulse">Henter værdata…</div>
           )}
-          {error && (
-            <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-              {error}
-            </div>
+          {segmentMode === "weather" && error && (
+            <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>
           )}
-          <SegmentList
-            segments={segments}
-            activeIndex={activeSegment}
-            sport={sport}
-            onActiveChange={setActiveSegment}
-          />
+          {segmentMode === "strava" && stravaLoading && (
+            <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">Henter Strava-segmenter…</div>
+          )}
+          {segmentMode === "strava" && stravaError && (
+            <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{stravaError instanceof Error ? stravaError.message : String(stravaError)}</div>
+          )}
+          {segmentMode === "weather" && (
+            <SegmentList segments={segments} activeIndex={activeSegment} sport={sport} onActiveChange={setActiveSegment} />
+          )}
+          {segmentMode === "strava" && (
+            <StravaSegmentList segments={stravaSegments} activeId={activeStravaId} onSelect={setActiveStravaId} />
+          )}
         </aside>
       </div>
     </>
@@ -166,6 +201,14 @@ interface SheetProps {
   isSkiing: boolean;
   reversed: boolean;
   onToggleReverse: () => void;
+  segmentMode: SegmentMode;
+  onSegmentModeChange: (m: SegmentMode) => void;
+  stravaConnected: boolean;
+  stravaSegments: StravaSegment[];
+  stravaLoading: boolean;
+  stravaError: string | null;
+  activeStravaId: number | null;
+  onStravaSegmentClick: (id: number) => void;
 }
 
 function MobileBottomSheet({
@@ -182,6 +225,14 @@ function MobileBottomSheet({
   isSkiing,
   reversed,
   onToggleReverse,
+  segmentMode,
+  onSegmentModeChange,
+  stravaConnected,
+  stravaSegments,
+  stravaLoading,
+  stravaError,
+  activeStravaId,
+  onStravaSegmentClick,
 }: SheetProps) {
   const [state, setState] = useState<SheetState>("peek");
   const touchStartY = useRef(0);
@@ -263,38 +314,70 @@ function MobileBottomSheet({
         </div>
       )}
 
-      {/* Legend — only when expanded */}
+      {/* Segment mode toggle + legend — only when expanded */}
       {state === "expanded" && (
-        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-100 flex items-center gap-3 text-xs flex-wrap">
-          {isSkiing ? (
-            <>
-              <LegendItem color="#10b981" label="Perfekte forhold" />
-              <LegendItem color="#f59e0b" label="Overgang" />
-              <LegendItem color="#ef4444" label="Dårlige forhold" />
-            </>
-          ) : (
-            <>
-              <LegendItem color="#10b981" label="Medvind" />
-              <LegendItem color="#f59e0b" label="Sidevind" />
-              <LegendItem color="#ef4444" label="Motvind" />
-            </>
+        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-100 flex items-center justify-between gap-2 flex-wrap">
+          {/* Mode toggle */}
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+            <button
+              onClick={() => onSegmentModeChange("weather")}
+              className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "weather" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500")}
+            >
+              Vær
+            </button>
+            {stravaConnected && (
+              <button
+                onClick={() => onSegmentModeChange("strava")}
+                className={clsx("px-3 py-1 rounded-md transition-colors", segmentMode === "strava" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500")}
+              >
+                Strava-seg.
+              </button>
+            )}
+          </div>
+          {/* Legend (weather mode only) */}
+          {segmentMode === "weather" && (
+            <div className="flex items-center gap-2 text-xs flex-wrap">
+              {isSkiing ? (
+                <>
+                  <LegendItem color="#10b981" label="Perfekt" />
+                  <LegendItem color="#f59e0b" label="Overgang" />
+                  <LegendItem color="#ef4444" label="Dårlig" />
+                </>
+              ) : (
+                <>
+                  <LegendItem color="#10b981" label="Med" />
+                  <LegendItem color="#f59e0b" label="Side" />
+                  <LegendItem color="#ef4444" label="Mot" />
+                </>
+              )}
+            </div>
           )}
         </div>
       )}
 
-      {state === "expanded" && isLoading && (
+      {state === "expanded" && segmentMode === "weather" && isLoading && (
         <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-blue-500 animate-pulse">
           Henter værdata…
         </div>
       )}
-      {state === "expanded" && error && (
+      {state === "expanded" && segmentMode === "weather" && error && (
         <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
           {error}
         </div>
       )}
+      {state === "expanded" && segmentMode === "strava" && stravaLoading && (
+        <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-orange-500 animate-pulse">
+          Henter Strava-segmenter…
+        </div>
+      )}
+      {state === "expanded" && segmentMode === "strava" && stravaError && (
+        <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
+          {stravaError}
+        </div>
+      )}
 
       {/* Segment list — only when expanded */}
-      {state === "expanded" && (
+      {state === "expanded" && segmentMode === "weather" && (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <SegmentList
             segments={segments}
@@ -304,11 +387,68 @@ function MobileBottomSheet({
           />
         </div>
       )}
+      {state === "expanded" && segmentMode === "strava" && (
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <StravaSegmentList
+            segments={stravaSegments}
+            activeId={activeStravaId}
+            onSelect={onStravaSegmentClick}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
+
+function StravaSegmentList({
+  segments,
+  activeId,
+  onSelect,
+}: {
+  segments: StravaSegment[];
+  activeId: number | null;
+  onSelect: (id: number) => void;
+}) {
+  if (!segments.length) {
+    return (
+      <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-4 text-center">
+        Ingen Strava-segmenter funnet langs denne ruten
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2 px-3 py-3">
+      {segments.map((seg) => (
+        <button
+          key={seg.id}
+          onClick={() => onSelect(seg.id)}
+          className={clsx(
+            "w-full text-left p-3 rounded-xl border transition-all",
+            activeId === seg.id
+              ? "border-orange-400 bg-orange-50 ring-1 ring-orange-400"
+              : "border-gray-200 bg-white hover:border-orange-300"
+          )}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <span className="font-medium text-gray-900 text-sm leading-tight">{seg.name}</span>
+            {seg.climbCategory > 0 && (
+              <span className="shrink-0 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">
+                {seg.climbCategory === 5 ? "HC" : `Cat ${seg.climbCategory}`}
+              </span>
+            )}
+          </div>
+          <div className="mt-1 flex gap-3 text-xs text-gray-500">
+            <span>{(seg.distanceM / 1000).toFixed(1)} km</span>
+            {seg.avgGrade !== 0 && <span>{seg.avgGrade.toFixed(1)}% snitt</span>}
+            {seg.elevDifference > 0 && <span>+{Math.round(seg.elevDifference)} m</span>}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: () => void }) {
   return (

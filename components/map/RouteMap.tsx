@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
-import type { Route, WeatherSegment, SportType } from "@/types";
+import type { Route, WeatherSegment, SportType, StravaSegment } from "@/types";
 import { classifySkiConditions } from "@/lib/ski-conditions";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
@@ -13,6 +13,9 @@ interface Props {
   activeSegmentIndex: number | null;
   sport?: SportType;
   onSegmentClick?: (index: number) => void;
+  stravaSegments?: StravaSegment[];
+  activeStravaSegmentId?: number | null;
+  onStravaSegmentClick?: (id: number) => void;
 }
 
 export function RouteMap({
@@ -21,12 +24,16 @@ export function RouteMap({
   activeSegmentIndex,
   sport = "cycling",
   onSegmentClick,
+  stravaSegments,
+  activeStravaSegmentId,
+  onStravaSegmentClick,
 }: Props) {
-  const containerRef   = useRef<HTMLDivElement>(null);
-  const mapRef         = useRef<mapboxgl.Map | null>(null);
-  const popupRef       = useRef<mapboxgl.Popup | null>(null);
-  const windMarkersRef = useRef<mapboxgl.Marker[]>([]);
-  const wxMarkersRef   = useRef<mapboxgl.Marker[]>([]);
+  const containerRef       = useRef<HTMLDivElement>(null);
+  const mapRef             = useRef<mapboxgl.Map | null>(null);
+  const popupRef           = useRef<mapboxgl.Popup | null>(null);
+  const windMarkersRef     = useRef<mapboxgl.Marker[]>([]);
+  const wxMarkersRef       = useRef<mapboxgl.Marker[]>([]);
+  const stravaMarkersRef   = useRef<mapboxgl.Marker[]>([]);
   // Store the latest segments/sport so the map-load callback can use them
   const pendingRef     = useRef<(() => void) | null>(null);
   const mapReadyRef    = useRef(false);
@@ -50,7 +57,7 @@ export function RouteMap({
     map.on("load", () => {
       mapReadyRef.current = true;
       addRouteLayers(map, route);
-      // Apply any segments that arrived before the map was ready
+      addStravaSegmentLayers(map);
       if (pendingRef.current) {
         pendingRef.current();
         pendingRef.current = null;
@@ -87,6 +94,13 @@ export function RouteMap({
     apply();
   }, [segments, sport, onSegmentClick]);
 
+  // ── Update Strava segments layer ───────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+    updateStravaSegments(map, stravaSegments ?? [], activeStravaSegmentId ?? null, stravaMarkersRef, onStravaSegmentClick);
+  }, [stravaSegments, activeStravaSegmentId, onStravaSegmentClick]);
+
   // ── Fly + popup on active segment ──────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
@@ -109,6 +123,83 @@ export function RouteMap({
       className="w-full h-full"
     />
   );
+}
+
+// ─── Strava segment layers ────────────────────────────────────────────────────
+
+function addStravaSegmentLayers(map: mapboxgl.Map) {
+  map.addSource("strava-segments", { type: "geojson", data: empty() });
+  map.addLayer({
+    id: "strava-segments-bg", type: "line", source: "strava-segments",
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#fff", "line-width": 10, "line-opacity": 0.5 },
+  });
+  map.addLayer({
+    id: "strava-segments-line", type: "line", source: "strava-segments",
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: {
+      "line-color": ["case", ["get", "active"], "#f97316", "#a855f7"],
+      "line-width": ["case", ["get", "active"], 6, 4],
+      "line-opacity": 0.9,
+    },
+  });
+}
+
+function updateStravaSegments(
+  map: mapboxgl.Map,
+  segments: StravaSegment[],
+  activeId: number | null,
+  markersRef: React.MutableRefObject<mapboxgl.Marker[]>,
+  onClick?: (id: number) => void
+) {
+  const src = map.getSource("strava-segments") as mapboxgl.GeoJSONSource | undefined;
+  if (!src) return;
+
+  markersRef.current.forEach((m) => m.remove());
+  markersRef.current = [];
+
+  if (!segments.length) {
+    src.setData(empty());
+    return;
+  }
+
+  src.setData({
+    type: "FeatureCollection",
+    features: segments.map((seg) => ({
+      type: "Feature" as const,
+      geometry: {
+        type: "LineString" as const,
+        coordinates: seg.coordinates.map((c) => [c.lon, c.lat]),
+      },
+      properties: { id: seg.id, active: seg.id === activeId },
+    })),
+  });
+
+  // Start marker for each segment
+  segments.forEach((seg) => {
+    const el = document.createElement("div");
+    el.style.cssText = [
+      "background:#a855f7",
+      "color:white",
+      "border-radius:999px",
+      "padding:3px 7px",
+      "font-size:11px",
+      "font-weight:700",
+      "font-family:system-ui,sans-serif",
+      "cursor:pointer",
+      "white-space:nowrap",
+      "box-shadow:0 2px 6px rgba(0,0,0,0.25)",
+      "border:1.5px solid rgba(255,255,255,0.8)",
+    ].join(";");
+    el.textContent = seg.name.length > 18 ? seg.name.slice(0, 17) + "…" : seg.name;
+    if (onClick) el.addEventListener("click", () => onClick(seg.id));
+
+    markersRef.current.push(
+      new mapboxgl.Marker({ element: el, anchor: "left" })
+        .setLngLat([seg.startLatLng[1], seg.startLatLng[0]])
+        .addTo(map)
+    );
+  });
 }
 
 // ─── Route layers ─────────────────────────────────────────────────────────────

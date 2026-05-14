@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getRoute } from "@/lib/db/client";
 import { notFound } from "next/navigation";
 import { RouteView } from "@/components/RouteView";
@@ -17,6 +18,8 @@ export default async function RoutePage({ params, searchParams }: Props) {
     ? (searchParams.sport as SportType)
     : "cycling";
 
+  const stravaConnected = !!cookies().get("strava_access_token")?.value;
+
   return (
     <RouteView
       route={{
@@ -29,6 +32,7 @@ export default async function RoutePage({ params, searchParams }: Props) {
         createdAt: route.created_at,
       }}
       initialSport={sport}
+      stravaConnected={stravaConnected}
     />
   );
 }

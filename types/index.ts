@@ -141,6 +141,20 @@ export interface DbRoute {
   created_at: string;
 }
 
+// ─── Strava segments ──────────────────────────────────────────────────────────
+
+export interface StravaSegment {
+  id: number;
+  name: string;
+  distanceM: number;
+  avgGrade: number;
+  elevDifference: number;
+  climbCategory: number; // 0 = not categorised, 1–5 = HC
+  startLatLng: [number, number];
+  endLatLng: [number, number];
+  coordinates: Coordinate[]; // decoded from Strava's encoded polyline
+}
+
 export interface DbWeatherCache {
   id: string;
   route_id: string;

@@ -2,9 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { UploadResponse, SportType } from "@/types";
+import type { UploadResponse } from "@/types";
 import { OsmTrailSearch } from "@/components/trail/OsmTrailSearch";
-import { SportTypeSelector } from "@/components/SportTypeSelector";
 import clsx from "clsx";
 
 type Tab = "upload" | "strava" | "ski";
@@ -12,12 +11,6 @@ type Tab = "upload" | "strava" | "ski";
 export function RouteImporter() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("upload");
-  const [sport, setSport] = useState<SportType>("cycling");
-
-  const handleSportChange = useCallback((s: SportType) => {
-    setSport(s);
-    if (s !== "skiing" && tab === "ski") setTab("upload");
-  }, [tab]);
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -35,13 +28,13 @@ export function RouteImporter() {
           throw new Error(error ?? `HTTP ${res.status}`);
         }
         const { route } = (await res.json()) as UploadResponse;
-        router.push(`/route/${route.id}?sport=${sport}`);
+        router.push(`/route/${route.id}`);
       } catch (err) {
         setStatus("error");
         setErrorMsg(err instanceof Error ? err.message : "Ukjent feil");
       }
     },
-    [router, sport]
+    [router]
   );
 
   const handleFile = useCallback(
@@ -60,39 +53,26 @@ export function RouteImporter() {
 
   return (
     <div className="w-full max-w-md space-y-5">
-      {/* Sport type selector */}
-      <div className="space-y-1.5">
-        <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Sport</p>
-        <SportTypeSelectorLight value={sport} onChange={handleSportChange} />
-      </div>
-
       {/* Tab selector */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 text-sm border border-gray-200">
         {([
-          { id: "upload", label: "📁 Last opp GPX/TCX", skiOnly: false },
-          { id: "strava", label: "🟠 Strava",           skiOnly: false },
-          { id: "ski",    label: "⛷️ Skiløyper",        skiOnly: true  },
-        ] as { id: Tab; label: string; skiOnly: boolean }[]).map((t) => {
-          const disabled = t.skiOnly && sport !== "skiing";
-          return (
-            <button
-              key={t.id}
-              disabled={disabled}
-              onClick={() => { if (!disabled) setTab(t.id); }}
-              className={clsx(
-                "flex-1 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
-                tab === t.id && !disabled
-                  ? "bg-white text-blue-900 shadow-sm"
-                  : disabled
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-500 hover:text-gray-700"
-              )}
-              title={disabled ? "Velg Langrenn for å søke skiløyper" : undefined}
-            >
-              {t.label}
-            </button>
-          );
-        })}
+          { id: "upload", label: "📁 Last opp GPX/TCX" },
+          { id: "strava", label: "🟠 Strava" },
+          { id: "ski",    label: "⛷️ Skiløyper" },
+        ] as { id: Tab; label: string }[]).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={clsx(
+              "flex-1 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
+              tab === t.id
+                ? "bg-white text-blue-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {/* ── Upload tab ──────────────────────────────────────────────── */}
@@ -145,7 +125,7 @@ export function RouteImporter() {
       {/* ── Strava tab ──────────────────────────────────────────────── */}
       {tab === "strava" && (
         <a
-          href={`/api/strava/auth?sport=${sport}`}
+          href="/api/strava/auth"
           className="flex items-center justify-center gap-3 w-full py-4 px-4
                      bg-[#FC4C02] hover:bg-[#e04300] rounded-xl font-medium
                      text-white transition-colors shadow-sm"
@@ -173,35 +153,6 @@ export function RouteImporter() {
       {status === "error" && errorMsg && (
         <p className="text-center text-red-500 text-sm">{errorMsg}</p>
       )}
-    </div>
-  );
-}
-
-// Light-themed sport selector for white background
-function SportTypeSelectorLight({ value, onChange }: { value: SportType; onChange: (s: SportType) => void }) {
-  const sports = [
-    { type: "cycling" as SportType, label: "Sykkel", emoji: "🚴" },
-    { type: "skiing"  as SportType, label: "Langrenn", emoji: "⛷️" },
-    { type: "running" as SportType, label: "Løping", emoji: "🏃" },
-  ];
-  return (
-    <div className="flex gap-1 bg-gray-100 rounded-xl p-1 border border-gray-200">
-      {sports.map((s) => (
-        <button
-          key={s.type}
-          onClick={() => onChange(s.type)}
-          className={clsx(
-            "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg",
-            "text-sm font-medium transition-all",
-            value === s.type
-              ? "bg-blue-900 text-white shadow"
-              : "text-gray-500 hover:text-gray-800"
-          )}
-        >
-          <span>{s.emoji}</span>
-          <span className="hidden sm:inline">{s.label}</span>
-        </button>
-      ))}
     </div>
   );
 }

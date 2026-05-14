@@ -5,8 +5,9 @@ import type {
   WindStrength,
 } from "@/types";
 import { classifyWind, windClassColor } from "./wind-classifier";
-import { sampleRoute, SamplePoint } from "./route-sampler";
+import { sampleRoute, SamplePoint, estimateSegmentTimes } from "./route-sampler";
 import { windStrengthFromMs } from "@/types";
+import type { SportType } from "@/types";
 
 const MET_BASE = "https://api.met.no/weatherapi/locationforecast/2.0/compact";
 const USER_AGENT = "SportsWeather/1.0 github.com/your-org/sportsweather";
@@ -124,9 +125,16 @@ export async function fetchRouteWeather(
   coords: Coordinate[],
   startTime: Date,
   intervalM = 500,
-  concurrency = 4
+  concurrency = 4,
+  speedKmh?: number,
+  sport?: SportType
 ): Promise<WeatherSegment[]> {
   const samples = sampleRoute(coords, intervalM);
+
+  // Per-sample arrival times when speed is given; otherwise all use startTime
+  const arrivalTimes = speedKmh && speedKmh > 0
+    ? estimateSegmentTimes(samples, startTime, speedKmh, sport ?? "cycling")
+    : null;
 
   // Fetch in batches
   const segments: WeatherSegment[] = [];
@@ -140,12 +148,13 @@ export async function fetchRouteWeather(
     for (let j = 0; j < batch.length; j++) {
       const sample = batch[j];
       const result = results[j];
+      const sampleTime = arrivalTimes ? arrivalTimes[i + j] : startTime;
 
       let weather: PointWeather;
       if (result.status === "fulfilled") {
         const closest = findClosestTimeseries(
           result.value.properties.timeseries,
-          startTime
+          sampleTime
         );
         weather = closest
           ? parseTimeseries(closest)

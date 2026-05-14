@@ -38,7 +38,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
   const inputValue = format(value, "yyyy-MM-dd'T'HH:mm");
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Starttid</span>
         <span className="text-xs text-blue-600 font-semibold capitalize">{formattedDate}</span>
@@ -56,24 +56,14 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
         aria-label="Velg starttid"
       />
 
-      <div className="flex justify-between text-xs text-gray-400">
-        <span>{format(base, "d. MMM HH:mm", { locale: nb })}</span>
-        <span>{format(addHours(base, rangeHours), "d. MMM HH:mm", { locale: nb })}</span>
-      </div>
-
-      <details className="text-xs text-gray-400">
-        <summary className="cursor-pointer select-none hover:text-gray-600 transition-colors">
-          Velg eksakt tidspunkt
-        </summary>
-        <input
-          type="datetime-local"
-          value={inputValue}
-          onChange={handleDateInput}
-          className="mt-2 w-full bg-white border border-gray-300 rounded-lg
-                     px-3 py-1.5 text-gray-700 text-sm focus:outline-none
-                     focus:ring-2 focus:ring-blue-400"
-        />
-      </details>
+      <input
+        type="datetime-local"
+        value={inputValue}
+        onChange={handleDateInput}
+        className="w-full bg-white border border-gray-200 rounded-lg
+                   px-2.5 py-1 text-gray-600 text-xs focus:outline-none
+                   focus:ring-2 focus:ring-blue-400"
+      />
     </div>
   );
 }

@@ -7,8 +7,8 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const body = (await req.json()) as WeatherRequest & { routeId?: string };
-    const { coordinates, startTime, routeId } = body;
+    const body = (await req.json()) as WeatherRequest & { routeId?: string; speedKmh?: number; sport?: string };
+    const { coordinates, startTime, routeId, speedKmh, sport } = body;
 
     if (!startTime) {
       return NextResponse.json({ error: "startTime is required" }, { status: 400 });
@@ -28,13 +28,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "Route not found" }, { status: 404 });
       }
 
-      const cached = await getCachedWeather(routeId, start);
-      if (cached) {
-        return NextResponse.json({
-          segments: cached.segments,
-          fetchedAt: cached.fetched_at,
-          fromCache: true,
-        } satisfies WeatherResponse & { fromCache: boolean });
+      // Only use cache when no custom speed is set (default = no per-segment timing)
+      if (!speedKmh) {
+        const cached = await getCachedWeather(routeId, start);
+        if (cached) {
+          return NextResponse.json({
+            segments: cached.segments,
+            fetchedAt: cached.fetched_at,
+            fromCache: true,
+          } satisfies WeatherResponse & { fromCache: boolean });
+        }
       }
 
       coords = dbRoute.coordinates;
@@ -54,7 +57,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const segments = await fetchRouteWeather(coords, start, 500, 4);
+    const validSport = (["cycling", "running", "skiing"] as const).find((s) => s === sport);
+    const segments = await fetchRouteWeather(coords, start, 500, 4, speedKmh, validSport);
 
     // Cache result if we have a routeId
     if (routeId && segments.length > 0) {

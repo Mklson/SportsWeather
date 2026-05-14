@@ -1,24 +1,26 @@
 "use client";
 
 import useSWR from "swr";
-import type { Coordinate, WeatherResponse, WeatherSegment } from "@/types";
+import type { Coordinate, SportType, WeatherResponse, WeatherSegment } from "@/types";
 
 export function useWeather(
   routeId: string,
   startTime: Date,
-  overrideCoords?: Coordinate[]
+  overrideCoords?: Coordinate[],
+  speedKmh?: number,
+  sport?: SportType
 ) {
   const rounded = new Date(startTime);
   rounded.setMinutes(0, 0, 0);
   const reversed = !!overrideCoords;
-  const key = ["/api/weather", routeId, rounded.toISOString(), reversed ? "rev" : "fwd"] as const;
+  const key = ["/api/weather", routeId, rounded.toISOString(), reversed ? "rev" : "fwd", speedKmh ?? 0] as const;
 
   const { data, error, isLoading } = useSWR(
     key,
     async () => {
       const body = reversed
-        ? { coordinates: overrideCoords, startTime: rounded.toISOString() }
-        : { routeId, startTime: rounded.toISOString() };
+        ? { coordinates: overrideCoords, startTime: rounded.toISOString(), speedKmh, sport }
+        : { routeId, startTime: rounded.toISOString(), speedKmh, sport };
 
       const res = await fetch("/api/weather", {
         method: "POST",

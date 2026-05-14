@@ -5,7 +5,9 @@ import dynamic from "next/dynamic";
 import useSWR from "swr";
 import type { Route, SportType, StravaSegment, WeatherSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
+import { SpeedSlider } from "./SpeedSlider";
 import { useWeather } from "@/hooks/useWeather";
+import { DEFAULT_SPEED_KMH } from "@/lib/route-sampler";
 import clsx from "clsx";
 
 const RouteMap = dynamic(
@@ -28,6 +30,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const [sport] = useState<SportType>(initialSport);
   const [reversed, setReversed] = useState(false);
   const [activeStravaId, setActiveStravaId] = useState<number | null>(null);
+  const [speedKmh, setSpeedKmh] = useState(() => DEFAULT_SPEED_KMH[initialSport]);
   const [, startTransition] = useTransition();
 
   const reversedCoords = useMemo(
@@ -38,7 +41,9 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const { segments } = useWeather(
     route.id,
     startTime,
-    reversed ? reversedCoords : undefined
+    reversed ? reversedCoords : undefined,
+    speedKmh,
+    sport
   );
 
   const stravaSegKey = stravaConnected
@@ -77,8 +82,11 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         <MobileBottomSheet
           route={route}
           isSkiing={isSkiing}
+          sport={sport}
           startTime={startTime}
           onTimeChange={handleTimeChange}
+          speedKmh={speedKmh}
+          onSpeedChange={(s) => startTransition(() => setSpeedKmh(s))}
           reversed={reversed}
           onToggleReverse={() => setReversed((v) => !v)}
           stravaConnected={stravaConnected}
@@ -122,9 +130,15 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             </div>
           </div>
 
-          {/* Time picker */}
-          <div className="p-4 border-b border-gray-200 bg-white">
+          {/* Time + speed */}
+          <div className="p-4 border-b border-gray-200 bg-white space-y-4">
             <TimeSlider value={startTime} onChange={handleTimeChange} />
+            <SpeedSlider
+              sport={sport}
+              speedKmh={speedKmh}
+              onChange={(s) => startTransition(() => setSpeedKmh(s))}
+              coords={route.coordinates}
+            />
           </div>
 
           {/* Legend */}
@@ -173,8 +187,11 @@ const PEEK_HEIGHT   = 170;
 interface SheetProps {
   route: Route;
   isSkiing: boolean;
+  sport: SportType;
   startTime: Date;
   onTimeChange: (d: Date) => void;
+  speedKmh: number;
+  onSpeedChange: (s: number) => void;
   reversed: boolean;
   onToggleReverse: () => void;
   stravaConnected: boolean;
@@ -189,8 +206,11 @@ interface SheetProps {
 function MobileBottomSheet({
   route,
   isSkiing,
+  sport,
   startTime,
   onTimeChange,
+  speedKmh,
+  onSpeedChange,
   reversed,
   onToggleReverse,
   stravaConnected,
@@ -267,10 +287,16 @@ function MobileBottomSheet({
         )}
       </div>
 
-      {/* Time slider */}
+      {/* Time + speed */}
       {visible && (
-        <div className="flex-shrink-0 px-4 pb-2 border-b border-gray-100">
+        <div className="flex-shrink-0 px-4 pb-3 border-b border-gray-100 space-y-3">
           <TimeSlider value={startTime} onChange={onTimeChange} />
+          <SpeedSlider
+            sport={sport}
+            speedKmh={speedKmh}
+            onChange={onSpeedChange}
+            coords={route.coordinates}
+          />
         </div>
       )}
 

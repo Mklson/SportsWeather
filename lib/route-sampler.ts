@@ -1,4 +1,4 @@
-import type { Coordinate } from "@/types";
+import type { Coordinate, SportType } from "@/types";
 
 const EARTH_RADIUS_M = 6_371_000;
 
@@ -101,6 +101,75 @@ export function totalDistanceKm(coords: Coordinate[]): number {
     total += haversineMetres(coords[i], coords[i + 1]);
   }
   return total / 1000;
+}
+
+/** Default flat speed in km/h per sport. */
+export const DEFAULT_SPEED_KMH: Record<SportType, number> = {
+  cycling: 20,
+  running: 10,
+  skiing:  12,
+};
+
+/**
+ * Returns effective speed adjusted for slope.
+ * Uphill reduces speed, downhill increases it (capped at 2.5× base).
+ */
+export function gradeAdjustedSpeed(
+  baseSpeedKmh: number,
+  gradePercent: number,
+  sport: SportType
+): number {
+  // Sensitivity differs per sport: cycling loses speed faster on uphills
+  const factor = sport === "cycling" ? 0.055 : sport === "running" ? 0.08 : 0.10;
+  const adjusted = baseSpeedKmh / (1 + factor * gradePercent);
+  return Math.max(2, Math.min(adjusted, baseSpeedKmh * 2.5));
+}
+
+/**
+ * For each sample point, compute the estimated wall-clock arrival time
+ * using grade-adjusted speed. Returns one Date per sample.
+ */
+export function estimateSegmentTimes(
+  samples: SamplePoint[],
+  startTime: Date,
+  baseSpeedKmh: number,
+  sport: SportType
+): Date[] {
+  const times: Date[] = [new Date(startTime)];
+  let cumulativeMs = 0;
+
+  for (let i = 1; i < samples.length; i++) {
+    const distM    = samples[i].distanceM - samples[i - 1].distanceM;
+    const prevEle  = samples[i - 1].coordinate.ele ?? 0;
+    const currEle  = samples[i].coordinate.ele ?? 0;
+    const grade    = distM > 0 ? ((currEle - prevEle) / distM) * 100 : 0;
+    const speed    = gradeAdjustedSpeed(baseSpeedKmh, grade, sport);
+    cumulativeMs  += ((distM / 1000) / speed) * 3_600_000;
+    times.push(new Date(startTime.getTime() + cumulativeMs));
+  }
+
+  return times;
+}
+
+/**
+ * Total estimated route duration in hours, accounting for slope.
+ * Computed directly from raw coordinates (no sampling needed).
+ */
+export function estimateTotalDuration(
+  coords: Coordinate[],
+  baseSpeedKmh: number,
+  sport: SportType
+): number {
+  let totalHours = 0;
+  for (let i = 1; i < coords.length; i++) {
+    const distM   = haversineMetres(coords[i - 1], coords[i]);
+    const prevEle = coords[i - 1].ele ?? 0;
+    const currEle = coords[i].ele ?? 0;
+    const grade   = distM > 0 ? ((currEle - prevEle) / distM) * 100 : 0;
+    const speed   = gradeAdjustedSpeed(baseSpeedKmh, grade, sport);
+    totalHours   += (distM / 1000) / speed;
+  }
+  return totalHours;
 }
 
 /** Total elevation gain in metres. */

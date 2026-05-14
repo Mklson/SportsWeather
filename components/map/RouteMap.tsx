@@ -21,16 +21,15 @@ function buildStyle(basemap: Basemap): mapboxgl.Style | string {
       layers: [{ id: "bg", type: "raster", source: "sat" }],
     } as mapboxgl.Style;
   }
-  // topo: Kartverket topografisk (Norway)
+  // topo: Kartverket topografisk (Norway) via server-side proxy (avoids CORS)
   return {
     version: 8,
     glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
     sources: {
       "kv-topo": {
         type: "raster" as const,
-        tiles: ["https://opencache.statkart.no/gatekeeper/gk/cache.vc/tms/1.0.0/topo4/{z}/{x}/{y}.png"],
+        tiles: ["/api/tiles/kv/{z}/{x}/{y}"],
         tileSize: 256,
-        scheme: "tms" as const,
         attribution: "© Kartverket",
       },
     },

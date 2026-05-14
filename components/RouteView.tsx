@@ -6,7 +6,6 @@ import useSWR from "swr";
 import type { Route, SportType, WeatherSegment, StravaSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
 import { SegmentList } from "./route/SegmentList";
-import { SportTypeSelector } from "./SportTypeSelector";
 import { useWeather } from "@/hooks/useWeather";
 import clsx from "clsx";
 
@@ -83,7 +82,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         <MobileBottomSheet
           route={route}
           sport={sport}
-          onSportChange={setSport}
           startTime={startTime}
           onTimeChange={handleTimeChange}
           segments={segments}
@@ -133,9 +131,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
               </div>
               <ReverseButton reversed={reversed} onToggle={() => setReversed((v) => !v)} />
             </div>
-          </div>
-          <div className="p-3 border-b border-gray-200 bg-white">
-            <SportTypeSelector value={sport} onChange={setSport} />
           </div>
           <div className="p-4 border-b border-gray-200 bg-white">
             <TimeSlider value={startTime} onChange={handleTimeChange} />
@@ -192,7 +187,6 @@ const PEEK_HEIGHT   = 210;
 interface SheetProps {
   route: Route;
   sport: SportType;
-  onSportChange: (s: SportType) => void;
   startTime: Date;
   onTimeChange: (d: Date) => void;
   segments: WeatherSegment[];
@@ -216,7 +210,6 @@ interface SheetProps {
 function MobileBottomSheet({
   route,
   sport,
-  onSportChange,
   startTime,
   onTimeChange,
   segments,
@@ -306,13 +299,6 @@ function MobileBottomSheet({
       {visible && (
         <div className="flex-shrink-0 px-4 pb-2 border-b border-gray-100">
           <TimeSlider value={startTime} onChange={onTimeChange} />
-        </div>
-      )}
-
-      {/* Sport selector — always visible when not hidden */}
-      {visible && (
-        <div className="flex-shrink-0 px-4 py-2.5 border-b border-gray-100">
-          <SportTypeSelector value={sport} onChange={onSportChange} />
         </div>
       )}
 

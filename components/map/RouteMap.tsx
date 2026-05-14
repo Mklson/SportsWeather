@@ -509,7 +509,7 @@ function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
   // White halo for contrast against map
   const halo = document.createElementNS("http://www.w3.org/2000/svg", "path");
   halo.setAttribute("d", "M10,17 L10,4 M6,8 L10,4 L14,8");
-  halo.setAttribute("stroke", "rgba(255,255,255,0.95)");
+  halo.setAttribute("stroke", "rgba(0,0,0,0.25)");
   halo.setAttribute("stroke-width", "4");
   halo.setAttribute("stroke-linecap", "round");
   halo.setAttribute("stroke-linejoin", "round");

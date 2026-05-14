@@ -137,6 +137,7 @@ export interface DbRoute {
   coordinates: Coordinate[]; // stored as JSONB
   distance_km: number;
   elevation_gain_m: number | null;
+  external_id: string | null;
   created_at: string;
 }
 

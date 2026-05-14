@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listStravaRoutes, getStravaRoute, decodePolyline } from "@/lib/strava";
+import { listStravaRoutes, getStravaRoute, decodePolyline, stravaRouteTypeToSport } from "@/lib/strava";
 import { saveRoute } from "@/lib/db/client";
 import { totalDistanceKm, totalElevationGain } from "@/lib/route-sampler";
 import type { UploadResponse } from "@/types";
@@ -53,6 +53,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       distance_km: distanceKm,
       elevation_gain_m: elevationGainM || null,
       external_id: `strava-route:${routeId}`,
+      sport: stravaRouteTypeToSport(stravaRoute.type),
     } as Parameters<typeof saveRoute>[0]);
 
     const response: UploadResponse = {

@@ -14,9 +14,10 @@ export default async function RoutePage({ params, searchParams }: Props) {
   if (!route) notFound();
 
   const validSports: SportType[] = ["cycling", "skiing", "running"];
-  const sport: SportType = validSports.includes(searchParams.sport as SportType)
-    ? (searchParams.sport as SportType)
-    : "cycling";
+  const sport: SportType =
+    (route.sport && validSports.includes(route.sport) ? route.sport : null) ??
+    (validSports.includes(searchParams.sport as SportType) ? (searchParams.sport as SportType) : null) ??
+    "cycling";
 
   const stravaConnected = !!cookies().get("strava_access_token")?.value;
 
@@ -30,6 +31,7 @@ export default async function RoutePage({ params, searchParams }: Props) {
         distanceKm: route.distance_km,
         elevationGainM: route.elevation_gain_m ?? undefined,
         createdAt: route.created_at,
+        sport: route.sport ?? undefined,
       }}
       initialSport={sport}
       stravaConnected={stravaConnected}

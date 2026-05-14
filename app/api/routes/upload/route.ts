@@ -53,6 +53,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       distance_km: distanceKm,
       elevation_gain_m: elevationGainM > 0 ? elevationGainM : null,
       external_id: null,
+      sport: null,
     });
 
     const response: UploadResponse = {

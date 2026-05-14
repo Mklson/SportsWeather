@@ -1,5 +1,5 @@
 import polyline from "@mapbox/polyline";
-import type { Coordinate, StravaActivity, StravaRoute, StravaSegment } from "@/types";
+import type { Coordinate, SportType, StravaActivity, StravaRoute, StravaSegment } from "@/types";
 
 const STRAVA_API = "https://www.strava.com/api/v3";
 
@@ -101,7 +101,7 @@ export async function listStravaRoutes(
 export async function getStravaRoute(
   token: string,
   routeId: number
-): Promise<{ name: string; map: { summary_polyline: string } }> {
+): Promise<{ name: string; type: number; map: { summary_polyline: string } }> {
   const res = await fetch(`${STRAVA_API}/routes/${routeId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -136,6 +136,21 @@ export async function exploreSegments(
     endLatLng: s.end_latlng,
     coordinates: decodePolyline(s.points),
   }));
+}
+
+/** Map Strava activity type string to SportType. */
+export function stravaActivityTypeToSport(stravaType: string): SportType {
+  const cycling = ["Ride", "VirtualRide", "EBikeRide", "MountainBikeRide", "GravelRide", "Handcycle"];
+  const skiing = ["NordicSki", "BackcountrySki", "AlpineSki", "Snowboard", "RollerSki"];
+  if (cycling.includes(stravaType)) return "cycling";
+  if (skiing.includes(stravaType)) return "skiing";
+  return "running";
+}
+
+/** Map Strava route type number to SportType. */
+export function stravaRouteTypeToSport(routeType: number): SportType {
+  if (routeType === 1) return "cycling";
+  return "running"; // 2=run, 3=walk/hike
 }
 
 /** Decode Google Encoded Polyline to Coordinate array. */

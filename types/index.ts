@@ -57,6 +57,7 @@ export interface Route {
   elevationGainM?: number;
   createdAt: string; // ISO
   userId?: string;
+  sport?: SportType;
 }
 
 export interface StravaActivity {
@@ -138,6 +139,7 @@ export interface DbRoute {
   distance_km: number;
   elevation_gain_m: number | null;
   external_id: string | null;
+  sport: SportType | null;
   created_at: string;
 }
 

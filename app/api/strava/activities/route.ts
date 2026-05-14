@@ -3,6 +3,7 @@ import {
   listStravaActivities,
   getStravaActivity,
   decodePolyline,
+  stravaActivityTypeToSport,
 } from "@/lib/strava";
 import { saveRoute } from "@/lib/db/client";
 import { totalDistanceKm, totalElevationGain } from "@/lib/route-sampler";
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       distance_km: distanceKm,
       elevation_gain_m: elevationGainM || null,
       external_id: String(activityId),
+      sport: stravaActivityTypeToSport(activity.type),
     } as Parameters<typeof saveRoute>[0]);
 
     const response: UploadResponse = {

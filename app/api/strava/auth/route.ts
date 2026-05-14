@@ -9,6 +9,8 @@ export async function GET(): Promise<NextResponse> {
   const state = nanoid(16);
 
   const authUrl = buildStravaAuthUrl(state);
+  console.log("[strava/auth] redirect_uri:", process.env.STRAVA_REDIRECT_URI);
+  console.log("[strava/auth] authUrl:", authUrl);
 
   const response = NextResponse.redirect(authUrl);
   response.cookies.set("strava_oauth_state", state, {

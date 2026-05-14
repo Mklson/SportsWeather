@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "mapbox-gl/dist/mapbox-gl.css";
+
+@layer base {
+  :root {
+    --map-height-mobile: 50vh;
+    --map-height-desktop: 100vh;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .segment-card-active {
+    @apply ring-2 ring-blue-400 bg-gray-700;
+  }
+}
+
+/* Mapbox popup override */
+.mapboxgl-popup-content {
+  @apply bg-white text-gray-800 text-sm rounded-xl shadow-xl border border-gray-200 p-3;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: white !important;
+}

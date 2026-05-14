@@ -130,7 +130,10 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
 
 // ─── Mobile bottom sheet ──────────────────────────────────────────────────────
 
-const PEEK_HEIGHT = 188;
+type SheetState = "hidden" | "peek" | "expanded";
+
+const HIDDEN_HEIGHT = 32;
+const PEEK_HEIGHT   = 210;
 
 interface SheetProps {
   route: Route;
@@ -159,7 +162,7 @@ function MobileBottomSheet({
   error,
   isSkiing,
 }: SheetProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [state, setState] = useState<SheetState>("peek");
   const touchStartY = useRef(0);
   const didDrag = useRef(false);
 
@@ -172,20 +175,32 @@ function MobileBottomSheet({
     const dy = touchStartY.current - e.changedTouches[0].clientY;
     if (Math.abs(dy) > 40) {
       didDrag.current = true;
-      setExpanded(dy > 0);
+      setState((s) => {
+        if (dy > 0) return s === "hidden" ? "peek" : "expanded";
+        return s === "expanded" ? "peek" : "hidden";
+      });
     }
   };
 
   const onHandleClick = () => {
-    if (!didDrag.current) setExpanded((v) => !v);
+    if (!didDrag.current) {
+      setState((s) => (s === "hidden" ? "peek" : s === "peek" ? "hidden" : "peek"));
+    }
     didDrag.current = false;
   };
+
+  const sheetHeight =
+    state === "hidden" ? HIDDEN_HEIGHT :
+    state === "peek"   ? PEEK_HEIGHT :
+    "72dvh";
+
+  const visible = state !== "hidden";
 
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
       style={{
-        height: expanded ? "72dvh" : `${PEEK_HEIGHT}px`,
+        height: sheetHeight,
         transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
       }}
     >
@@ -196,32 +211,36 @@ function MobileBottomSheet({
         onTouchEnd={onTouchEnd}
         onClick={onHandleClick}
       >
-        <div className="flex justify-center pt-2.5 pb-1.5">
+        <div className="flex justify-center pt-2.5 pb-1">
           <div className="w-9 h-1 bg-gray-300 rounded-full" />
         </div>
-        <div className="px-4 pb-2 flex items-center justify-between">
-          <span className="font-semibold text-gray-900 text-sm truncate">{route.name}</span>
-          <span className="text-gray-400 text-xs ml-2 shrink-0">
-            {route.distanceKm.toFixed(1)} km
-            {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
-          </span>
-        </div>
+        {visible && (
+          <div className="px-4 pb-1.5 flex items-center justify-between">
+            <span className="font-semibold text-gray-900 text-sm truncate">{route.name}</span>
+            <span className="text-gray-400 text-xs ml-2 shrink-0">
+              {route.distanceKm.toFixed(1)} km
+              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Sport selector — always visible */}
-      <div className="flex-shrink-0 px-4 pb-3 border-b border-gray-100">
-        <SportTypeSelector value={sport} onChange={onSportChange} />
-      </div>
-
-      {/* Time slider — only when expanded */}
-      {expanded && (
-        <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100">
+      {/* Time slider — always visible when not hidden */}
+      {visible && (
+        <div className="flex-shrink-0 px-4 pb-2 border-b border-gray-100">
           <TimeSlider value={startTime} onChange={onTimeChange} />
         </div>
       )}
 
+      {/* Sport selector — always visible when not hidden */}
+      {visible && (
+        <div className="flex-shrink-0 px-4 py-2.5 border-b border-gray-100">
+          <SportTypeSelector value={sport} onChange={onSportChange} />
+        </div>
+      )}
+
       {/* Legend — only when expanded */}
-      {expanded && (
+      {state === "expanded" && (
         <div className="flex-shrink-0 px-4 py-2 border-b border-gray-100 flex items-center gap-3 text-xs flex-wrap">
           {isSkiing ? (
             <>
@@ -239,26 +258,28 @@ function MobileBottomSheet({
         </div>
       )}
 
-      {isLoading && (
+      {state === "expanded" && isLoading && (
         <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-blue-500 animate-pulse">
           Henter værdata…
         </div>
       )}
-      {error && (
+      {state === "expanded" && error && (
         <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
           {error}
         </div>
       )}
 
-      {/* Segment list */}
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        <SegmentList
-          segments={segments}
-          activeIndex={activeSegment}
-          sport={sport}
-          onActiveChange={onSegmentChange}
-        />
-      </div>
+      {/* Segment list — only when expanded */}
+      {state === "expanded" && (
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <SegmentList
+            segments={segments}
+            activeIndex={activeSegment}
+            sport={sport}
+            onActiveChange={onSegmentChange}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -143,6 +143,16 @@ export interface DbRoute {
 
 // ─── Strava segments ──────────────────────────────────────────────────────────
 
+export interface StravaRoute {
+  id: number;
+  name: string;
+  distanceM: number;
+  elevationGain: number;
+  type: 1 | 2 | 3; // 1=ride, 2=run, 3=walk
+  timestamp: number; // unix
+  hasSummaryPolyline: boolean;
+}
+
 export interface StravaSegment {
   id: number;
   name: string;

@@ -1,5 +1,5 @@
 import polyline from "@mapbox/polyline";
-import type { Coordinate, StravaActivity, StravaSegment } from "@/types";
+import type { Coordinate, StravaActivity, StravaRoute, StravaSegment } from "@/types";
 
 const STRAVA_API = "https://www.strava.com/api/v3";
 
@@ -8,7 +8,7 @@ export function buildStravaAuthUrl(state?: string): string {
     client_id: process.env.STRAVA_CLIENT_ID!,
     redirect_uri: process.env.STRAVA_REDIRECT_URI!,
     response_type: "code",
-    scope: "read,activity:read_all",
+    scope: "read,read_all,activity:read_all",
     ...(state ? { state } : {}),
   });
   return `https://www.strava.com/oauth/authorize?${params}`;
@@ -72,6 +72,40 @@ export async function getStravaActivity(
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error(`Failed to get Strava activity: ${res.status}`);
+  return res.json();
+}
+
+export async function listStravaRoutes(
+  token: string,
+  page = 1,
+  perPage = 30
+): Promise<StravaRoute[]> {
+  const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+  const res = await fetch(`${STRAVA_API}/athlete/routes?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Failed to list Strava routes: ${res.status}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any[] = await res.json();
+  return data.map((r) => ({
+    id: r.id,
+    name: r.name,
+    distanceM: r.distance,
+    elevationGain: r.elevation_gain,
+    type: r.type,
+    timestamp: r.timestamp,
+    hasSummaryPolyline: Boolean(r.map?.summary_polyline),
+  }));
+}
+
+export async function getStravaRoute(
+  token: string,
+  routeId: number
+): Promise<{ name: string; map: { summary_polyline: string } }> {
+  const res = await fetch(`${STRAVA_API}/routes/${routeId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Failed to get Strava route: ${res.status}`);
   return res.json();
 }
 

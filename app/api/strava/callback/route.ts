@@ -13,6 +13,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   // Verify CSRF state
   const cookieState = req.cookies.get("strava_oauth_state")?.value;
+  console.log("[strava/callback] state:", state, "cookieState:", cookieState, "match:", state === cookieState);
   if (!state || state !== cookieState) {
     return NextResponse.redirect(new URL("/?error=strava_state_mismatch", req.url));
   }

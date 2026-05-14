@@ -41,7 +41,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
     reversed ? reversedCoords : undefined
   );
 
-  const stravaSegKey = stravaConnected && sport !== "skiing"
+  const stravaSegKey = stravaConnected
     ? `/api/strava/segments?routeId=${route.id}&sport=${sport}&rev=${reversed}`
     : null;
   const { data: stravaSegData, isLoading: stravaLoading, error: stravaError } = useSWR<{ segments: StravaSegment[] }>(

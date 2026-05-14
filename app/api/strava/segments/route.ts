@@ -48,7 +48,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Route not found" }, { status: 404 });
   }
 
-  const activityType: ActivityType = sport === "running" ? "running" : "riding";
+  const activityType: ActivityType = sport === "cycling" ? "riding" : "running";
   const bounds = boundingBox(dbRoute.coordinates);
 
   try {

@@ -78,7 +78,6 @@ export function SegmentList({ segments, activeIndex, sport, onActiveChange }: Pr
     <div
       ref={listRef}
       className="overflow-y-auto flex-1 space-y-2 px-3 py-3 pb-8 overscroll-contain bg-gray-50"
-      style={{ maxHeight: "calc(var(--map-height-mobile) * 1.2)" }}
     >
       {segments.map((seg) => (
         <div key={seg.index} data-segment-index={seg.index}>

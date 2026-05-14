@@ -106,7 +106,7 @@ export function RouteMap({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[var(--map-height-mobile)] md:h-[var(--map-height-desktop)] sticky top-0 z-10"
+      className="w-full h-full"
     />
   );
 }

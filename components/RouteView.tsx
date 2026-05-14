@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useRef } from "react";
 import dynamic from "next/dynamic";
-import type { Route, SportType } from "@/types";
+import type { Route, SportType, WeatherSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
 import { SegmentList } from "./route/SegmentList";
 import { SportTypeSelector } from "./SportTypeSelector";
@@ -38,43 +38,191 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
   const isSkiing = sport === "skiing";
 
   return (
-    <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-white">
-      {/* ── Map ─────────────────────────────────────────────────────────── */}
-      <div className="w-full md:flex-1 shrink-0">
-        <RouteMap
+    <>
+      {/* ── Mobile layout ─────────────────────────────────────────────── */}
+      <div className="md:hidden relative overflow-hidden bg-white" style={{ height: "100dvh" }}>
+        <div className="absolute inset-0">
+          <RouteMap
+            route={route}
+            segments={segments}
+            activeSegmentIndex={activeSegment}
+            onSegmentClick={setActiveSegment}
+            sport={sport}
+          />
+        </div>
+        <MobileBottomSheet
           route={route}
-          segments={segments}
-          activeSegmentIndex={activeSegment}
-          onSegmentClick={setActiveSegment}
           sport={sport}
+          onSportChange={setSport}
+          startTime={startTime}
+          onTimeChange={handleTimeChange}
+          segments={segments}
+          activeSegment={activeSegment}
+          onSegmentChange={setActiveSegment}
+          isLoading={isLoading}
+          error={error ?? null}
+          isSkiing={isSkiing}
         />
       </div>
 
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="w-full md:w-80 md:overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
+      {/* ── Desktop layout ─────────────────────────────────────────────── */}
+      <div className="hidden md:flex flex-row h-screen overflow-hidden bg-white">
+        <div className="flex-1 min-h-0">
+          <RouteMap
+            route={route}
+            segments={segments}
+            activeSegmentIndex={activeSegment}
+            onSegmentClick={setActiveSegment}
+            sport={sport}
+          />
+        </div>
+        <aside className="w-80 overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
+          <div className="p-4 border-b border-gray-200 bg-white">
+            <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
+            <p className="text-gray-500 text-sm mt-0.5">
+              {route.distanceKm.toFixed(1)} km
+              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m stigning` : ""}
+            </p>
+            <SourceBadge source={route.source} />
+          </div>
+          <div className="p-3 border-b border-gray-200 bg-white">
+            <SportTypeSelector value={sport} onChange={setSport} />
+          </div>
+          <div className="p-4 border-b border-gray-200 bg-white">
+            <TimeSlider value={startTime} onChange={handleTimeChange} />
+          </div>
+          <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
+            {isSkiing ? (
+              <>
+                <LegendItem color="#10b981" label="Perfekte forhold" />
+                <LegendItem color="#f59e0b" label="Overgang" />
+                <LegendItem color="#ef4444" label="Dårlige forhold" />
+              </>
+            ) : (
+              <>
+                <LegendItem color="#10b981" label="Medvind" />
+                <LegendItem color="#f59e0b" label="Sidevind" />
+                <LegendItem color="#ef4444" label="Motvind" />
+              </>
+            )}
+          </div>
+          {isLoading && (
+            <div className="flex items-center justify-center gap-2 p-4 text-sm text-blue-500 animate-pulse">
+              Henter værdata…
+            </div>
+          )}
+          {error && (
+            <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+          <SegmentList
+            segments={segments}
+            activeIndex={activeSegment}
+            sport={sport}
+            onActiveChange={setActiveSegment}
+          />
+        </aside>
+      </div>
+    </>
+  );
+}
 
-        {/* Route header */}
-        <div className="p-4 border-b border-gray-200 bg-white">
-          <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
+// ─── Mobile bottom sheet ──────────────────────────────────────────────────────
+
+const PEEK_HEIGHT = 188;
+
+interface SheetProps {
+  route: Route;
+  sport: SportType;
+  onSportChange: (s: SportType) => void;
+  startTime: Date;
+  onTimeChange: (d: Date) => void;
+  segments: WeatherSegment[];
+  activeSegment: number | null;
+  onSegmentChange: (i: number) => void;
+  isLoading: boolean;
+  error: string | null;
+  isSkiing: boolean;
+}
+
+function MobileBottomSheet({
+  route,
+  sport,
+  onSportChange,
+  startTime,
+  onTimeChange,
+  segments,
+  activeSegment,
+  onSegmentChange,
+  isLoading,
+  error,
+  isSkiing,
+}: SheetProps) {
+  const [expanded, setExpanded] = useState(false);
+  const touchStartY = useRef(0);
+  const didDrag = useRef(false);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    didDrag.current = false;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dy = touchStartY.current - e.changedTouches[0].clientY;
+    if (Math.abs(dy) > 40) {
+      didDrag.current = true;
+      setExpanded(dy > 0);
+    }
+  };
+
+  const onHandleClick = () => {
+    if (!didDrag.current) setExpanded((v) => !v);
+    didDrag.current = false;
+  };
+
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
+      style={{
+        height: expanded ? "72dvh" : `${PEEK_HEIGHT}px`,
+        transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+      }}
+    >
+      {/* Drag handle */}
+      <div
+        className="flex-shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onClick={onHandleClick}
+      >
+        <div className="flex justify-center pt-2.5 pb-1.5">
+          <div className="w-9 h-1 bg-gray-300 rounded-full" />
+        </div>
+        <div className="px-4 pb-2 flex items-center justify-between">
+          <span className="font-semibold text-gray-900 text-sm truncate">{route.name}</span>
+          <span className="text-gray-400 text-xs ml-2 shrink-0">
             {route.distanceKm.toFixed(1)} km
-            {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m stigning` : ""}
-          </p>
-          <SourceBadge source={route.source} />
+            {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
+          </span>
         </div>
+      </div>
 
-        {/* Sport type */}
-        <div className="p-3 border-b border-gray-200 bg-white">
-          <SportTypeSelector value={sport} onChange={setSport} />
+      {/* Sport selector — always visible */}
+      <div className="flex-shrink-0 px-4 pb-3 border-b border-gray-100">
+        <SportTypeSelector value={sport} onChange={onSportChange} />
+      </div>
+
+      {/* Time slider — only when expanded */}
+      {expanded && (
+        <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100">
+          <TimeSlider value={startTime} onChange={onTimeChange} />
         </div>
+      )}
 
-        {/* Time slider */}
-        <div className="p-4 border-b border-gray-200 bg-white">
-          <TimeSlider value={startTime} onChange={handleTimeChange} />
-        </div>
-
-        {/* Legend */}
-        <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
+      {/* Legend — only when expanded */}
+      {expanded && (
+        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-100 flex items-center gap-3 text-xs flex-wrap">
           {isSkiing ? (
             <>
               <LegendItem color="#10b981" label="Perfekte forhold" />
@@ -89,28 +237,33 @@ export function RouteView({ route, initialSport = "cycling" }: Props) {
             </>
           )}
         </div>
+      )}
 
-        {isLoading && (
-          <div className="flex items-center justify-center gap-2 p-4 text-sm text-blue-500 animate-pulse">
-            Henter værdata…
-          </div>
-        )}
-        {error && (
-          <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-            {error}
-          </div>
-        )}
+      {isLoading && (
+        <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-blue-500 animate-pulse">
+          Henter værdata…
+        </div>
+      )}
+      {error && (
+        <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
+          {error}
+        </div>
+      )}
 
+      {/* Segment list */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <SegmentList
           segments={segments}
           activeIndex={activeSegment}
           sport={sport}
-          onActiveChange={setActiveSegment}
+          onActiveChange={onSegmentChange}
         />
-      </aside>
+      </div>
     </div>
   );
 }
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
 
 function SourceBadge({ source }: { source: Route["source"] }) {
   const labels: Record<Route["source"], string> = {
@@ -139,7 +292,5 @@ function LegendItem({ color, label }: { color: string; label: string }) {
 }
 
 function MapSkeleton() {
-  return (
-    <div className="w-full h-[var(--map-height-mobile)] md:h-[var(--map-height-desktop)] bg-gray-100 animate-pulse" />
-  );
+  return <div className="w-full h-full bg-gray-100 animate-pulse" />;
 }

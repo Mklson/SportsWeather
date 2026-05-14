@@ -265,11 +265,8 @@ export function RouteMap({
     { key: "satellite", label: "🛰"        },
   ];
 
-  // Outer wrapper is React-controlled (for buttons).
-  // Inner div (containerRef) is owned exclusively by Mapbox GL — no React children.
   return (
-    <div className="w-full h-full relative">
-      <div ref={containerRef} className="absolute inset-0" />
+    <div ref={containerRef} className="w-full h-full relative">
       <div className="absolute top-2 left-2 z-10 flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
         {basemapOptions.map(({ key, label }) => (
           <button

@@ -16,6 +16,7 @@ interface Props {
   stravaSegments?: StravaSegment[];
   activeStravaSegmentId?: number | null;
   onStravaSegmentClick?: (id: number) => void;
+  reversed?: boolean;
 }
 
 export function RouteMap({
@@ -27,6 +28,7 @@ export function RouteMap({
   stravaSegments,
   activeStravaSegmentId,
   onStravaSegmentClick,
+  reversed = false,
 }: Props) {
   const containerRef       = useRef<HTMLDivElement>(null);
   const mapRef             = useRef<mapboxgl.Map | null>(null);
@@ -56,12 +58,14 @@ export function RouteMap({
 
     map.on("load", () => {
       mapReadyRef.current = true;
-      addRouteLayers(map, route);
-      addStravaSegmentLayers(map);
-      if (pendingRef.current) {
-        pendingRef.current();
-        pendingRef.current = null;
-      }
+      loadDirectionArrowImage(map, () => {
+        addRouteLayers(map, route);
+        addStravaSegmentLayers(map);
+        if (pendingRef.current) {
+          pendingRef.current();
+          pendingRef.current = null;
+        }
+      });
     });
 
     return () => {
@@ -93,6 +97,17 @@ export function RouteMap({
 
     apply();
   }, [segments, sport, onSegmentClick]);
+
+  // ── Flip direction arrows when route is reversed ───────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+    const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
+    if (!src) return;
+    const coords = (reversed ? [...route.coordinates].reverse() : route.coordinates)
+      .map((c) => [c.lon, c.lat] as [number, number]);
+    src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+  }, [reversed, route.coordinates]);
 
   // ── Update Strava segments layer ───────────────────────────────────────
   useEffect(() => {
@@ -219,6 +234,21 @@ function updateStravaSegments(
   });
 }
 
+// ─── Direction arrow image ────────────────────────────────────────────────────
+
+function loadDirectionArrowImage(map: mapboxgl.Map, onReady: () => void) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path d="M12 3 L18 15 L12 12 L6 15 Z" fill="white" opacity="0.9"/>
+  </svg>`;
+  const img = new Image(24, 24);
+  img.onload = () => {
+    if (!map.hasImage("direction-arrow")) map.addImage("direction-arrow", img);
+    onReady();
+  };
+  img.onerror = onReady; // fail gracefully
+  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 // ─── Route layers ─────────────────────────────────────────────────────────────
 
 function addRouteLayers(map: mapboxgl.Map, route: Route) {
@@ -253,6 +283,22 @@ function addRouteLayers(map: mapboxgl.Map, route: Route) {
       "line-color": "#3b82f6",
       "line-width": ["interpolate", ["linear"], ["zoom"], 8, 8, 14, 14],
       "line-opacity": ["get", "opacity"],
+    },
+  });
+
+  // Direction arrows along the route line
+  map.addLayer({
+    id: "route-direction-arrows",
+    type: "symbol",
+    source: "route-base",
+    layout: {
+      "symbol-placement": "line",
+      "symbol-spacing": 120,
+      "icon-image": "direction-arrow",
+      "icon-size": 0.65,
+      "icon-rotation-alignment": "map",
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
     },
   });
 

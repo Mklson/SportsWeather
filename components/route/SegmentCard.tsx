@@ -21,17 +21,28 @@ export function SegmentCard({ segment: seg, isActive, sport, onClick }: Props) {
     if (isActive) ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [isActive]);
 
+  const windBorderColor =
+    seg.windClass === "tailwind"  ? "#10b981" :
+    seg.windClass === "headwind"  ? "#ef4444" : "#f59e0b";
+
+  const skiConditions = sport === "skiing" ? classifySkiConditions(seg.weather) : null;
+  const accentColor = skiConditions ? skiConditions.color : windBorderColor;
+
   return (
     <div
       ref={ref}
       onClick={onClick}
       className={clsx(
         "relative rounded-xl p-3 cursor-pointer transition-all duration-150",
-        "bg-white border flex flex-col gap-2",
-        isActive
-          ? "border-blue-400 shadow-md shadow-blue-100"
-          : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+        "bg-white flex flex-col gap-2",
+        isActive ? "shadow-md shadow-blue-100" : "hover:shadow-sm"
       )}
+      style={{
+        border: isActive
+          ? "2px solid #60a5fa"
+          : `1.5px solid ${accentColor}33`,
+        borderLeft: `4px solid ${accentColor}`,
+      }}
     >
       {sport === "skiing" ? <SkiCard seg={seg} /> : <DefaultCard seg={seg} />}
     </div>

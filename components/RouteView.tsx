@@ -48,7 +48,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   );
 
   const stravaSegKey = segmentMode === "strava" && stravaConnected
-    ? `/api/strava/segments?routeId=${route.id}&sport=${sport}`
+    ? `/api/strava/segments?routeId=${route.id}&sport=${sport}&rev=${reversed}`
     : null;
   const { data: stravaSegData, isLoading: stravaLoading, error: stravaError } = useSWR<{ segments: StravaSegment[] }>(
     stravaSegKey,
@@ -77,6 +77,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             stravaSegments={segmentMode === "strava" ? stravaSegments : []}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={setActiveStravaId}
+            reversed={reversed}
           />
         </div>
         <MobileBottomSheet
@@ -116,6 +117,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             stravaSegments={segmentMode === "strava" ? stravaSegments : []}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={setActiveStravaId}
+            reversed={reversed}
           />
         </div>
         <aside className="w-80 overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">

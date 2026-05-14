@@ -101,6 +101,23 @@ export function RouteMap({
     updateStravaSegments(map, stravaSegments ?? [], activeStravaSegmentId ?? null, stravaMarkersRef, onStravaSegmentClick);
   }, [stravaSegments, activeStravaSegmentId, onStravaSegmentClick]);
 
+  // ── Fit map to active Strava segment ───────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current || activeStravaSegmentId === null) return;
+    const seg = (stravaSegments ?? []).find((s) => s.id === activeStravaSegmentId);
+    if (!seg || !seg.coordinates.length) return;
+
+    const bounds = seg.coordinates.reduce(
+      (b, c) => b.extend([c.lon, c.lat] as [number, number]),
+      new mapboxgl.LngLatBounds(
+        [seg.coordinates[0].lon, seg.coordinates[0].lat],
+        [seg.coordinates[0].lon, seg.coordinates[0].lat]
+      )
+    );
+    map.fitBounds(bounds, { padding: 80, duration: 600, maxZoom: 16 });
+  }, [activeStravaSegmentId, stravaSegments]);
+
   // ── Fly + popup on active segment ──────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current;

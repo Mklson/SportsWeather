@@ -70,7 +70,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         <div className="absolute inset-0">
           <RouteMap
             route={route}
-            segments={segmentMode === "weather" ? segments : []}
+            segments={segments}
             activeSegmentIndex={activeSegment}
             onSegmentClick={setActiveSegment}
             sport={sport}
@@ -109,7 +109,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         <div className="flex-1 min-h-0">
           <RouteMap
             route={route}
-            segments={segmentMode === "weather" ? segments : []}
+            segments={segments}
             activeSegmentIndex={activeSegment}
             onSegmentClick={setActiveSegment}
             sport={sport}

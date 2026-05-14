@@ -12,13 +12,23 @@ export default async function StravaActivitiesPage() {
   let activities: Awaited<ReturnType<typeof listStravaActivities>> = [];
   let routes: Awaited<ReturnType<typeof listStravaRoutes>> = [];
 
-  try {
-    [activities, routes] = await Promise.all([
-      listStravaActivities(token, 1, 30),
-      listStravaRoutes(token, 1, 30),
-    ]);
-  } catch {
+  const [activitiesResult, routesResult] = await Promise.allSettled([
+    listStravaActivities(token, 1, 30),
+    listStravaRoutes(token, 1, 30),
+  ]);
+
+  if (activitiesResult.status === "rejected") {
+    console.error("[strava/activities] activities fetch failed:", activitiesResult.reason);
     redirect("/?error=strava_fetch_failed");
+  }
+
+  activities = activitiesResult.value;
+
+  if (routesResult.status === "rejected") {
+    console.error("[strava/activities] routes fetch failed (non-fatal):", routesResult.reason);
+    // Routes are optional — continue without them
+  } else {
+    routes = routesResult.value;
   }
 
   return (

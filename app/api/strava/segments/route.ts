@@ -24,7 +24,7 @@ function boundingBox(coords: Coordinate[]): BoundingBox {
 // Split route coordinates into overlapping chunks so each chunk gets its own
 // bounding box query. Strava returns max 10 segments per call, so chunking a
 // long route multiplies the total segments we can discover.
-function routeChunks(coords: Coordinate[], maxChunks = 12): Coordinate[][] {
+function routeChunks(coords: Coordinate[], maxChunks = 4): Coordinate[][] {
   if (coords.length < 20) return [coords];
   const step = Math.ceil(coords.length / maxChunks);
   const stride = Math.ceil(step * 0.85); // 15% overlap between chunks

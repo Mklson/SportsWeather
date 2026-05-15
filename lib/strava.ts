@@ -60,6 +60,7 @@ export async function listStravaActivities(
   });
   const res = await fetch(`${STRAVA_API}/athlete/activities?${params}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`Failed to list Strava activities: ${res.status}`);
   return res.json();
@@ -71,6 +72,7 @@ export async function getStravaActivity(
 ): Promise<StravaActivity & { map: { polyline: string } }> {
   const res = await fetch(`${STRAVA_API}/activities/${activityId}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`Failed to get Strava activity: ${res.status}`);
   return res.json();
@@ -84,6 +86,7 @@ export async function listStravaRoutes(
   const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
   const res = await fetch(`${STRAVA_API}/athlete/routes?${params}`, {
     headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`Failed to list Strava routes: ${res.status}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,6 +109,7 @@ export async function getStravaRoute(
 ): Promise<{ name: string; type: number; map: { summary_polyline: string } }> {
   const res = await fetch(`${STRAVA_API}/routes/${routeId}`, {
     headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`Failed to get Strava route: ${res.status}`);
   return res.json();
@@ -114,6 +118,7 @@ export async function getStravaRoute(
 export async function getStarredSegments(token: string): Promise<StravaSegment[]> {
   const res = await fetch(`${STRAVA_API}/segments/starred?per_page=100`, {
     headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`Strava segments/starred failed: ${res.status}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,6 +148,7 @@ export async function exploreSegments(
   });
   const res = await fetch(`${STRAVA_API}/segments/explore?${params}`, {
     headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`Strava segments/explore failed: ${res.status}`);
   const data = await res.json();

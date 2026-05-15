@@ -55,6 +55,7 @@ interface Props {
   stravaSegments?: StravaSegment[];
   activeStravaSegmentId?: number | null;
   onStravaSegmentClick?: (id: number) => void;
+  onBoundsChange?: (bounds: { west: number; south: number; east: number; north: number }) => void;
   reversed?: boolean;
 }
 
@@ -67,6 +68,7 @@ export function RouteMap({
   stravaSegments,
   activeStravaSegmentId,
   onStravaSegmentClick,
+  onBoundsChange,
   reversed = false,
 }: Props) {
   const [basemap, setBasemap] = useState<Basemap>("outdoors");
@@ -88,6 +90,7 @@ export function RouteMap({
   const latestActiveStravaIdRef   = useRef(activeStravaSegmentId);
   const latestOnSegmentClickRef   = useRef(onSegmentClick);
   const latestOnStravaClickRef    = useRef(onStravaSegmentClick);
+  const latestOnBoundsChangeRef   = useRef(onBoundsChange);
   const latestTerrain3dRef          = useRef(false);
   latestSegmentsRef.current         = segments;
   latestSportRef.current            = sport;
@@ -96,6 +99,7 @@ export function RouteMap({
   latestActiveStravaIdRef.current   = activeStravaSegmentId;
   latestOnSegmentClickRef.current   = onSegmentClick;
   latestOnStravaClickRef.current    = onStravaSegmentClick;
+  latestOnBoundsChangeRef.current   = onBoundsChange;
   latestTerrain3dRef.current        = terrain3d;
   const mapReadyRef    = useRef(false);
 
@@ -115,6 +119,14 @@ export function RouteMap({
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
     mapRef.current = map;
+
+    map.on("moveend", () => {
+      const b = map.getBounds();
+      if (b) latestOnBoundsChangeRef.current?.({
+        west: b.getWest(), south: b.getSouth(),
+        east: b.getEast(), north: b.getNorth(),
+      });
+    });
 
     map.on("load", () => {
       mapReadyRef.current = true;
@@ -323,7 +335,7 @@ function updateStravaSegments(
   segments: StravaSegment[],
   activeId: number | null,
   markersRef: React.MutableRefObject<mapboxgl.Marker[]>,
-  onClick?: (id: number) => void
+  _onClick?: (id: number) => void
 ) {
   const src = map.getSource("strava-segments") as mapboxgl.GeoJSONSource | undefined;
   if (!src) return;
@@ -331,12 +343,7 @@ function updateStravaSegments(
   markersRef.current.forEach((m) => m.remove());
   markersRef.current = [];
 
-  if (!segments.length) {
-    src.setData(empty());
-    return;
-  }
-
-  src.setData({
+  src.setData(segments.length ? {
     type: "FeatureCollection",
     features: segments.map((seg) => ({
       type: "Feature" as const,
@@ -346,33 +353,7 @@ function updateStravaSegments(
       },
       properties: { id: seg.id, active: seg.id === activeId },
     })),
-  });
-
-  // Start marker for each segment
-  segments.forEach((seg) => {
-    const el = document.createElement("div");
-    el.style.cssText = [
-      "background:#1e3a8a",
-      "color:white",
-      "border-radius:999px",
-      "padding:3px 7px",
-      "font-size:11px",
-      "font-weight:700",
-      "font-family:system-ui,sans-serif",
-      "cursor:pointer",
-      "white-space:nowrap",
-      "box-shadow:0 2px 6px rgba(0,0,0,0.25)",
-      "border:1.5px solid rgba(255,255,255,0.8)",
-    ].join(";");
-    el.textContent = seg.name.length > 18 ? seg.name.slice(0, 17) + "…" : seg.name;
-    if (onClick) el.addEventListener("click", () => onClick(seg.id));
-
-    markersRef.current.push(
-      new mapboxgl.Marker({ element: el, anchor: "left" })
-        .setLngLat([seg.startLatLng[1], seg.startLatLng[0]])
-        .addTo(map)
-    );
-  });
+  } : empty());
 }
 
 // ─── Direction arrow image ────────────────────────────────────────────────────

@@ -31,7 +31,12 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const [reversed, setReversed] = useState(false);
   const [activeStravaId, setActiveStravaId] = useState<number | null>(null);
   const [speedKmh, setSpeedKmh] = useState(() => DEFAULT_SPEED_KMH[initialSport]);
+  const [mapBounds, setMapBounds] = useState<{ west: number; south: number; east: number; north: number } | null>(null);
   const [, startTransition] = useTransition();
+
+  const handleBoundsChange = useCallback((b: { west: number; south: number; east: number; north: number }) => {
+    setMapBounds(b);
+  }, []);
 
   const reversedCoords = useMemo(
     () => [...route.coordinates].reverse(),
@@ -62,6 +67,16 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
   const isSkiing = sport === "skiing";
 
+  const visibleStravaSegments = mapBounds
+    ? stravaSegments.filter((seg) =>
+        seg.coordinates.some(
+          (c) =>
+            c.lat >= mapBounds.south && c.lat <= mapBounds.north &&
+            c.lon >= mapBounds.west  && c.lon <= mapBounds.east
+        )
+      )
+    : stravaSegments;
+
   return (
     <>
       {/* ── Mobile layout ─────────────────────────────────────────────── */}
@@ -76,6 +91,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             stravaSegments={stravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={setActiveStravaId}
+            onBoundsChange={handleBoundsChange}
             reversed={reversed}
           />
         </div>
@@ -90,7 +106,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           reversed={reversed}
           onToggleReverse={() => setReversed((v) => !v)}
           stravaConnected={stravaConnected}
-          stravaSegments={stravaSegments}
+          stravaSegments={visibleStravaSegments}
           weatherSegments={segments}
           stravaLoading={stravaLoading}
           stravaError={(stravaError as { error?: string } | null)?.error ?? (stravaError instanceof Error ? stravaError.message : null)}
@@ -111,6 +127,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             stravaSegments={stravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={setActiveStravaId}
+            onBoundsChange={handleBoundsChange}
             reversed={reversed}
           />
         </div>
@@ -167,7 +184,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
                 </div>
               )}
               {!stravaLoading && (
-                <StravaSegmentList segments={stravaSegments} weatherSegments={segments} activeId={activeStravaId} onSelect={setActiveStravaId} />
+                <StravaSegmentList segments={visibleStravaSegments} weatherSegments={segments} activeId={activeStravaId} onSelect={setActiveStravaId} />
               )}
             </>
           )}

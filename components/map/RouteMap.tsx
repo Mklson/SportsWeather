@@ -187,20 +187,22 @@ export function RouteMap({
   }, [segments, sport, onSegmentClick]);
 
   // ── Show/hide route and apply direction ────────────────────────────────
-  // Uses setData (empty coords = hidden) rather than setLayoutProperty so the
-  // map reliably reflects the cleared/reversed state.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReadyRef.current) return;
     const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
-    if (!src) return;
+
     if (!showRoute) {
-      src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: [] }, properties: {} });
+      // Triple-layer hide: empty data + visibility none + opacity 0
+      if (src) src.setData({ type: "FeatureCollection", features: [] });
+      setRouteLayerVisibility(map, false);
       return;
     }
+
     const coords = (reversed ? [...route.coordinates].reverse() : route.coordinates)
       .map((c) => [c.lon, c.lat] as [number, number]);
-    src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+    if (src) src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+    setRouteLayerVisibility(map, true);
   }, [showRoute, reversed, route.coordinates]);
 
   // ── Swap basemap ────────────────────────────────────────────────────────
@@ -404,8 +406,16 @@ function loadDirectionArrowImage(map: mapboxgl.Map, onReady: () => void) {
 
 function setRouteLayerVisibility(map: mapboxgl.Map, visible: boolean) {
   const vis = visible ? "visible" : "none";
-  for (const id of ["route-casing", "route-base", "route-direction-arrows"]) {
-    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", vis);
+  if (map.getLayer("route-casing")) {
+    map.setLayoutProperty("route-casing", "visibility", vis);
+    map.setPaintProperty("route-casing", "line-opacity", visible ? 0.8 : 0);
+  }
+  if (map.getLayer("route-base")) {
+    map.setLayoutProperty("route-base", "visibility", vis);
+    map.setPaintProperty("route-base", "line-opacity", visible ? 0.9 : 0);
+  }
+  if (map.getLayer("route-direction-arrows")) {
+    map.setLayoutProperty("route-direction-arrows", "visibility", vis);
   }
 }
 

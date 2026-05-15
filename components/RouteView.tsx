@@ -360,20 +360,54 @@ function MobileBottomSheet({
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
-function nearestWindClass(
-  startLatLng: [number, number],
+function nearestWeatherSegment(
+  latLng: [number, number],
   weatherSegments: WeatherSegment[]
-): WeatherSegment["windClass"] | null {
+): WeatherSegment | null {
   if (!weatherSegments.length) return null;
   let nearest = weatherSegments[0];
   let minDist = Infinity;
   for (const ws of weatherSegments) {
-    const dlat = startLatLng[0] - ws.coordinate.lat;
-    const dlon = startLatLng[1] - ws.coordinate.lon;
+    const dlat = latLng[0] - ws.coordinate.lat;
+    const dlon = latLng[1] - ws.coordinate.lon;
     const d = dlat * dlat + dlon * dlon;
     if (d < minDist) { minDist = d; nearest = ws; }
   }
-  return nearest.windClass;
+  return nearest;
+}
+
+function nearestWindClass(
+  startLatLng: [number, number],
+  weatherSegments: WeatherSegment[]
+): WeatherSegment["windClass"] | null {
+  return nearestWeatherSegment(startLatLng, weatherSegments)?.windClass ?? null;
+}
+
+function weatherPillStyle(symbolCode: string, precipitation: number, cloudCover: number) {
+  const c = symbolCode.toLowerCase();
+  if (c.includes("thunder"))   return { bg: "#111827", text: "#fef08a" };
+  if (precipitation > 7)       return { bg: "#1f2937", text: "#f3f4f6" };
+  if (precipitation > 4)       return { bg: "#374151", text: "#f3f4f6" };
+  if (precipitation > 2)       return { bg: "#6b7280", text: "#f9fafb" };
+  if (precipitation > 0.5)     return { bg: "#9ca3af", text: "#111827" };
+  if (precipitation > 0.1)     return { bg: "#d1d5db", text: "#111827" };
+  if (cloudCover > 75)         return { bg: "#e5e7eb", text: "#111827" };
+  if (cloudCover > 40)         return { bg: "#f3f4f6", text: "#0f172a" };
+  return                              { bg: "#ffffff", text: "#0f172a" };
+}
+
+function weatherEmoji(code: string, t: number): string {
+  const c = code.toLowerCase();
+  if (c.includes("thunder"))      return "⛈️";
+  if (c.includes("heavyrain"))    return "⛈️";
+  if (c.includes("rain"))         return "🌧️";
+  if (c.includes("snow"))         return "❄️";
+  if (c.includes("sleet"))        return "🌨️";
+  if (c.includes("fog"))          return "🌫️";
+  if (c.includes("clearsky"))     return t < 0 ? "🌙" : "☀️";
+  if (c.includes("fair"))         return "🌤️";
+  if (c.includes("partlycloudy")) return "⛅";
+  return "☁️";
 }
 
 function windClassBorderColor(wc: WeatherSegment["windClass"] | null): string {
@@ -404,8 +438,15 @@ function StravaSegmentList({
   return (
     <div className="space-y-2 px-3 py-3">
       {segments.map((seg) => {
-        const wc = nearestWindClass(seg.startLatLng, weatherSegments);
+        const midCoord = seg.coordinates[Math.floor(seg.coordinates.length / 2)];
+        const midLatLng: [number, number] = midCoord
+          ? [midCoord.lat, midCoord.lon]
+          : seg.startLatLng;
+        const wx = nearestWeatherSegment(midLatLng, weatherSegments);
+        const wc = wx?.windClass ?? null;
         const borderColor = activeId === seg.id ? "#f97316" : windClassBorderColor(wc);
+        const pill = wx ? weatherPillStyle(wx.weather.symbolCode, wx.weather.precipitation, wx.weather.cloudCover) : null;
+
         return (
           <button
             key={seg.id}
@@ -428,10 +469,24 @@ function StravaSegmentList({
                 </span>
               )}
             </div>
-            <div className="mt-1 flex gap-3 text-xs text-gray-500">
-              <span>{(seg.distanceM / 1000).toFixed(1)} km</span>
-              {seg.avgGrade !== 0 && <span>{seg.avgGrade.toFixed(1)}% snitt</span>}
-              {seg.elevDifference > 0 && <span>+{Math.round(seg.elevDifference)} m</span>}
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              <div className="flex gap-3 text-xs text-gray-500">
+                <span>{(seg.distanceM / 1000).toFixed(1)} km</span>
+                {seg.avgGrade !== 0 && <span>{seg.avgGrade.toFixed(1)}% snitt</span>}
+                {seg.elevDifference > 0 && <span>+{Math.round(seg.elevDifference)} m</span>}
+              </div>
+              {pill && wx && (
+                <span
+                  className="shrink-0 flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: pill.bg, color: pill.text, border: "1px solid rgba(0,0,0,0.08)" }}
+                >
+                  <span>{weatherEmoji(wx.weather.symbolCode, wx.weather.temperature)}</span>
+                  <span>{Math.round(wx.weather.temperature)}°</span>
+                  {wx.weather.precipitation > 0.1 && (
+                    <span style={{ opacity: 0.85 }}>{wx.weather.precipitation.toFixed(1)}mm</span>
+                  )}
+                </span>
+              )}
             </div>
           </button>
         );

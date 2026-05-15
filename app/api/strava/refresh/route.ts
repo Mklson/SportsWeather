@@ -10,7 +10,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   try {
     const tokens = await refreshStravaToken(refreshToken);
-    const response = NextResponse.redirect(new URL("/strava/activities", req.url));
+    const response = NextResponse.redirect(new URL("/strava/activities?retried=1", req.url));
 
     response.cookies.set("strava_access_token", tokens.access_token, {
       httpOnly: true,

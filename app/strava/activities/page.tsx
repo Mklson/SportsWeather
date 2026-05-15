@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { listStravaActivities, listStravaRoutes } from "@/lib/strava";
 import { StravaImportPage } from "@/components/route/StravaImportPage";
 
-export default async function StravaActivitiesPage() {
+export default async function StravaActivitiesPage({
+  searchParams,
+}: {
+  searchParams: { retried?: string };
+}) {
   const cookieStore = cookies();
   const token = cookieStore.get("strava_access_token")?.value;
 
@@ -19,20 +23,25 @@ export default async function StravaActivitiesPage() {
 
   if (activitiesResult.status === "rejected") {
     console.error("[strava/activities] activities fetch failed:", activitiesResult.reason);
-    // Don't redirect — that can cause an infinite loop. Show an error with a re-auth link.
+
+    // First failure: auto-refresh the token and come back. The refresh endpoint
+    // redirects to ?retried=1 so we only do this once and avoid infinite loops.
+    if (!searchParams.retried) {
+      redirect("/api/strava/refresh");
+    }
+
+    // Already retried — show a manual re-auth link.
     return (
       <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
         <p className="text-red-400 text-center">
-          Kunne ikke hente Strava-data. Token kan være utløpt.
+          Kunne ikke hente Strava-data. Prøv å logge inn på nytt.
         </p>
-        <form method="get" action="/api/strava/auth">
-          <button
-            type="submit"
-            className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
-          >
-            Logg inn med Strava på nytt
-          </button>
-        </form>
+        <a
+          href="/api/strava/auth"
+          className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
+        >
+          Logg inn med Strava
+        </a>
       </main>
     );
   }

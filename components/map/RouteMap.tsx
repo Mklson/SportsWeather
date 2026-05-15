@@ -123,6 +123,8 @@ export function RouteMap({
         r.current = [];
       });
     }
+    // Remove any orphaned Mapbox canvas that map.remove() may have missed
+    containerRef.current.querySelectorAll(".mapboxgl-canvas-container").forEach((el) => el.remove());
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -150,8 +152,7 @@ export function RouteMap({
       mapReadyRef.current = true;
       loadDirectionArrowImage(map, () => {
         if (mapRef.current !== map) return;
-        addRouteLayers(map, route);
-        if (!latestShowRouteRef.current) setRouteLayerVisibility(map, false);
+        if (latestShowRouteRef.current) addRouteLayers(map, route);
         addStravaSegmentLayers(map);
         if (pendingRef.current) {
           pendingRef.current();
@@ -187,22 +188,34 @@ export function RouteMap({
   }, [segments, sport, onSegmentClick]);
 
   // ── Show/hide route and apply direction ────────────────────────────────
+  // Uses removeLayer/removeSource so the route truly ceases to exist on the map,
+  // avoiding any Mapbox visibility-toggle or opacity-caching quirks.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReadyRef.current) return;
-    const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
 
     if (!showRoute) {
-      // Triple-layer hide: empty data + visibility none + opacity 0
-      if (src) src.setData({ type: "FeatureCollection", features: [] });
-      setRouteLayerVisibility(map, false);
+      for (const id of ["route-direction-arrows", "route-base", "route-casing"]) {
+        if (map.getLayer(id)) map.removeLayer(id);
+      }
+      if (map.getSource("route-base")) map.removeSource("route-base");
       return;
     }
 
+    const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
     const coords = (reversed ? [...route.coordinates].reverse() : route.coordinates)
       .map((c) => [c.lon, c.lat] as [number, number]);
-    if (src) src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
-    setRouteLayerVisibility(map, true);
+
+    if (src) {
+      src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+    } else {
+      // Source was removed (restoring after clear) — re-add without panning
+      addRouteLayers(map, route, false);
+      if (reversed) {
+        const s = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
+        if (s) s.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+      }
+    }
   }, [showRoute, reversed, route.coordinates]);
 
   // ── Swap basemap ────────────────────────────────────────────────────────
@@ -222,14 +235,14 @@ export function RouteMap({
       if (latestTerrain3dRef.current) addTerrain(map);
       mapReadyRef.current = true;
       loadDirectionArrowImage(map, () => {
-        addRouteLayers(map, route);
-        if (!latestShowRouteRef.current) setRouteLayerVisibility(map, false);
-        // Restore reversed state
-        if (latestReversedRef.current) {
-          const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
-          if (src) {
-            const coords = [...route.coordinates].reverse().map((c) => [c.lon, c.lat] as [number, number]);
-            src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+        if (latestShowRouteRef.current) {
+          addRouteLayers(map, route, false); // basemap swap — keep current viewport
+          if (latestReversedRef.current) {
+            const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
+            if (src) {
+              const coords = [...route.coordinates].reverse().map((c) => [c.lon, c.lat] as [number, number]);
+              src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
+            }
           }
         }
         addStravaSegmentLayers(map);
@@ -419,7 +432,7 @@ function setRouteLayerVisibility(map: mapboxgl.Map, visible: boolean) {
   }
 }
 
-function addRouteLayers(map: mapboxgl.Map, route: Route) {
+function addRouteLayers(map: mapboxgl.Map, route: Route, fitMap = true) {
   const coords = route.coordinates.map((c) => [c.lon, c.lat] as [number, number]);
   const data: GeoJSON.Feature<GeoJSON.LineString> = {
     type: "Feature",
@@ -464,8 +477,10 @@ function addRouteLayers(map: mapboxgl.Map, route: Route) {
     },
   });
 
-  const bounds = coords.reduce((b, c) => b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
-  map.fitBounds(bounds, { padding: 48, duration: 800 });
+  if (fitMap) {
+    const bounds = coords.reduce((b, c) => b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
+    map.fitBounds(bounds, { padding: 48, duration: 800 });
+  }
 }
 
 // ─── Weather icon markers ─────────────────────────────────────────────────────

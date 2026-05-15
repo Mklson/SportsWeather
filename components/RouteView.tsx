@@ -33,7 +33,10 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const [activeStravaId, setActiveStravaId] = useState<number | null>(null);
   const [speedKmh, setSpeedKmh] = useState(() => DEFAULT_SPEED_KMH[initialSport]);
   const [mapBounds, setMapBounds] = useState<{ west: number; south: number; east: number; north: number } | null>(null);
+  const [mapResetKey, setMapResetKey] = useState(0);
   const [, startTransition] = useTransition();
+
+  const resetMap = useCallback(() => setMapResetKey((k) => k + 1), []);
 
   const handleBoundsChange = useCallback((b: { west: number; south: number; east: number; north: number }) => {
     setMapBounds(b);
@@ -91,10 +94,17 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
               ← Strava
             </Link>
           )}
+          <button
+            onClick={resetMap}
+            title="Clear map"
+            className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200 hover:bg-white transition-colors"
+          >
+            <ResetIcon /> Clear
+          </button>
         </div>
         <div className="absolute inset-0">
           <RouteMap
-            key={route.id}
+            key={`${route.id}-${mapResetKey}`}
             route={route}
             segments={segments}
             activeSegmentIndex={null}
@@ -130,7 +140,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
       <div className="hidden md:flex flex-row h-screen overflow-hidden bg-white">
         <div className="flex-1 min-h-0">
           <RouteMap
-            key={route.id}
+            key={`${route.id}-${mapResetKey}`}
             route={route}
             segments={segments}
             activeSegmentIndex={null}
@@ -145,18 +155,27 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         </div>
         <aside className="w-80 overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
           {/* Back navigation */}
-          <div className="flex gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
-            <Link href="/" className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
-              ← Hjem
-            </Link>
-            {stravaConnected && (
-              <>
-                <span className="text-gray-300">|</span>
-                <Link href="/strava/activities" className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
-                  ← Strava
-                </Link>
-              </>
-            )}
+          <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
+            <div className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
+                ← Hjem
+              </Link>
+              {stravaConnected && (
+                <>
+                  <span className="text-gray-300">|</span>
+                  <Link href="/strava/activities" className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
+                    ← Strava
+                  </Link>
+                </>
+              )}
+            </div>
+            <button
+              onClick={resetMap}
+              title="Clear map"
+              className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
+            >
+              <ResetIcon /> Clear map
+            </button>
           </div>
           {/* Header */}
           <div className="p-4 border-b border-gray-200 bg-white">
@@ -289,7 +308,7 @@ function MobileBottomSheet({
           {state !== "hidden" && (
             <button
               onClick={() => setState((s) => s === "expanded" ? "peek" : "hidden")}
-              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors"
+              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
               aria-label="Skjul"
             >
               <ChevronDownIcon />
@@ -299,7 +318,7 @@ function MobileBottomSheet({
           {state !== "expanded" && (
             <button
               onClick={() => setState((s) => s === "hidden" ? "peek" : "expanded")}
-              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors"
+              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
               aria-label="Vis mer"
             >
               <ChevronUpIcon />
@@ -372,6 +391,15 @@ function ChevronDownIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+function ResetIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="1 4 1 10 7 10" />
+      <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
     </svg>
   );
 }

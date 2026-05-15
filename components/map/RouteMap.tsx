@@ -515,14 +515,29 @@ function updateWeatherMarkers(
   });
 }
 
+function pillColors(symbolCode: string, precipitation: number, cloudCover: number): { bg: string; text: string; border: string } {
+  const c = symbolCode.toLowerCase();
+  if (c.includes("thunder"))       return { bg: "#111827", text: "#fef08a", border: "rgba(254,240,138,0.4)" };
+  if (precipitation > 7)           return { bg: "#1f2937", text: "#f3f4f6", border: "rgba(255,255,255,0.12)" };
+  if (precipitation > 4)           return { bg: "#374151", text: "#f3f4f6", border: "rgba(255,255,255,0.14)" };
+  if (precipitation > 2)           return { bg: "#6b7280", text: "#f9fafb", border: "rgba(255,255,255,0.18)" };
+  if (precipitation > 0.5)         return { bg: "#9ca3af", text: "#111827", border: "rgba(0,0,0,0.14)" };
+  if (precipitation > 0.1)         return { bg: "#d1d5db", text: "#111827", border: "rgba(0,0,0,0.13)" };
+  if (cloudCover > 75)             return { bg: "#e5e7eb", text: "#111827", border: "rgba(0,0,0,0.12)" };
+  if (cloudCover > 40)             return { bg: "#f3f4f6", text: "#0f172a", border: "rgba(0,0,0,0.12)" };
+  return                                  { bg: "#ffffff", text: "#0f172a", border: "rgba(0,0,0,0.15)" };
+}
+
 function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
   const wrap = document.createElement("div");
   wrap.style.cssText = "cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;pointer-events:auto";
 
+  const { bg, text, border } = pillColors(seg.weather.symbolCode, seg.weather.precipitation, seg.weather.cloudCover);
+
   const pill = document.createElement("div");
   pill.style.cssText = [
-    "background:white",
-    "border:1.5px solid rgba(0,0,0,0.15)",
+    `background:${bg}`,
+    `border:1.5px solid ${border}`,
     "border-radius:999px",
     "padding:4px 9px",
     "display:flex",
@@ -536,19 +551,18 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
     "line-height:1",
   ].join(";");
 
-  const icon  = weatherEmoji(seg.weather.symbolCode, seg.weather.temperature);
-  const temp  = `${Math.round(seg.weather.temperature)}°`;
-  const rain  = seg.weather.precipitation > 0
-    ? `<span style="color:#2563eb;font-size:11px"> ${seg.weather.precipitation.toFixed(1)}mm</span>` : "";
+  const icon = weatherEmoji(seg.weather.symbolCode, seg.weather.temperature);
+  const temp = `${Math.round(seg.weather.temperature)}°`;
+  const rain = seg.weather.precipitation > 0
+    ? `<span style="font-size:11px;opacity:0.85"> ${seg.weather.precipitation.toFixed(1)}mm</span>` : "";
 
   if (sport === "skiing") {
     const ski = classifySkiConditions(seg.weather);
-    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:#0f172a">${temp}</span><span style="color:${ski.color};font-size:10px;font-weight:600">${ski.label.split(" ")[0]}</span>${rain}`;
+    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span><span style="color:${ski.color};font-size:10px;font-weight:600">${ski.label.split(" ")[0]}</span>${rain}`;
   } else {
-    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:#0f172a">${temp}</span>${rain}`;
+    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span><span style="color:${text}">${rain}</span>`;
   }
 
-  // Connector stem
   const stem = document.createElement("div");
   stem.style.cssText = "width:2px;height:10px;background:rgba(0,0,0,0.25);border-radius:0 0 2px 2px";
 
@@ -633,6 +647,14 @@ function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
   const color     = windClassColor(seg.windClass);
   const SIZE      = 26;
 
+  // Shaft length scales with wind speed: calm(~1 m/s)=4 units, gale(18+ m/s)=14 units
+  const shaftLen  = 4 + Math.min(speed / 18, 1) * 10;
+  const baseY     = 17;
+  const tipY      = +(baseY - shaftLen).toFixed(1);
+  const headSize  = +(Math.max(2.5, shaftLen * 0.32)).toFixed(1);
+  const headY     = +(tipY + headSize).toFixed(1);
+  const d = `M10,${baseY} L10,${tipY} M${10 - headSize},${headY} L10,${tipY} L${10 + headSize},${headY}`;
+
   const el = document.createElement("div");
   el.style.width   = `${SIZE}px`;
   el.style.height  = `${SIZE}px`;
@@ -647,9 +669,8 @@ function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
   svg.style.transform  = `rotate(${direction}deg)`;
   svg.style.overflow   = "visible";
 
-  // White halo for contrast against map
   const halo = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  halo.setAttribute("d", "M10,17 L10,4 M6,8 L10,4 L14,8");
+  halo.setAttribute("d", d);
   halo.setAttribute("stroke", "rgba(0,0,0,0.5)");
   halo.setAttribute("stroke-width", "4");
   halo.setAttribute("stroke-linecap", "round");
@@ -657,9 +678,8 @@ function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
   halo.setAttribute("fill", "none");
   svg.appendChild(halo);
 
-  // Colored arrow
   const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  arrow.setAttribute("d", "M10,17 L10,4 M6,8 L10,4 L14,8");
+  arrow.setAttribute("d", d);
   arrow.setAttribute("stroke", color);
   arrow.setAttribute("stroke-width", "2.2");
   arrow.setAttribute("stroke-linecap", "round");

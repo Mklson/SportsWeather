@@ -46,6 +46,20 @@ function nearRoute(segCoord: [number, number], coords: Coordinate[], thresholdKm
   return false;
 }
 
+// Returns true only if start, end, AND intermediate points all stay close to the route.
+// Prevents segments whose polyline detours far off-route from being included.
+function segmentAlongsideRoute(seg: StravaSegment, routeCoords: Coordinate[]): boolean {
+  if (!nearRoute(seg.startLatLng, routeCoords)) return false;
+  if (!nearRoute(seg.endLatLng, routeCoords)) return false;
+  if (seg.coordinates.length > 4) {
+    for (const frac of [0.25, 0.5, 0.75]) {
+      const pt = seg.coordinates[Math.floor(frac * (seg.coordinates.length - 1))];
+      if (!nearRoute([pt.lat, pt.lon], routeCoords)) return false;
+    }
+  }
+  return true;
+}
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const token = req.cookies.get("strava_access_token")?.value;
   if (!token) {
@@ -74,11 +88,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     ]);
 
     // Starred segments near the route go first, marked with starred: true
-    const starredNearRoute = starred.filter(
-      (s) =>
-        nearRoute(s.startLatLng, dbRoute.coordinates) &&
-        nearRoute(s.endLatLng, dbRoute.coordinates)
-    );
+    const starredNearRoute = starred.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
     const starredIds = new Set(starredNearRoute.map((s) => s.id));
 
     // Deduplicate explore results by ID, skip any already covered by starred
@@ -93,12 +103,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Keep only explore segments whose start AND end are close to the route
-    const filteredExplore = exploreSegments_.filter(
-      (s) =>
-        nearRoute(s.startLatLng, dbRoute.coordinates) &&
-        nearRoute(s.endLatLng, dbRoute.coordinates)
-    );
+    // Keep only segments whose full polyline stays close to the route
+    const filteredExplore = exploreSegments_.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
 
     // Starred first, then remaining explore results
     const segments = [...starredNearRoute, ...filteredExplore];

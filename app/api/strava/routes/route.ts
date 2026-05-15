@@ -29,14 +29,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Not authenticated with Strava" }, { status: 401 });
   }
 
-  const { routeId } = (await req.json()) as { routeId: number };
+  const { routeId, routeName, routeType, summaryPolyline } =
+    (await req.json()) as { routeId: number; routeName?: string; routeType?: number; summaryPolyline?: string };
   if (!routeId) {
     return NextResponse.json({ error: "routeId required" }, { status: 400 });
   }
 
   try {
-    const stravaRoute = await getStravaRoute(token, routeId);
-    const encoded = stravaRoute.map?.summary_polyline;
+    // Use the polyline already fetched during listing if available — avoids a
+    // separate /routes/{id} call which can fail with 404 for private routes.
+    let encoded = summaryPolyline;
+    let name = routeName ?? `Route ${routeId}`;
+    let type = routeType ?? 1;
+
+    if (!encoded) {
+      const stravaRoute = await getStravaRoute(token, routeId);
+      encoded = stravaRoute.map?.summary_polyline;
+      name = stravaRoute.name;
+      type = stravaRoute.type;
+    }
+
     if (!encoded) {
       return NextResponse.json({ error: "Route has no polyline data" }, { status: 422 });
     }
@@ -47,13 +59,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const saved = await saveRoute({
       user_id: null,
-      name: stravaRoute.name,
+      name,
       source: "strava",
       coordinates,
       distance_km: distanceKm,
       elevation_gain_m: elevationGainM || null,
       external_id: `strava-route:${routeId}`,
-      sport: stravaRouteTypeToSport(stravaRoute.type),
+      sport: stravaRouteTypeToSport(type),
     } as Parameters<typeof saveRoute>[0]);
 
     const response: UploadResponse = {

@@ -153,6 +153,7 @@ export interface StravaRoute {
   type: 1 | 2 | 3; // 1=ride, 2=run, 3=walk
   timestamp: number; // unix
   hasSummaryPolyline: boolean;
+  summaryPolyline?: string;
 }
 
 export interface StravaSegment {

@@ -95,6 +95,7 @@ export async function listStravaRoutes(
     type: r.type,
     timestamp: r.timestamp,
     hasSummaryPolyline: Boolean(r.map?.summary_polyline),
+    summaryPolyline: r.map?.summary_polyline ?? undefined,
   }));
 }
 

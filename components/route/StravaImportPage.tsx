@@ -60,14 +60,19 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
   };
 
   // ── Import saved route ───────────────────────────────────────────────────
-  const importRoute = async (id: number) => {
-    setImporting(`rt-${id}`);
+  const importRoute = async (r: StravaRoute) => {
+    setImporting(`rt-${r.id}`);
     setError(null);
     try {
       const res = await fetch("/api/strava/routes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ routeId: id }),
+        body: JSON.stringify({
+          routeId: r.id,
+          routeName: r.name,
+          routeType: r.type,
+          summaryPolyline: r.summaryPolyline,
+        }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? `HTTP ${res.status}`);
       const { route } = (await res.json()) as UploadResponse;
@@ -182,7 +187,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
               {routes.map((r) => (
                 <button
                   key={r.id}
-                  onClick={() => importRoute(r.id)}
+                  onClick={() => importRoute(r)}
                   disabled={importing !== null || !r.hasSummaryPolyline}
                   className={clsx(
                     "w-full text-left p-3 rounded-xl bg-gray-800",

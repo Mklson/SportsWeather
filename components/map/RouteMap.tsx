@@ -70,6 +70,7 @@ export function RouteMap({
   reversed = false,
 }: Props) {
   const [basemap, setBasemap] = useState<Basemap>("outdoors");
+  const [terrain3d, setTerrain3d] = useState(false);
 
   const containerRef       = useRef<HTMLDivElement>(null);
   const mapRef             = useRef<mapboxgl.Map | null>(null);
@@ -87,6 +88,7 @@ export function RouteMap({
   const latestActiveStravaIdRef   = useRef(activeStravaSegmentId);
   const latestOnSegmentClickRef   = useRef(onSegmentClick);
   const latestOnStravaClickRef    = useRef(onStravaSegmentClick);
+  const latestTerrain3dRef          = useRef(false);
   latestSegmentsRef.current         = segments;
   latestSportRef.current            = sport;
   latestReversedRef.current         = reversed;
@@ -94,6 +96,7 @@ export function RouteMap({
   latestActiveStravaIdRef.current   = activeStravaSegmentId;
   latestOnSegmentClickRef.current   = onSegmentClick;
   latestOnStravaClickRef.current    = onStravaSegmentClick;
+  latestTerrain3dRef.current        = terrain3d;
   const mapReadyRef    = useRef(false);
 
   // ── Initialise map once ────────────────────────────────────────────────
@@ -105,7 +108,7 @@ export function RouteMap({
       style: buildStyle("outdoors"),
       center: [route.coordinates[0].lon, route.coordinates[0].lat],
       zoom: 11,
-      pitch: 30,
+      pitch: 0,
       attributionControl: false,
     });
 
@@ -114,7 +117,6 @@ export function RouteMap({
     mapRef.current = map;
 
     map.on("load", () => {
-      addTerrain(map);
       mapReadyRef.current = true;
       loadDirectionArrowImage(map, () => {
         addRouteLayers(map, route);
@@ -181,7 +183,7 @@ export function RouteMap({
 
     map.setStyle(buildStyle(basemap));
     map.once("style.load", () => {
-      addTerrain(map);
+      if (latestTerrain3dRef.current) addTerrain(map);
       mapReadyRef.current = true;
       loadDirectionArrowImage(map, () => {
         addRouteLayers(map, route);
@@ -204,6 +206,19 @@ export function RouteMap({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basemap]);
+
+  // ── Toggle 3D terrain ──────────────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+    if (terrain3d) {
+      addTerrain(map);
+      map.easeTo({ pitch: 50, duration: 600 });
+    } else {
+      try { map.setTerrain(null); } catch { /* ok */ }
+      map.easeTo({ pitch: 0, duration: 600 });
+    }
+  }, [terrain3d]);
 
   // ── Update Strava segments layer ───────────────────────────────────────
   useEffect(() => {
@@ -252,19 +267,32 @@ export function RouteMap({
 
   return (
     <div ref={containerRef} className="w-full h-full relative">
-      <div className="absolute top-2 left-2 z-10 flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
-        {basemapOptions.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setBasemap(key)}
-            className={`px-2.5 py-1.5 transition-colors ${
-              basemap === key ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-            title={key === "outdoors" ? "Mapbox Outdoors" : "Satellittbilde"}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+        <div className="flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
+          {basemapOptions.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setBasemap(key)}
+              className={`px-2.5 py-1.5 transition-colors ${
+                basemap === key ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              title={key === "outdoors" ? "Mapbox Outdoors" : "Satellittbilde"}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setTerrain3d((v) => !v)}
+          className={`rounded-lg shadow border text-xs font-semibold px-2.5 py-1.5 transition-colors ${
+            terrain3d
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+          }`}
+          title="3D terreng"
+        >
+          3D
+        </button>
       </div>
     </div>
   );

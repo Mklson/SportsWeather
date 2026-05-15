@@ -42,7 +42,8 @@ export async function getCachedWeather(
     .from("weather_cache")
     .select("*")
     .eq("route_id", routeId)
-    .lte("expires_at", new Date().toISOString())
+    .eq("start_time", startTime.toISOString())
+    .gte("expires_at", new Date().toISOString())
     .order("fetched_at", { ascending: false })
     .limit(1)
     .maybeSingle();

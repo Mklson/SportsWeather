@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import type { Route, WeatherSegment, SportType, StravaSegment } from "@/types";
 import { classifySkiConditions } from "@/lib/ski-conditions";
@@ -108,7 +108,9 @@ export function RouteMap({
   const mapReadyRef    = useRef(false);
 
   // ── Initialise (or re-initialise) map when route.id changes ──────────
-  useEffect(() => {
+  // useLayoutEffect so cleanup (map.remove) fires synchronously before paint,
+  // preventing the old map's canvas from overlapping the new one even briefly.
+  useLayoutEffect(() => {
     if (!containerRef.current) return;
 
     // Destroy any existing map so a new route always gets a clean canvas

@@ -24,17 +24,40 @@ export default async function StravaActivitiesPage({
   if (activitiesResult.status === "rejected") {
     console.error("[strava/activities] activities fetch failed:", activitiesResult.reason);
 
-    // First failure: auto-refresh the token and come back. The refresh endpoint
-    // redirects to ?retried=1 so we only do this once and avoid infinite loops.
-    if (!searchParams.retried) {
+    const errorMsg =
+      activitiesResult.reason instanceof Error
+        ? activitiesResult.reason.message
+        : String(activitiesResult.reason);
+
+    const isRateLimit = errorMsg.includes("429");
+    const isUnauthorized = errorMsg.includes("401");
+
+    // 429: token is fine, just too many requests. Don't auto-refresh — show a wait message.
+    if (isRateLimit) {
+      return (
+        <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
+          <p className="text-yellow-400 text-center font-medium">
+            Du har nådd Stravas forespørselgrense.
+          </p>
+          <p className="text-zinc-400 text-sm text-center">
+            Vent noen minutter og prøv igjen.
+          </p>
+          <a
+            href="/strava/activities"
+            className="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded-xl font-medium transition-colors"
+          >
+            Prøv igjen
+          </a>
+        </main>
+      );
+    }
+
+    // 401: token expired. Auto-refresh once, then fall through to manual re-auth.
+    if (isUnauthorized && !searchParams.retried) {
       redirect("/api/strava/refresh");
     }
 
-    const errorMsg = activitiesResult.reason instanceof Error
-      ? activitiesResult.reason.message
-      : String(activitiesResult.reason);
-
-    // Already retried — show a manual re-auth link.
+    // Already retried, or some other error — show manual re-auth.
     return (
       <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
         <p className="text-red-400 text-center">

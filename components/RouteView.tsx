@@ -94,6 +94,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         </div>
         <div className="absolute inset-0">
           <RouteMap
+            key={route.id}
             route={route}
             segments={segments}
             activeSegmentIndex={null}
@@ -129,6 +130,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
       <div className="hidden md:flex flex-row h-screen overflow-hidden bg-white">
         <div className="flex-1 min-h-0">
           <RouteMap
+            key={route.id}
             route={route}
             segments={segments}
             activeSegmentIndex={null}

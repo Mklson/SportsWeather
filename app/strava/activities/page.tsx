@@ -30,14 +30,19 @@ export default async function StravaActivitiesPage({
       redirect("/api/strava/refresh");
     }
 
+    const errorMsg = activitiesResult.reason instanceof Error
+      ? activitiesResult.reason.message
+      : String(activitiesResult.reason);
+
     // Already retried — show a manual re-auth link.
     return (
       <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
         <p className="text-red-400 text-center">
           Kunne ikke hente Strava-data. Prøv å logge inn på nytt.
         </p>
+        <p className="text-zinc-400 text-xs text-center font-mono">{errorMsg}</p>
         <a
-          href="/api/strava/auth"
+          href="/api/strava/auth?force=1"
           className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
         >
           Logg inn med Strava

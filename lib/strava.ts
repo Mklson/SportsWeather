@@ -3,13 +3,14 @@ import type { Coordinate, SportType, StravaActivity, StravaRoute, StravaSegment 
 
 const STRAVA_API = "https://www.strava.com/api/v3";
 
-export function buildStravaAuthUrl(state?: string): string {
+export function buildStravaAuthUrl(state?: string, force = false): string {
   const params = new URLSearchParams({
     client_id: process.env.STRAVA_CLIENT_ID!,
     redirect_uri: process.env.STRAVA_REDIRECT_URI!,
     response_type: "code",
     scope: "read,read_all,activity:read_all",
     ...(state ? { state } : {}),
+    ...(force ? { approval_prompt: "force" } : {}),
   });
   return `https://www.strava.com/oauth/authorize?${params}`;
 }

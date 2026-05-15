@@ -29,25 +29,40 @@ export default async function StravaActivitiesPage({
         ? activitiesResult.reason.message
         : String(activitiesResult.reason);
 
-    const isRateLimit = errorMsg.includes("429");
+    const isRateLimit = errorMsg.startsWith("RATE_LIMIT:") || errorMsg.includes("429");
     const isUnauthorized = errorMsg.includes("401");
 
     // 429: token is fine, just too many requests. Don't auto-refresh — show a wait message.
     if (isRateLimit) {
+      // Parse "RATE_LIMIT:<usage>:<limit>" — e.g. "RATE_LIMIT:97,850:100,1000"
+      const [, usagePart, limitPart] = errorMsg.split(":");
+      const [fifteenUsage, dailyUsage] = (usagePart ?? "").split(",").map(Number);
+      const [fifteenLimit, dailyLimit] = (limitPart ?? "").split(",").map(Number);
+      const isDailyLimit = dailyLimit > 0 && dailyUsage >= dailyLimit;
+      const waitMsg = isDailyLimit
+        ? "You have hit the daily request limit. Try again tomorrow."
+        : "You have hit the 15-minute request limit. Wait a few minutes and try again.";
+      const usageInfo = fifteenLimit > 0
+        ? `${fifteenUsage}/${fifteenLimit} per 15 min · ${dailyUsage}/${dailyLimit} per day`
+        : null;
+
       return (
         <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
           <p className="text-yellow-400 text-center font-medium">
-            You have reached Strava&apos;s rate limit.
+            Strava rate limit reached.
           </p>
-          <p className="text-zinc-400 text-sm text-center">
-            Wait a few minutes and try again.
-          </p>
-          <a
-            href="/strava/activities"
-            className="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded-xl font-medium transition-colors"
-          >
-            Try again
-          </a>
+          <p className="text-zinc-400 text-sm text-center">{waitMsg}</p>
+          {usageInfo && (
+            <p className="text-zinc-600 text-xs text-center font-mono">{usageInfo}</p>
+          )}
+          {!isDailyLimit && (
+            <a
+              href="/strava/activities"
+              className="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded-xl font-medium transition-colors"
+            >
+              Try again
+            </a>
+          )}
         </main>
       );
     }

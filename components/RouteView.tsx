@@ -104,7 +104,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             ← Home
           </Link>
           {stravaConnected && (
-            <Link href="/strava/activities" className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-orange-200 hover:bg-white transition-colors">
+            <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-orange-200 hover:bg-white transition-colors">
               ← Strava
             </Link>
           )}
@@ -179,7 +179,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
               {stravaConnected && (
                 <>
                   <span className="text-gray-300">|</span>
-                  <Link href="/strava/activities" className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
+                  <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
                     ← Strava
                   </Link>
                 </>

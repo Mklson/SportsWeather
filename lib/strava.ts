@@ -3,6 +3,12 @@ import type { Coordinate, SportType, StravaActivity, StravaRoute, StravaSegment 
 
 const STRAVA_API = "https://www.strava.com/api/v3";
 
+function throwRateLimitError(res: Response): never {
+  const usage = res.headers.get("X-RateLimit-Usage") ?? "";
+  const limit = res.headers.get("X-RateLimit-Limit") ?? "";
+  throw new Error(`RATE_LIMIT:${usage}:${limit}`);
+}
+
 export function buildStravaAuthUrl(state?: string, force = false): string {
   const params = new URLSearchParams({
     client_id: process.env.STRAVA_CLIENT_ID!,
@@ -62,6 +68,7 @@ export async function listStravaActivities(
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
+  if (res.status === 429) throwRateLimitError(res);
   if (!res.ok) throw new Error(`Failed to list Strava activities: ${res.status}`);
   return res.json();
 }

@@ -23,6 +23,7 @@ export default async function RoutePage({ params, searchParams }: Props) {
 
   return (
     <RouteView
+      key={route.id}
       route={{
         id: route.id,
         name: route.name,

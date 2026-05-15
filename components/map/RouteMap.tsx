@@ -9,10 +9,9 @@ mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
 // ─── Basemap ──────────────────────────────────────────────────────────────────
 
-type Basemap = "topo" | "outdoors" | "satellite";
+type Basemap = "outdoors" | "satellite";
 
 function buildStyle(basemap: Basemap): mapboxgl.Style | string {
-  if (basemap === "outdoors") return "mapbox://styles/mapbox/outdoors-v12";
   if (basemap === "satellite") {
     return {
       version: 8,
@@ -21,20 +20,7 @@ function buildStyle(basemap: Basemap): mapboxgl.Style | string {
       layers: [{ id: "bg", type: "raster", source: "sat" }],
     } as mapboxgl.Style;
   }
-  // topo: Kartverket topografisk (Norway) via server-side proxy (avoids CORS)
-  return {
-    version: 8,
-    glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
-    sources: {
-      "kv-topo": {
-        type: "raster" as const,
-        tiles: ["/api/tiles/kv/{z}/{x}/{y}"],
-        tileSize: 256,
-        attribution: "© Kartverket",
-      },
-    },
-    layers: [{ id: "bg", type: "raster" as const, source: "kv-topo" }],
-  } as unknown as mapboxgl.Style;
+  return "mapbox://styles/mapbox/outdoors-v12";
 }
 
 function addTerrain(map: mapboxgl.Map) {
@@ -260,9 +246,8 @@ export function RouteMap({
   }, [activeSegmentIndex, segments, sport]);
 
   const basemapOptions: { key: Basemap; label: string }[] = [
-    { key: "topo",      label: "Topo (NO)" },
-    { key: "outdoors",  label: "Globalt"   },
-    { key: "satellite", label: "🛰"        },
+    { key: "outdoors",  label: "Kart"  },
+    { key: "satellite", label: "🛰"    },
   ];
 
   return (
@@ -275,7 +260,7 @@ export function RouteMap({
             className={`px-2.5 py-1.5 transition-colors ${
               basemap === key ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
             }`}
-            title={key === "topo" ? "Kartverket topografisk (Norge)" : key === "outdoors" ? "Mapbox Outdoors (global)" : "Satellittbilde"}
+            title={key === "outdoors" ? "Mapbox Outdoors" : "Satellittbilde"}
           >
             {label}
           </button>

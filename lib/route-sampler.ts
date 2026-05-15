@@ -105,7 +105,7 @@ export function totalDistanceKm(coords: Coordinate[]): number {
 
 /** Default flat speed in km/h per sport. */
 export const DEFAULT_SPEED_KMH: Record<SportType, number> = {
-  cycling: 20,
+  cycling: 28,
   running: 10,
   skiing:  12,
 };

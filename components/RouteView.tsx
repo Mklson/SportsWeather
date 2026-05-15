@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, useRef, useMemo } from "react";
+import { useState, useCallback, useTransition, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
@@ -66,7 +66,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
     startTransition(() => setStartTime(date));
   }, []);
 
-  const isSkiing = sport === "skiing";
 
   const visibleStravaSegments = mapBounds
     ? stravaSegments.filter((seg) =>
@@ -109,7 +108,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         </div>
         <MobileBottomSheet
           route={route}
-          isSkiing={isSkiing}
           sport={sport}
           startTime={startTime}
           onTimeChange={handleTimeChange}
@@ -186,11 +184,9 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
           {/* Legend */}
           <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
-            {isSkiing ? (
-              <><LegendItem color="#10b981" label="Perfekt" /><LegendItem color="#f59e0b" label="Overgang" /><LegendItem color="#ef4444" label="Dårlig" /></>
-            ) : (
-              <><LegendItem color="#10b981" label="Medvind" /><LegendItem color="#f59e0b" label="Sidevind" /><LegendItem color="#ef4444" label="Motvind" /></>
-            )}
+            <LegendItem color="#10b981" label="Medvind" />
+            <LegendItem color="#f59e0b" label="Sidevind" />
+            <LegendItem color="#ef4444" label="Motvind" />
           </div>
 
           {/* Strava segments */}
@@ -224,12 +220,11 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
 type SheetState = "hidden" | "peek" | "expanded";
 
-const HIDDEN_HEIGHT = 32;
-const PEEK_HEIGHT   = 170;
+const HIDDEN_HEIGHT = 52;
+const PEEK_HEIGHT   = 210;
 
 interface SheetProps {
   route: Route;
-  isSkiing: boolean;
   sport: SportType;
   startTime: Date;
   onTimeChange: (d: Date) => void;
@@ -248,7 +243,6 @@ interface SheetProps {
 
 function MobileBottomSheet({
   route,
-  isSkiing,
   sport,
   startTime,
   onTimeChange,
@@ -265,74 +259,56 @@ function MobileBottomSheet({
   onStravaSegmentClick,
 }: SheetProps) {
   const [state, setState] = useState<SheetState>("peek");
-  const touchStartY = useRef(0);
-  const didDrag = useRef(false);
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-    didDrag.current = false;
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const dy = touchStartY.current - e.changedTouches[0].clientY;
-    if (Math.abs(dy) > 40) {
-      didDrag.current = true;
-      setState((s) => {
-        if (dy > 0) return s === "hidden" ? "peek" : "expanded";
-        return s === "expanded" ? "peek" : "hidden";
-      });
-    }
-  };
-
-  const onHandleClick = () => {
-    if (!didDrag.current) {
-      setState((s) => (s === "hidden" ? "peek" : s === "peek" ? "hidden" : "peek"));
-    }
-    didDrag.current = false;
-  };
 
   const sheetHeight =
     state === "hidden" ? HIDDEN_HEIGHT :
     state === "peek"   ? PEEK_HEIGHT :
     "72dvh";
 
-  const visible = state !== "hidden";
-
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
-      style={{
-        height: sheetHeight,
-        transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
-      }}
+      style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
     >
-      {/* Drag handle */}
-      <div
-        className="flex-shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        onClick={onHandleClick}
-      >
-        <div className="flex justify-center pt-2.5 pb-1">
-          <div className="w-9 h-1 bg-gray-300 rounded-full" />
+      {/* Header — always visible */}
+      <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-100">
+        <div className="min-w-0 flex-1">
+          <span className="font-semibold text-gray-900 text-sm truncate block">{route.name}</span>
+          {state !== "hidden" && (
+            <span className="text-gray-400 text-xs">
+              {route.distanceKm.toFixed(1)} km
+              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
+            </span>
+          )}
         </div>
-        {visible && (
-          <div className="px-4 pb-1.5 flex items-center justify-between gap-2">
-            <span className="font-semibold text-gray-900 text-sm truncate">{route.name}</span>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-gray-400 text-xs">
-                {route.distanceKm.toFixed(1)} km
-                {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
-              </span>
-              <ReverseButton reversed={reversed} onToggle={onToggleReverse} />
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {state !== "hidden" && <ReverseButton reversed={reversed} onToggle={onToggleReverse} />}
+          {/* Collapse: expanded→peek or peek→hidden */}
+          {state !== "hidden" && (
+            <button
+              onClick={() => setState((s) => s === "expanded" ? "peek" : "hidden")}
+              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="Skjul"
+            >
+              <ChevronDownIcon />
+            </button>
+          )}
+          {/* Expand: hidden→peek or peek→expanded */}
+          {state !== "expanded" && (
+            <button
+              onClick={() => setState((s) => s === "hidden" ? "peek" : "expanded")}
+              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="Vis mer"
+            >
+              <ChevronUpIcon />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Time + speed */}
-      {visible && (
-        <div className="flex-shrink-0 px-4 pb-3 border-b border-gray-100 space-y-3">
+      {state !== "hidden" && (
+        <div className="flex-shrink-0 px-4 pb-3 pt-2 border-b border-gray-100 space-y-3">
           <TimeSlider value={startTime} onChange={onTimeChange} />
           <SpeedSlider
             sport={sport}
@@ -344,13 +320,11 @@ function MobileBottomSheet({
       )}
 
       {/* Legend */}
-      {visible && (
+      {state !== "hidden" && (
         <div className="flex-shrink-0 px-4 py-2 flex items-center gap-3 text-xs border-b border-gray-100">
-          {isSkiing ? (
-            <><LegendItem color="#10b981" label="Perfekt" /><LegendItem color="#f59e0b" label="Overgang" /><LegendItem color="#ef4444" label="Dårlig" /></>
-          ) : (
-            <><LegendItem color="#10b981" label="Medvind" /><LegendItem color="#f59e0b" label="Sidevind" /><LegendItem color="#ef4444" label="Motvind" /></>
-          )}
+          <LegendItem color="#10b981" label="Medvind" />
+          <LegendItem color="#f59e0b" label="Sidevind" />
+          <LegendItem color="#ef4444" label="Motvind" />
         </div>
       )}
 
@@ -381,6 +355,22 @@ function MobileBottomSheet({
         </div>
       )}
     </div>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
   );
 }
 

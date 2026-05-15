@@ -58,7 +58,7 @@ export function RouteImporter() {
         {([
           { id: "upload", label: "📁 Last opp GPX/TCX" },
           { id: "strava", label: "🟠 Strava" },
-          { id: "ski",    label: "⛷️ Skiløyper" },
+          { id: "ski",    label: "⛷️ Cross country" },
         ] as { id: Tab; label: string }[]).map((t) => (
           <button
             key={t.id}
@@ -139,7 +139,7 @@ export function RouteImporter() {
       {tab === "ski" && (
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
-            Søk blant tusenvis av merkede skiløyper fra OpenStreetMap.
+            Search thousands of marked cross country trails from OpenStreetMap.
           </p>
           <OsmTrailSearchLight />
         </div>

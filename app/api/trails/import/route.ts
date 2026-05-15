@@ -20,7 +20,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     distance_km: distanceKm,
     elevation_gain_m: null,
     external_id: `osm:${trail.id}`,
-    sport: "running",
+    sport: "skiing",
   });
 
   const response: UploadResponse = {

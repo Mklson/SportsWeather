@@ -22,7 +22,7 @@ export function OsmTrailSearch() {
       const res = await fetch(`/api/trails/search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
       setTrails(data.trails ?? []);
-      if ((data.trails ?? []).length === 0) setError("Ingen merkede løyper funnet her. Prøv et stedsnavn, f.eks. «Nordmarka», «Sjusjøen» eller «Bymarka».");
+      if ((data.trails ?? []).length === 0) setError("No marked trails found. Try a place name, e.g. «Nordmarka», «Sjusjøen» or «Bymarka».");
     } catch {
       setError("Søket feilet. Sjekk nettverkstilkoblingen.");
     } finally {
@@ -67,7 +67,7 @@ export function OsmTrailSearch() {
           type="text"
           value={query}
           onChange={handleInput}
-          placeholder="Søk etter skiløype, f.eks. «Nordmarka»..."
+          placeholder="Search for a trail, e.g. «Nordmarka»..."
           className="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3
                      text-white placeholder-gray-500 focus:outline-none
                      focus:ring-2 focus:ring-blue-500 pr-10"

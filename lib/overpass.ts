@@ -5,7 +5,7 @@ const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 const USER_AGENT = "SportsWeather/1.0";
 
 interface NominatimResult {
-  boundingbox: [string, string, string, string]; // [minlat, maxlat, minlon, maxlon]
+  boundingbox: [string, string, string, string];
   display_name: string;
   lat: string;
   lon: string;
@@ -18,23 +18,28 @@ interface OverpassWay {
   geometry?: { lat: number; lon: number }[];
 }
 
-interface OverpassResponse {
-  elements: OverpassWay[];
+interface OverpassRelation {
+  type: "relation";
+  id: number;
+  tags?: Record<string, string>;
+  members?: Array<{ type: string; ref: number; role: string }>;
 }
 
-/**
- * Search for Nordic ski trails by area name.
- * Step 1: Geocode the query with Nominatim to get a bounding box.
- * Step 2: Query Overpass for ski pistes within that bbox.
- */
+interface OverpassNode {
+  type: "node";
+  id: number;
+}
+
+interface OverpassResponse {
+  elements: (OverpassWay | OverpassRelation | OverpassNode)[];
+}
+
 export async function searchSkiTrails(query: string): Promise<OsmTrail[]> {
   if (!query || query.trim().length < 2) return [];
 
-  // Step 1: Geocode
   const bbox = await geocodeToBbox(query.trim());
   if (!bbox) return [];
 
-  // Step 2: Fetch ski trails in bbox
   return fetchTrailsInBbox(bbox.south, bbox.west, bbox.north, bbox.east);
 }
 
@@ -60,15 +65,14 @@ async function geocodeToBbox(
   const r = results[0];
   const [minlat, maxlat, minlon, maxlon] = r.boundingbox;
 
-  // Expand bbox a bit to catch trails on the edges
   const latPad = 0.05;
   const lonPad = 0.08;
 
   return {
     south: parseFloat(minlat) - latPad,
     north: parseFloat(maxlat) + latPad,
-    west: parseFloat(minlon) - lonPad,
-    east: parseFloat(maxlon) + lonPad,
+    west:  parseFloat(minlon) - lonPad,
+    east:  parseFloat(maxlon) + lonPad,
   };
 }
 
@@ -81,15 +85,20 @@ export async function fetchTrailsInBbox(
 ): Promise<OsmTrail[]> {
   const bb = `${south},${west},${north},${east}`;
 
-  // Cast a wide net: nordic pistes, ski routes, and classic tracks
+  // Query both ways (individual segments) and relations (named trail networks).
+  // (._;>;) recurses relations → ways so every way gets geometry via out geom.
   const overpassQuery = `
-[out:json][timeout:25];
+[out:json][timeout:30];
 (
   way["piste:type"="nordic"](${bb});
   way["piste:type"="classic"](${bb});
-  way["route"="ski"](${bb});
-  way["sport"="skiing"]["highway"](${bb});
+  way["piste:type"="skitour"](${bb});
+  way["piste:grooming"~"classic|skating"](${bb});
+  relation["route"="ski"](${bb});
+  relation["piste:type"="nordic"](${bb});
+  relation["piste:type"="classic"](${bb});
 );
+(._;>;);
 out geom;
 `.trim();
 
@@ -102,42 +111,79 @@ out geom;
   if (!res.ok) throw new Error(`Overpass error: ${res.status}`);
 
   const data = (await res.json()) as OverpassResponse;
-  return parseWays(data).slice(0, limit);
+  return parseElements(data).slice(0, limit);
 }
 
-function parseWays(data: OverpassResponse): OsmTrail[] {
-  const trails: OsmTrail[] = [];
-
+function parseElements(data: OverpassResponse): OsmTrail[] {
+  // Index all ways by ID so relation members can look them up
+  const wayById = new Map<number, OverpassWay>();
   for (const el of data.elements) {
-    if (el.type !== "way" || !el.geometry || el.geometry.length < 2) continue;
+    if (el.type === "way" && (el as OverpassWay).geometry) {
+      wayById.set(el.id, el as OverpassWay);
+    }
+  }
 
-    const tags = el.tags ?? {};
-    const name =
-      tags.name ??
-      tags["name:no"] ??
-      tags.ref ??
-      null;
+  const trails: OsmTrail[] = [];
+  const coveredWayIds = new Set<number>();
 
-    if (!name) continue; // skip unnamed fragments
+  // Relations first — they carry the canonical name for a whole trail network
+  for (const el of data.elements) {
+    if (el.type !== "relation") continue;
+    const rel = el as OverpassRelation;
+    const tags = rel.tags ?? {};
+    const name = tags.name ?? tags["name:no"] ?? tags.ref ?? null;
+    if (!name) continue;
 
-    const coords: Coordinate[] = el.geometry.map((g) => ({ lat: g.lat, lon: g.lon }));
+    const coords: Coordinate[] = [];
+    for (const member of rel.members ?? []) {
+      if (member.type !== "way") continue;
+      const way = wayById.get(member.ref);
+      if (way?.geometry) {
+        for (const g of way.geometry) coords.push({ lat: g.lat, lon: g.lon });
+        coveredWayIds.add(member.ref);
+      }
+    }
+
+    if (coords.length < 2) continue;
+    const distanceKm = approximateDistanceKm(coords);
+    if (distanceKm < 0.5) continue;
+
+    trails.push({
+      id: rel.id,
+      name,
+      distanceKm,
+      coordinates: coords,
+      difficulty: mapDifficulty(tags["piste:difficulty"]),
+      area: tags["addr:city"] ?? tags["is_in:city"] ?? undefined,
+    });
+  }
+
+  // Standalone ways not already claimed by a relation
+  for (const way of Array.from(wayById.values())) {
+    if (coveredWayIds.has(way.id)) continue;
+    const tags = way.tags ?? {};
+    const name = tags.name ?? tags["name:no"] ?? tags.ref ?? null;
+    if (!name) continue;
+
+    const coords: Coordinate[] = way.geometry!.map((g: { lat: number; lon: number }) => ({ lat: g.lat, lon: g.lon }));
     const distanceKm = approximateDistanceKm(coords);
     if (distanceKm < 0.2) continue;
 
-    const difficulty = mapDifficulty(tags["piste:difficulty"]);
-    const area = tags["addr:city"] ?? tags["is_in:city"] ?? undefined;
-
-    trails.push({ id: el.id, name, distanceKm, coordinates: coords, difficulty, area });
+    trails.push({
+      id: way.id,
+      name,
+      distanceKm,
+      coordinates: coords,
+      difficulty: mapDifficulty(tags["piste:difficulty"]),
+      area: undefined,
+    });
   }
 
-  // Merge segments with same name, sort by length
   return mergeByName(trails).sort((a, b) => b.distanceKm - a.distanceKm);
 }
 
-/** Merge short segments that share the same name into one trail. */
 function mergeByName(trails: OsmTrail[]): OsmTrail[] {
   const map = new Map<string, OsmTrail>();
-
   for (const t of trails) {
     const key = t.name.toLowerCase().trim();
     const existing = map.get(key);
@@ -148,17 +194,16 @@ function mergeByName(trails: OsmTrail[]): OsmTrail[] {
       existing.coordinates = [...existing.coordinates, ...t.coordinates];
     }
   }
-
   return Array.from(map.values());
 }
 
 function mapDifficulty(raw?: string): string | undefined {
   const map: Record<string, string> = {
-    easy: "Enkel",
-    novice: "Nybegynner",
-    intermediate: "Middels",
-    advanced: "Krevende",
-    expert: "Ekspert",
+    easy:         "Easy",
+    novice:       "Beginner",
+    intermediate: "Intermediate",
+    advanced:     "Challenging",
+    expert:       "Expert",
   };
   return raw ? (map[raw] ?? raw) : undefined;
 }

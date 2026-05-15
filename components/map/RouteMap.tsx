@@ -103,9 +103,20 @@ export function RouteMap({
   latestTerrain3dRef.current        = terrain3d;
   const mapReadyRef    = useRef(false);
 
-  // ── Initialise map once ────────────────────────────────────────────────
+  // ── Initialise (or re-initialise) map when route.id changes ──────────
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
+
+    // Destroy any existing map so a new route always gets a clean canvas
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+      mapReadyRef.current = false;
+      [windMarkersRef, wxMarkersRef, stravaMarkersRef].forEach((r) => {
+        r.current.forEach((m) => m.remove());
+        r.current = [];
+      });
+    }
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -146,7 +157,7 @@ export function RouteMap({
       mapReadyRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [route.id]);
 
   // ── Update weather overlays when segments / sport changes ──────────────
   useEffect(() => {
@@ -154,15 +165,11 @@ export function RouteMap({
     if (!map) return;
 
     const apply = () => {
-      console.log("[RouteMap] applying", segments.length, "segments, mapReady:", mapReadyRef.current);
-      updateWeatherLine(map, segments, sport);
-      updatePrecipitationLine(map, segments);
       updateWindMarkers(map, segments, windMarkersRef, onSegmentClick);
       updateWeatherMarkers(map, segments, wxMarkersRef, sport, onSegmentClick);
     };
 
     if (!mapReadyRef.current) {
-      console.log("[RouteMap] map not ready, queuing", segments.length, "segments");
       pendingRef.current = apply;
       return;
     }
@@ -208,9 +215,6 @@ export function RouteMap({
           }
         }
         addStravaSegmentLayers(map);
-        // Re-populate all data layers
-        updateWeatherLine(map, latestSegmentsRef.current, latestSportRef.current);
-        updatePrecipitationLine(map, latestSegmentsRef.current);
         updateWindMarkers(map, latestSegmentsRef.current, windMarkersRef, latestOnSegmentClickRef.current);
         updateWeatherMarkers(map, latestSegmentsRef.current, wxMarkersRef, latestSportRef.current, latestOnSegmentClickRef.current);
         updateStravaSegments(map, latestStravaRef.current ?? [], latestActiveStravaIdRef.current ?? null, stravaMarkersRef, latestOnStravaClickRef.current);
@@ -386,28 +390,6 @@ function addRouteLayers(map: mapboxgl.Map, route: Route) {
     paint: { "line-color": "#94a3b8", "line-width": 6, "line-opacity": 0.45 },
   });
 
-  map.addSource("route-weather", { type: "geojson", data: empty() });
-  map.addLayer({
-    id: "route-weather", type: "line", source: "route-weather",
-    layout: { "line-join": "round", "line-cap": "round" },
-    paint: {
-      "line-color": ["get", "color"],
-      "line-width": ["interpolate", ["linear"], ["zoom"], 8, 5, 14, 10],
-      "line-opacity": 1,
-    },
-  });
-
-  map.addSource("route-rain", { type: "geojson", data: empty() });
-  map.addLayer({
-    id: "route-rain", type: "line", source: "route-rain",
-    layout: { "line-join": "round", "line-cap": "round" },
-    paint: {
-      "line-color": "#3b82f6",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 8, 8, 14, 14],
-      "line-opacity": ["get", "opacity"],
-    },
-  });
-
   // Direction arrows along the route line
   map.addLayer({
     id: "route-direction-arrows",
@@ -426,44 +408,6 @@ function addRouteLayers(map: mapboxgl.Map, route: Route) {
 
   const bounds = coords.reduce((b, c) => b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
   map.fitBounds(bounds, { padding: 48, duration: 800 });
-}
-
-function updateWeatherLine(map: mapboxgl.Map, segments: WeatherSegment[], sport: SportType) {
-  const src = map.getSource("route-weather") as mapboxgl.GeoJSONSource | undefined;
-  if (!src || !segments.length) return;
-  src.setData({
-    type: "FeatureCollection",
-    features: segments.map((seg, i) => {
-      const next = segments[i + 1];
-      const end = next ?? seg;
-      const color = sport === "skiing" ? classifySkiConditions(seg.weather).color : seg.color;
-      return {
-        type: "Feature",
-        geometry: { type: "LineString", coordinates: [[seg.coordinate.lon, seg.coordinate.lat], [end.coordinate.lon, end.coordinate.lat]] },
-        properties: { color },
-      };
-    }),
-  });
-}
-
-function updatePrecipitationLine(map: mapboxgl.Map, segments: WeatherSegment[]) {
-  const src = map.getSource("route-rain") as mapboxgl.GeoJSONSource | undefined;
-  if (!src) return;
-  src.setData({
-    type: "FeatureCollection",
-    features: segments
-      .filter((s) => s.weather.precipitation > 0)
-      .map((seg, _, arr) => {
-        const i = segments.indexOf(seg);
-        const next = segments[i + 1] ?? seg;
-        const opacity = Math.min(0.15 + seg.weather.precipitation * 0.12, 0.7);
-        return {
-          type: "Feature" as const,
-          geometry: { type: "LineString" as const, coordinates: [[seg.coordinate.lon, seg.coordinate.lat], [next.coordinate.lon, next.coordinate.lat]] },
-          properties: { opacity },
-        };
-      }),
-  });
 }
 
 // ─── Weather icon markers ─────────────────────────────────────────────────────

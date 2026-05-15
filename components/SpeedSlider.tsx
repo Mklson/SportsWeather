@@ -6,7 +6,7 @@ import { estimateTotalDuration } from "@/lib/route-sampler";
 import type { Coordinate } from "@/types";
 
 const SPORT_CONFIG: Record<SportType, { min: number; max: number; default: number; unit: string }> = {
-  cycling: { min: 5,  max: 45, default: 20, unit: "km/t" },
+  cycling: { min: 5,  max: 45, default: 28, unit: "km/t" },
   running: { min: 3,  max: 20, default: 10, unit: "km/t" },
   skiing:  { min: 3,  max: 30, default: 12, unit: "km/t" },
 };

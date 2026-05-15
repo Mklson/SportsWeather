@@ -19,14 +19,26 @@ export default async function StravaActivitiesPage() {
 
   if (activitiesResult.status === "rejected") {
     console.error("[strava/activities] activities fetch failed:", activitiesResult.reason);
-    redirect("/api/strava/refresh"); // token likely expired — try silent refresh, then re-auth
+    // Don't redirect — that can cause an infinite loop. Show an error with a re-auth link.
+    return (
+      <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
+        <p className="text-red-400 text-center">
+          Kunne ikke hente Strava-data. Token kan være utløpt.
+        </p>
+        <a
+          href="/api/strava/auth"
+          className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
+        >
+          Logg inn med Strava på nytt
+        </a>
+      </main>
+    );
   }
 
   activities = activitiesResult.value;
 
   if (routesResult.status === "rejected") {
     console.error("[strava/activities] routes fetch failed (non-fatal):", routesResult.reason);
-    // Routes are optional — continue without them
   } else {
     routes = routesResult.value;
   }

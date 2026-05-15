@@ -38,6 +38,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       path: "/",
     });
 
+    response.cookies.set("strava_refresh_token", tokens.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 90, // 90 days — refresh tokens are long-lived
+      path: "/",
+    });
+
     response.cookies.delete("strava_oauth_state");
 
     return response;

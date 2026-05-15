@@ -7,7 +7,7 @@ export default async function StravaActivitiesPage() {
   const cookieStore = cookies();
   const token = cookieStore.get("strava_access_token")?.value;
 
-  if (!token) redirect("/api/strava/auth");
+  if (!token) redirect("/api/strava/refresh");
 
   let activities: Awaited<ReturnType<typeof listStravaActivities>> = [];
   let routes: Awaited<ReturnType<typeof listStravaRoutes>> = [];
@@ -19,7 +19,7 @@ export default async function StravaActivitiesPage() {
 
   if (activitiesResult.status === "rejected") {
     console.error("[strava/activities] activities fetch failed:", activitiesResult.reason);
-    redirect("/?error=strava_fetch_failed");
+    redirect("/api/strava/refresh"); // token likely expired — try silent refresh, then re-auth
   }
 
   activities = activitiesResult.value;

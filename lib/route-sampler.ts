@@ -172,6 +172,58 @@ export function estimateTotalDuration(
   return totalHours;
 }
 
+// ─── Douglas-Peucker simplification ──────────────────────────────────────────
+
+/**
+ * Simplify a GPS polyline using Douglas-Peucker.
+ * Removes points that deviate less than `toleranceM` metres from the straight
+ * line between their neighbours. Reduces GPS noise and point count while
+ * preserving all meaningful turns.
+ */
+export function simplifyRoute(coords: Coordinate[], toleranceM = 10): Coordinate[] {
+  if (coords.length <= 2) return coords;
+  return dpReduce(coords, toleranceM);
+}
+
+function dpReduce(coords: Coordinate[], tolerance: number): Coordinate[] {
+  if (coords.length <= 2) return [...coords];
+
+  const first = coords[0];
+  const last  = coords[coords.length - 1];
+
+  let maxDist = 0;
+  let maxIdx  = 0;
+
+  for (let i = 1; i < coords.length - 1; i++) {
+    const d = ptSegDist(coords[i], first, last);
+    if (d > maxDist) { maxDist = d; maxIdx = i; }
+  }
+
+  if (maxDist > tolerance) {
+    const left  = dpReduce(coords.slice(0, maxIdx + 1), tolerance);
+    const right = dpReduce(coords.slice(maxIdx),         tolerance);
+    return [...left.slice(0, -1), ...right];
+  }
+
+  return [first, last];
+}
+
+/** Perpendicular distance (metres) from `p` to line segment [a, b]. */
+function ptSegDist(p: Coordinate, a: Coordinate, b: Coordinate): number {
+  const cosLat     = Math.cos((a.lat * Math.PI) / 180);
+  const mPerDegLat = 111_320;
+  const mPerDegLon = 111_320 * cosLat;
+
+  const bx = (b.lon - a.lon) * mPerDegLon;
+  const by = (b.lat - a.lat) * mPerDegLat;
+  const px = (p.lon  - a.lon) * mPerDegLon;
+  const py = (p.lat  - a.lat) * mPerDegLat;
+
+  const lenSq = bx * bx + by * by;
+  if (lenSq === 0) return Math.sqrt(px * px + py * py);
+  return Math.abs(bx * py - by * px) / Math.sqrt(lenSq);
+}
+
 /** Total elevation gain in metres. */
 export function totalElevationGain(coords: Coordinate[]): number {
   let gain = 0;

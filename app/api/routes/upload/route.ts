@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseGpx } from "@/lib/gpx-parser";
 import { parseTcx } from "@/lib/tcx-parser";
-import { totalDistanceKm, totalElevationGain } from "@/lib/route-sampler";
+import { totalDistanceKm, totalElevationGain, simplifyRoute } from "@/lib/route-sampler";
 import { saveRoute } from "@/lib/db/client";
 import type { RouteSource, UploadResponse } from "@/types";
 
@@ -31,8 +31,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const xml = await file.text();
     const source = ext as RouteSource;
 
-    const coordinates =
-      source === "gpx" ? await parseGpx(xml) : await parseTcx(xml);
+    const raw = source === "gpx" ? await parseGpx(xml) : await parseTcx(xml);
+
+    // Simplify GPS noise (Garmin activities record ~1 pt/sec → thousands of noisy points).
+    // 10 m tolerance removes jitter while preserving every meaningful direction change.
+    const coordinates = simplifyRoute(raw, 10);
 
     if (coordinates.length < 2) {
       return NextResponse.json(

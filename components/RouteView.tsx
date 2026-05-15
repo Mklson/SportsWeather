@@ -125,7 +125,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             activeSegmentIndex={null}
             onSegmentClick={() => {}}
             sport={sport}
-            stravaSegments={stravaSegments}
+            stravaSegments={cleared ? [] : stravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={handleStravaSegmentClick}
             onBoundsChange={handleBoundsChange}
@@ -162,7 +162,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             activeSegmentIndex={null}
             onSegmentClick={() => {}}
             sport={sport}
-            stravaSegments={stravaSegments}
+            stravaSegments={cleared ? [] : stravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={handleStravaSegmentClick}
             onBoundsChange={handleBoundsChange}

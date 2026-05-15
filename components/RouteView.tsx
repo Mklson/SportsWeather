@@ -409,18 +409,6 @@ function nearestWindClass(
   return nearestWeatherSegment(startLatLng, weatherSegments)?.windClass ?? null;
 }
 
-function weatherPillStyle(symbolCode: string, precipitation: number, cloudCover: number) {
-  const c = symbolCode.toLowerCase();
-  if (c.includes("thunder"))   return { bg: "#111827", text: "#fef08a" };
-  if (precipitation > 7)       return { bg: "#1f2937", text: "#f3f4f6" };
-  if (precipitation > 4)       return { bg: "#374151", text: "#f3f4f6" };
-  if (precipitation > 2)       return { bg: "#6b7280", text: "#f9fafb" };
-  if (precipitation > 0.5)     return { bg: "#9ca3af", text: "#111827" };
-  if (precipitation > 0.1)     return { bg: "#d1d5db", text: "#111827" };
-  if (cloudCover > 75)         return { bg: "#e5e7eb", text: "#111827" };
-  if (cloudCover > 40)         return { bg: "#f3f4f6", text: "#0f172a" };
-  return                              { bg: "#ffffff", text: "#0f172a" };
-}
 
 function weatherEmoji(code: string, t: number): string {
   const c = code.toLowerCase();
@@ -471,7 +459,6 @@ function StravaSegmentList({
         const wx = nearestWeatherSegment(midLatLng, weatherSegments);
         const wc = wx?.windClass ?? null;
         const borderColor = activeId === seg.id ? "#f97316" : windClassBorderColor(wc);
-        const pill = wx ? weatherPillStyle(wx.weather.symbolCode, wx.weather.precipitation, wx.weather.cloudCover) : null;
 
         return (
           <button
@@ -501,15 +488,12 @@ function StravaSegmentList({
                 {seg.avgGrade !== 0 && <span>{seg.avgGrade.toFixed(1)}% snitt</span>}
                 {seg.elevDifference > 0 && <span>+{Math.round(seg.elevDifference)} m</span>}
               </div>
-              {pill && wx && (
-                <span
-                  className="shrink-0 flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
-                  style={{ background: pill.bg, color: pill.text, border: "1px solid rgba(0,0,0,0.08)" }}
-                >
-                  <span>{weatherEmoji(wx.weather.symbolCode, wx.weather.temperature)}</span>
+              {wx && (
+                <span className="shrink-0 flex items-center gap-1 text-sm font-semibold text-gray-700">
+                  <span className="text-base">{weatherEmoji(wx.weather.symbolCode, wx.weather.temperature)}</span>
                   <span>{Math.round(wx.weather.temperature)}°</span>
                   {wx.weather.precipitation > 0.1 && (
-                    <span style={{ opacity: 0.85 }}>{wx.weather.precipitation.toFixed(1)}mm</span>
+                    <span className="text-blue-500 font-medium">{wx.weather.precipitation.toFixed(1)}mm</span>
                   )}
                 </span>
               )}

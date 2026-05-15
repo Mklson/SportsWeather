@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { listStravaActivities, listStravaRoutes } from "@/lib/strava";
 import { StravaImportPage } from "@/components/route/StravaImportPage";
-import { StravaAuthButton } from "@/components/route/StravaAuthButton";
 
 export default async function StravaActivitiesPage() {
   const cookieStore = cookies();
@@ -26,7 +25,14 @@ export default async function StravaActivitiesPage() {
         <p className="text-red-400 text-center">
           Kunne ikke hente Strava-data. Token kan være utløpt.
         </p>
-        <StravaAuthButton label="Logg inn med Strava på nytt" />
+        <form method="get" action="/api/strava/auth">
+          <button
+            type="submit"
+            className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
+          >
+            Logg inn med Strava på nytt
+          </button>
+        </form>
       </main>
     );
   }

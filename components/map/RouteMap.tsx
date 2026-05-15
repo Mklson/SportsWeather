@@ -57,6 +57,7 @@ interface Props {
   onStravaSegmentClick?: (id: number) => void;
   onBoundsChange?: (bounds: { west: number; south: number; east: number; north: number }) => void;
   reversed?: boolean;
+  showRoute?: boolean;
 }
 
 export function RouteMap({
@@ -70,6 +71,7 @@ export function RouteMap({
   onStravaSegmentClick,
   onBoundsChange,
   reversed = false,
+  showRoute = true,
 }: Props) {
   const [basemap, setBasemap] = useState<Basemap>("outdoors");
   const [terrain3d, setTerrain3d] = useState(false);
@@ -92,6 +94,7 @@ export function RouteMap({
   const latestOnStravaClickRef    = useRef(onStravaSegmentClick);
   const latestOnBoundsChangeRef   = useRef(onBoundsChange);
   const latestTerrain3dRef          = useRef(false);
+  const latestShowRouteRef          = useRef(showRoute);
   latestSegmentsRef.current         = segments;
   latestSportRef.current            = sport;
   latestReversedRef.current         = reversed;
@@ -101,6 +104,7 @@ export function RouteMap({
   latestOnStravaClickRef.current    = onStravaSegmentClick;
   latestOnBoundsChangeRef.current   = onBoundsChange;
   latestTerrain3dRef.current        = terrain3d;
+  latestShowRouteRef.current        = showRoute;
   const mapReadyRef    = useRef(false);
 
   // ── Initialise (or re-initialise) map when route.id changes ──────────
@@ -140,9 +144,12 @@ export function RouteMap({
     });
 
     map.on("load", () => {
+      if (mapRef.current !== map) return; // Component unmounted before load fired
       mapReadyRef.current = true;
       loadDirectionArrowImage(map, () => {
+        if (mapRef.current !== map) return;
         addRouteLayers(map, route);
+        if (!latestShowRouteRef.current) setRouteLayerVisibility(map, false);
         addStravaSegmentLayers(map);
         if (pendingRef.current) {
           pendingRef.current();
@@ -206,6 +213,7 @@ export function RouteMap({
       mapReadyRef.current = true;
       loadDirectionArrowImage(map, () => {
         addRouteLayers(map, route);
+        if (!latestShowRouteRef.current) setRouteLayerVisibility(map, false);
         // Restore reversed state
         if (latestReversedRef.current) {
           const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
@@ -236,6 +244,13 @@ export function RouteMap({
     }
   }, [terrain3d]);
 
+  // ── Show/hide route layer ──────────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+    setRouteLayerVisibility(map, showRoute);
+  }, [showRoute]);
+
   // ── Update Strava segments layer ───────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
@@ -243,10 +258,19 @@ export function RouteMap({
     updateStravaSegments(map, stravaSegments ?? [], activeStravaSegmentId ?? null, stravaMarkersRef, onStravaSegmentClick);
   }, [stravaSegments, activeStravaSegmentId, onStravaSegmentClick]);
 
-  // ── Fit map to active Strava segment ───────────────────────────────────
+  // ── Fit map to active Strava segment, or zoom back to full route ───────
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReadyRef.current || activeStravaSegmentId === null) return;
+    if (!map || !mapReadyRef.current) return;
+
+    if (activeStravaSegmentId === null) {
+      const coords = route.coordinates.map((c) => [c.lon, c.lat] as [number, number]);
+      if (!coords.length) return;
+      const bounds = coords.reduce((b, c) => b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
+      map.fitBounds(bounds, { padding: 48, duration: 600 });
+      return;
+    }
+
     const seg = (stravaSegments ?? []).find((s) => s.id === activeStravaSegmentId);
     if (!seg || !seg.coordinates.length) return;
 
@@ -258,7 +282,7 @@ export function RouteMap({
       )
     );
     map.fitBounds(bounds, { padding: 80, duration: 600, maxZoom: 16 });
-  }, [activeStravaSegmentId, stravaSegments]);
+  }, [activeStravaSegmentId, stravaSegments, route.coordinates]);
 
   // ── Fly + popup on active segment ──────────────────────────────────────
   useEffect(() => {
@@ -377,17 +401,40 @@ function loadDirectionArrowImage(map: mapboxgl.Map, onReady: () => void) {
 
 // ─── Route layers ─────────────────────────────────────────────────────────────
 
+function setRouteLayerVisibility(map: mapboxgl.Map, visible: boolean) {
+  const vis = visible ? "visible" : "none";
+  for (const id of ["route-casing", "route-base", "route-direction-arrows"]) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", vis);
+  }
+}
+
 function addRouteLayers(map: mapboxgl.Map, route: Route) {
   const coords = route.coordinates.map((c) => [c.lon, c.lat] as [number, number]);
+  const data: GeoJSON.Feature<GeoJSON.LineString> = {
+    type: "Feature",
+    geometry: { type: "LineString", coordinates: coords },
+    properties: {},
+  };
 
-  map.addSource("route-base", {
-    type: "geojson",
-    data: { type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} },
+  // Defensive cleanup — remove any stale layers/source from a previous render cycle
+  for (const id of ["route-direction-arrows", "route-base", "route-casing"]) {
+    if (map.getLayer(id)) map.removeLayer(id);
+  }
+  if (map.getSource("route-base")) map.removeSource("route-base");
+
+  map.addSource("route-base", { type: "geojson", data });
+
+  // White casing — makes the route visible against any basemap background
+  map.addLayer({
+    id: "route-casing", type: "line", source: "route-base",
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#ffffff", "line-width": 10, "line-opacity": 0.8 },
   });
+
   map.addLayer({
     id: "route-base", type: "line", source: "route-base",
     layout: { "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#94a3b8", "line-width": 6, "line-opacity": 0.45 },
+    paint: { "line-color": "#3b82f6", "line-width": 6, "line-opacity": 0.9 },
   });
 
   // Direction arrows along the route line

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import type { UploadResponse } from "@/types";
 import clsx from "clsx";
 
@@ -40,7 +40,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
       const { route } = (await res.json()) as UploadResponse;
       router.push(`/route/${route.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Feil ved import");
+      setError(err instanceof Error ? err.message : "Import failed");
       setImporting(null);
     }
   };
@@ -57,7 +57,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
       setPage(nextPage);
       setHasMore(more.length === 30);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunne ikke laste flere");
+      setError(err instanceof Error ? err.message : "Could not load more");
     } finally {
       setLoadingMore(false);
     }
@@ -83,7 +83,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
           <div>
             <p className="font-medium text-white">{a.name}</p>
             <p className="text-sm text-gray-400">
-              {format(new Date(a.startDate), "d. MMM yyyy", { locale: nb })}
+              {format(new Date(a.startDate), "MMM d, yyyy", { locale: enUS })}
               {" · "}
               {a.distanceKm.toFixed(1)} km
               {" · "}
@@ -91,7 +91,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
             </p>
           </div>
           <span className="text-gray-500 text-sm shrink-0">
-            {importing === a.id ? "Importerer…" : "Velg →"}
+            {importing === a.id ? "Importing…" : "Select →"}
           </span>
         </button>
       ))}
@@ -106,7 +106,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
             loadingMore && "opacity-60 animate-pulse"
           )}
         >
-          {loadingMore ? "Laster…" : "Last inn flere aktiviteter"}
+          {loadingMore ? "Loading…" : "Load more activities"}
         </button>
       )}
     </div>

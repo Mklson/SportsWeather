@@ -9,9 +9,9 @@ export interface SportConfig {
 }
 
 export const SPORT_CONFIGS: SportConfig[] = [
-  { type: "cycling", label: "Sykkel", emoji: "🚴" },
-  { type: "skiing", label: "Langrenn", emoji: "⛷️" },
-  { type: "running", label: "Løping", emoji: "🏃" },
+  { type: "cycling", label: "Cycling", emoji: "🚴" },
+  { type: "skiing", label: "Skiing", emoji: "⛷️" },
+  { type: "running", label: "Running", emoji: "🏃" },
 ];
 
 // ─── Ski conditions ────────────────────────────────────────────────────────

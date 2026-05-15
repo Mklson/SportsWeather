@@ -2,11 +2,11 @@ import Image from "next/image";
 import { RouteImporter } from "@/components/route/RouteImporter";
 
 const STRAVA_ERRORS: Record<string, string> = {
-  strava_denied:         "Du avbrøt Strava-tilkoblingen.",
-  strava_state_mismatch: "Sikkerhetssjekk feilet (state mismatch). Prøv igjen.",
-  strava_no_code:        "Ingen autoriseringskode mottatt fra Strava.",
-  strava_token_exchange: "Klarte ikke å hente token fra Strava. Sjekk at app-konfigurasjonen er riktig.",
-  strava_fetch_failed:   "Koblet til Strava, men klarte ikke laste aktiviteter. Prøv igjen.",
+  strava_denied:         "You cancelled the Strava connection.",
+  strava_state_mismatch: "Security check failed (state mismatch). Please try again.",
+  strava_no_code:        "No authorization code received from Strava.",
+  strava_token_exchange: "Could not retrieve token from Strava. Check your app configuration.",
+  strava_fetch_failed:   "Connected to Strava, but could not load activities. Please try again.",
 };
 
 export default function HomePage({
@@ -15,7 +15,7 @@ export default function HomePage({
   searchParams: { error?: string };
 }) {
   const errorMsg = searchParams.error
-    ? (STRAVA_ERRORS[searchParams.error] ?? `Ukjent feil: ${searchParams.error}`)
+    ? (STRAVA_ERRORS[searchParams.error] ?? `Unknown error: ${searchParams.error}`)
     : null;
 
   return (

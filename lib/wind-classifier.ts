@@ -42,24 +42,24 @@ export function windClassColor(wc: WindClass): string {
 export function windClassLabel(wc: WindClass): string {
   switch (wc) {
     case "tailwind":
-      return "Medvind";
+      return "Tailwind";
     case "crosswind":
-      return "Sidevind";
+      return "Crosswind";
     case "headwind":
-      return "Motvind";
+      return "Headwind";
   }
 }
 
 export function windStrengthLabel(ws: WindStrength): string {
   switch (ws) {
     case "calm":
-      return "Stille";
+      return "Calm";
     case "light":
-      return "Svak";
+      return "Light";
     case "moderate":
-      return "Moderat";
+      return "Moderate";
     case "strong":
-      return "Sterk";
+      return "Strong";
     case "storm":
       return "Storm";
   }

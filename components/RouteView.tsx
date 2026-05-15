@@ -101,7 +101,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         {/* Back nav — floats above map */}
         <div className="absolute top-2 right-2 z-20 flex gap-1.5">
           <Link href="/" className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200 hover:bg-white transition-colors">
-            ← Hjem
+            ← Home
           </Link>
           {stravaConnected && (
             <Link href="/strava/activities" className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-orange-200 hover:bg-white transition-colors">
@@ -174,7 +174,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-2">
               <Link href="/" className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
-                ← Hjem
+                ← Home
               </Link>
               {stravaConnected && (
                 <>
@@ -190,7 +190,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
               title="Clear map"
               className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
             >
-              <ResetIcon /> Clear map
+              <ResetIcon /> Reset map
             </button>
           </div>
           {/* Header */}
@@ -200,7 +200,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
                 <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
                 <p className="text-gray-500 text-sm mt-0.5">
                   {route.distanceKm.toFixed(1)} km
-                  {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m stigning` : ""}
+                  {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m elevation` : ""}
                 </p>
                 <SourceBadge source={route.source} />
               </div>
@@ -221,20 +221,20 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
           {/* Legend */}
           <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
-            <LegendItem color="#10b981" label="Medvind" />
-            <LegendItem color="#f59e0b" label="Sidevind" />
-            <LegendItem color="#ef4444" label="Motvind" />
+            <LegendItem color="#10b981" label="Tailwind" />
+            <LegendItem color="#f59e0b" label="Crosswind" />
+            <LegendItem color="#ef4444" label="Headwind" />
           </div>
 
           {/* Strava segments */}
           {stravaConnected && (
             <>
               <div className="px-4 py-2 border-b border-gray-200 bg-white">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava-segmenter</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</p>
               </div>
               {stravaLoading && (
                 <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">
-                  Henter segmenter…
+                  Loading segments…
                 </div>
               )}
               {stravaError && (
@@ -325,7 +325,7 @@ function MobileBottomSheet({
             <button
               onClick={() => setState((s) => s === "expanded" ? "peek" : "hidden")}
               className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
-              aria-label="Skjul"
+              aria-label="Collapse"
             >
               <ChevronDownIcon />
             </button>
@@ -335,7 +335,7 @@ function MobileBottomSheet({
             <button
               onClick={() => setState((s) => s === "hidden" ? "peek" : "expanded")}
               className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
-              aria-label="Vis mer"
+              aria-label="Show more"
             >
               <ChevronUpIcon />
             </button>
@@ -359,9 +359,9 @@ function MobileBottomSheet({
       {/* Legend */}
       {state !== "hidden" && (
         <div className="flex-shrink-0 px-4 py-2 flex items-center gap-3 text-xs border-b border-gray-100">
-          <LegendItem color="#10b981" label="Medvind" />
-          <LegendItem color="#f59e0b" label="Sidevind" />
-          <LegendItem color="#ef4444" label="Motvind" />
+          <LegendItem color="#10b981" label="Tailwind" />
+          <LegendItem color="#f59e0b" label="Crosswind" />
+          <LegendItem color="#ef4444" label="Headwind" />
         </div>
       )}
 
@@ -370,7 +370,7 @@ function MobileBottomSheet({
         <>
           {stravaLoading && (
             <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-orange-500 animate-pulse">
-              Henter Strava-segmenter…
+              Loading Strava segments…
             </div>
           )}
           {stravaError && (
@@ -388,7 +388,7 @@ function MobileBottomSheet({
 
       {state === "expanded" && !stravaConnected && (
         <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-6 text-center">
-          Koble til Strava fra forsiden for å se segmenter langs ruten
+          Connect to Strava from the home page to see segments along the route
         </div>
       )}
     </div>
@@ -481,7 +481,7 @@ function StravaSegmentList({
   if (!segments.length) {
     return (
       <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-4 text-center">
-        Ingen Strava-segmenter funnet langs denne ruten
+        No Strava segments found along this route
       </div>
     );
   }
@@ -509,7 +509,7 @@ function StravaSegmentList({
           >
             <div className="flex items-start justify-between gap-2">
               <span className="font-medium text-gray-900 text-sm leading-tight flex items-center gap-1">
-                {seg.starred && <span className="text-amber-400" title="Stjernemarket segment">★</span>}
+                {seg.starred && <span className="text-amber-400" title="Starred segment">★</span>}
                 {seg.name}
               </span>
               {seg.climbCategory > 0 && (
@@ -545,7 +545,7 @@ function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: ()
   return (
     <button
       onClick={onToggle}
-      title={reversed ? "Vis original retning" : "Snu ruten"}
+      title={reversed ? "Show original direction" : "Reverse route"}
       className={clsx(
         "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border transition-colors",
         reversed
@@ -559,7 +559,7 @@ function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: ()
         <path d="M7 23l-4-4 4-4" />
         <path d="M21 13v2a4 4 0 01-4 4H3" />
       </svg>
-      {reversed ? "Snudd" : "Snu"}
+      {reversed ? "Reversed" : "Reverse"}
     </button>
   );
 }

@@ -37,16 +37,16 @@ export default async function StravaActivitiesPage({
       return (
         <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
           <p className="text-yellow-400 text-center font-medium">
-            Du har nådd Stravas forespørselgrense.
+            You have reached Strava&apos;s rate limit.
           </p>
           <p className="text-zinc-400 text-sm text-center">
-            Vent noen minutter og prøv igjen.
+            Wait a few minutes and try again.
           </p>
           <a
             href="/strava/activities"
             className="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded-xl font-medium transition-colors"
           >
-            Prøv igjen
+            Try again
           </a>
         </main>
       );
@@ -61,14 +61,14 @@ export default async function StravaActivitiesPage({
     return (
       <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
         <p className="text-red-400 text-center">
-          Kunne ikke hente Strava-data. Prøv å logge inn på nytt.
+          Could not load Strava data. Try logging in again.
         </p>
         <p className="text-zinc-400 text-xs text-center font-mono">{errorMsg}</p>
         <a
           href="/api/strava/auth?force=1"
           className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
         >
-          Logg inn med Strava
+          Log in with Strava
         </a>
       </main>
     );
@@ -84,7 +84,7 @@ export default async function StravaActivitiesPage({
 
   return (
     <main className="min-h-screen p-4 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-6">Importer fra Strava</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Import from Strava</h1>
       <StravaImportPage
         activities={activities.map((a) => ({
           id: a.id,

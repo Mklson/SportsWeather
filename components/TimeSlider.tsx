@@ -2,7 +2,7 @@
 
 import { useCallback, useId } from "react";
 import { format, addHours, startOfHour } from "date-fns";
-import { nb } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface Props {
   value: Date;
@@ -34,13 +34,13 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
     [onChange]
   );
 
-  const formattedDate = format(value, "EEEE d. MMMM, HH:mm", { locale: nb });
+  const formattedDate = format(value, "EEEE, MMMM d, HH:mm", { locale: enUS });
   const inputValue = format(value, "yyyy-MM-dd'T'HH:mm");
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Starttid</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Start time</span>
         <span className="text-xs text-blue-600 font-semibold capitalize">{formattedDate}</span>
       </div>
 
@@ -53,7 +53,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
         value={clampedOffset}
         onChange={handleChange}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600"
-        aria-label="Velg starttid"
+        aria-label="Select start time"
       />
 
       <input

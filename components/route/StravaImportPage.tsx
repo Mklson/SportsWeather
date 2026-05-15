@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import type { StravaRoute, UploadResponse } from "@/types";
 import clsx from "clsx";
 
@@ -20,7 +20,7 @@ interface Props {
   routes: StravaRoute[];
 }
 
-const ROUTE_TYPE: Record<number, string> = { 1: "Sykkel", 2: "Løping", 3: "Gange" };
+const ROUTE_TYPE: Record<number, string> = { 1: "Cycling", 2: "Running", 3: "Walking" };
 
 export function StravaImportPage({ activities: initial, routes: initialRoutes }: Props) {
   const router = useRouter();
@@ -54,7 +54,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
       const { route } = (await res.json()) as UploadResponse;
       router.push(`/route/${route.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Feil ved import");
+      setError(err instanceof Error ? err.message : "Import failed");
       setImporting(null);
     }
   };
@@ -78,7 +78,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
       const { route } = (await res.json()) as UploadResponse;
       router.push(`/route/${route.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Feil ved import");
+      setError(err instanceof Error ? err.message : "Import failed");
       setImporting(null);
     }
   };
@@ -95,7 +95,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
       setActPage(next);
       setActHasMore(more.length === 30);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunne ikke laste flere");
+      setError(err instanceof Error ? err.message : "Could not load more");
     } finally {
       setActLoadingMore(false);
     }
@@ -113,7 +113,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
       setRtPage(next);
       setRtHasMore(more.length === 30);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunne ikke laste flere");
+      setError(err instanceof Error ? err.message : "Could not load more");
     } finally {
       setRtLoadingMore(false);
     }
@@ -129,7 +129,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
         {/* ── Seneste aktiviteter ─────────────────────────────────── */}
         <section>
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
-            Seneste aktiviteter
+            Recent activities
           </h2>
           <div className="space-y-2">
             {activities.map((a) => (
@@ -147,13 +147,13 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                 <div className="min-w-0">
                   <p className="font-medium text-white text-sm truncate">{a.name}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {format(new Date(a.startDate), "d. MMM yyyy", { locale: nb })}
+                    {format(new Date(a.startDate), "MMM d, yyyy", { locale: enUS })}
                     {" · "}{a.distanceKm.toFixed(1)} km
                     {" · "}{a.type}
                   </p>
                 </div>
                 <span className="text-gray-500 text-xs shrink-0">
-                  {importing === `act-${a.id}` ? "Importerer…" : "Velg →"}
+                  {importing === `act-${a.id}` ? "Importing…" : "Select →"}
                 </span>
               </button>
             ))}
@@ -167,7 +167,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                   actLoadingMore && "opacity-60 animate-pulse"
                 )}
               >
-                {actLoadingMore ? "Laster…" : "Last inn flere"}
+                {actLoadingMore ? "Loading…" : "Load more"}
               </button>
             )}
           </div>
@@ -176,11 +176,11 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
         {/* ── Gemte ruter ─────────────────────────────────────────── */}
         <section>
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
-            Gemte ruter
+            Saved routes
           </h2>
           {routes.length === 0 ? (
             <p className="text-gray-500 text-sm p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-              Ingen gemte ruter funnet. Opprett ruter i Strava-appen for å se dem her.
+              No saved routes found. Create routes in the Strava app to see them here.
             </p>
           ) : (
             <div className="space-y-2">
@@ -203,15 +203,15 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                     <p className="text-xs text-gray-400 mt-0.5">
                       {(r.distanceM / 1000).toFixed(1)} km
                       {r.elevationGain > 0 && ` · +${Math.round(r.elevationGain)} m`}
-                      {" · "}{ROUTE_TYPE[r.type] ?? "Ukjent"}
+                      {" · "}{ROUTE_TYPE[r.type] ?? "Unknown"}
                     </p>
                   </div>
                   <span className="text-gray-500 text-xs shrink-0">
                     {importing === `rt-${r.id}`
-                      ? "Importerer…"
+                      ? "Importing…"
                       : r.hasSummaryPolyline
-                        ? "Velg →"
-                        : "Ingen data"}
+                        ? "Select →"
+                        : "No data"}
                   </span>
                 </button>
               ))}
@@ -225,7 +225,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                     rtLoadingMore && "opacity-60 animate-pulse"
                   )}
                 >
-                  {rtLoadingMore ? "Laster…" : "Last inn flere"}
+                  {rtLoadingMore ? "Loading…" : "Load more"}
                 </button>
               )}
             </div>

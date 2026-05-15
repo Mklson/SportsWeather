@@ -24,7 +24,7 @@ export function OsmTrailSearch() {
       setTrails(data.trails ?? []);
       if ((data.trails ?? []).length === 0) setError("No marked trails found. Try a place name, e.g. «Nordmarka», «Sjusjøen» or «Bymarka».");
     } catch {
-      setError("Søket feilet. Sjekk nettverkstilkoblingen.");
+      setError("Search failed. Check your network connection.");
     } finally {
       setSearching(false);
     }
@@ -49,11 +49,11 @@ export function OsmTrailSearch() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(trail),
         });
-        if (!res.ok) throw new Error("Import feilet");
+        if (!res.ok) throw new Error("Import failed");
         const { route } = (await res.json()) as UploadResponse;
         router.push(`/route/${route.id}`);
       } catch {
-        setError("Kunne ikke importere løypen.");
+        setError("Could not import the trail.");
         setImporting(null);
       }
     },
@@ -103,7 +103,7 @@ export function OsmTrailSearch() {
                   </p>
                 </div>
                 <span className="text-gray-500 text-xs shrink-0">
-                  {importing === trail.id ? "Laster…" : "Velg →"}
+                  {importing === trail.id ? "Loading…" : "Select →"}
                 </span>
               </button>
             </li>

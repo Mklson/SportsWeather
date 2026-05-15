@@ -122,7 +122,7 @@ function SkiCard({ seg }: { seg: WeatherSegment }) {
             {Math.round(seg.weather.temperature)}°
           </span>
           {feelsLike !== seg.weather.temperature && (
-            <span className="text-xs text-gray-400">Føles {feelsLike}°</span>
+            <span className="text-xs text-gray-400">Feels like {feelsLike}°</span>
           )}
         </div>
         <div className="flex flex-col gap-0.5 min-w-0">
@@ -136,7 +136,7 @@ function SkiCard({ seg }: { seg: WeatherSegment }) {
       </div>
 
       <div className="text-xs bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1.5">
-        <span className="text-gray-400">Voks: </span>
+        <span className="text-gray-400">Wax: </span>
         <span className="text-gray-700 font-medium">{ski.waxHint}</span>
       </div>
 
@@ -144,7 +144,7 @@ function SkiCard({ seg }: { seg: WeatherSegment }) {
         <div className="flex items-center gap-1.5 text-xs">
           <span>{isSnowing ? "❄️" : "🌧️"}</span>
           <span className={isSnowing ? "text-blue-500" : "text-blue-400"}>
-            {isSnowing ? "Snø" : "Regn"} {seg.weather.precipitation.toFixed(1)} mm/t
+            {isSnowing ? "Snow" : "Rain"} {seg.weather.precipitation.toFixed(1)} mm/h
           </span>
         </div>
       )}
@@ -171,7 +171,7 @@ function CloudBar({ cover }: { cover: number }) {
         <div className="h-full bg-gray-300 rounded-full transition-all"
              style={{ width: `${cover}%` }} />
       </div>
-      <span className="text-xs text-gray-400">{Math.round(cover)}% sky</span>
+      <span className="text-xs text-gray-400">{Math.round(cover)}% cloud</span>
     </div>
   );
 }

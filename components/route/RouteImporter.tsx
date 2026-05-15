@@ -31,7 +31,7 @@ export function RouteImporter() {
         router.push(`/route/${route.id}`);
       } catch (err) {
         setStatus("error");
-        setErrorMsg(err instanceof Error ? err.message : "Ukjent feil");
+        setErrorMsg(err instanceof Error ? err.message : "Unknown error");
       }
     },
     [router]
@@ -43,7 +43,7 @@ export function RouteImporter() {
       const ext = file.name.split(".").pop()?.toLowerCase();
       if (!ext || !["gpx", "tcx"].includes(ext)) {
         setStatus("error");
-        setErrorMsg("Kun GPX og TCX-filer støttes");
+        setErrorMsg("Only GPX and TCX files are supported");
         return;
       }
       uploadFile(file);
@@ -56,7 +56,7 @@ export function RouteImporter() {
       {/* Tab selector */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 text-sm border border-gray-200">
         {([
-          { id: "upload", label: "📁 Last opp GPX/TCX" },
+          { id: "upload", label: "📁 Upload GPX/TCX" },
           { id: "strava", label: "🟠 Strava" },
           { id: "ski",    label: "⛷️ Cross country" },
         ] as { id: Tab; label: string }[]).map((t) => (
@@ -92,8 +92,8 @@ export function RouteImporter() {
           >
             <span className="text-4xl">📁</span>
             <div className="text-center">
-              <p className="text-gray-800 font-medium">Slipp GPX eller TCX her</p>
-              <p className="text-gray-400 text-sm mt-1">eller klikk for å velge fil</p>
+              <p className="text-gray-800 font-medium">Drop GPX or TCX here</p>
+              <p className="text-gray-400 text-sm mt-1">or click to select a file</p>
             </div>
             <input
               type="file"
@@ -106,17 +106,17 @@ export function RouteImporter() {
           {/* Sporet.no guide */}
           <details className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
             <summary className="cursor-pointer text-blue-700 font-medium select-none">
-              ⛷️ Importer fra Sporet.no
+              ⛷️ Import from Sporet.no
             </summary>
             <ol className="mt-3 space-y-2 text-gray-600 list-decimal list-inside">
-              <li>Åpne <strong>Sporet-appen</strong> på mobilen</li>
-              <li>Finn løypen du vil bruke</li>
-              <li>Trykk på løypen → <strong>Del</strong> → <strong>Eksporter GPX</strong></li>
-              <li>Send GPX-filen til deg selv (e-post, AirDrop, o.l.)</li>
-              <li>Last den opp her</li>
+              <li>Open the <strong>Sporet app</strong> on your phone</li>
+              <li>Find the trail you want to use</li>
+              <li>Tap the trail → <strong>Share</strong> → <strong>Export GPX</strong></li>
+              <li>Send the GPX file to yourself (email, AirDrop, etc.)</li>
+              <li>Upload it here</li>
             </ol>
             <p className="mt-3 text-gray-400 text-xs">
-              Sporet.no har ingen åpen API, men GPX-eksport fungerer fint.
+              Sporet.no has no open API, but GPX export works great.
             </p>
           </details>
         </div>
@@ -131,7 +131,7 @@ export function RouteImporter() {
                      text-white transition-colors shadow-sm"
         >
           <StravaIcon />
-          Koble til Strava og velg aktivitet
+          Connect to Strava and select an activity
         </a>
       )}
 
@@ -147,7 +147,7 @@ export function RouteImporter() {
 
       {status === "uploading" && (
         <p className="text-center text-blue-600 text-sm animate-pulse">
-          Laster opp og parser fil…
+          Uploading and parsing file…
         </p>
       )}
       {status === "error" && errorMsg && (

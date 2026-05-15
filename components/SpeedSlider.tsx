@@ -6,9 +6,9 @@ import { estimateTotalDuration } from "@/lib/route-sampler";
 import type { Coordinate } from "@/types";
 
 const SPORT_CONFIG: Record<SportType, { min: number; max: number; default: number; unit: string }> = {
-  cycling: { min: 5,  max: 45, default: 28, unit: "km/t" },
-  running: { min: 3,  max: 20, default: 10, unit: "km/t" },
-  skiing:  { min: 3,  max: 30, default: 12, unit: "km/t" },
+  cycling: { min: 5,  max: 45, default: 28, unit: "km/h" },
+  running: { min: 3,  max: 20, default: 10, unit: "km/h" },
+  skiing:  { min: 3,  max: 30, default: 12, unit: "km/h" },
 };
 
 function formatDuration(hours: number): string {
@@ -36,7 +36,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tidsbruk</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Duration</span>
         <span className="text-xs text-blue-600 font-semibold tabular-nums">
           {speedKmh} {cfg.unit} · {durationLabel}
         </span>
@@ -50,7 +50,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
         value={speedKmh}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600"
-        aria-label="Velg hastighet"
+        aria-label="Select speed"
       />
       <div className="flex justify-between text-xs text-gray-400">
         <span>{cfg.min} {cfg.unit}</span>

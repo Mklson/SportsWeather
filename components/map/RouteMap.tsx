@@ -713,16 +713,16 @@ function windSpeedColor(ms: number): string {
 function buildPopupHtml(seg: WeatherSegment, sport: SportType): string {
   const icon = weatherEmoji(seg.weather.symbolCode, seg.weather.temperature);
   const ski  = sport === "skiing" ? classifySkiConditions(seg.weather) : null;
-  const windLabel = seg.windClass === "tailwind" ? "Medvind" : seg.windClass === "crosswind" ? "Sidevind" : "Motvind";
+  const windLabel = seg.windClass === "tailwind" ? "Tailwind" : seg.windClass === "crosswind" ? "Crosswind" : "Headwind";
 
   return `<div style="font-family:system-ui,sans-serif;font-size:13px;line-height:1.7;color:#1e293b;min-width:155px">
     <div style="font-weight:700;margin-bottom:4px">${seg.startKm.toFixed(1)}–${seg.endKm.toFixed(1)} km</div>
-    <div>${icon} <strong>${seg.weather.temperature.toFixed(1)}°C</strong>${seg.weather.feelsLike !== undefined && seg.weather.feelsLike !== seg.weather.temperature ? ` <span style="color:#64748b;font-size:11px">(føles ${seg.weather.feelsLike}°)</span>` : ""}</div>
+    <div>${icon} <strong>${seg.weather.temperature.toFixed(1)}°C</strong>${seg.weather.feelsLike !== undefined && seg.weather.feelsLike !== seg.weather.temperature ? ` <span style="color:#64748b;font-size:11px">(feels like ${seg.weather.feelsLike}°)</span>` : ""}</div>
     ${ski
       ? `<div style="color:${ski.color};font-weight:600">${ski.label}</div><div style="color:#64748b;font-size:11px">${ski.waxHint}</div>`
       : `<div style="color:${seg.color};font-weight:600">💨 ${windLabel} · ${seg.weather.windSpeed.toFixed(1)} m/s</div>`}
-    ${seg.weather.precipitation > 0 ? `<div style="color:#2563eb">🌧️ ${seg.weather.precipitation.toFixed(1)} mm/t</div>` : ""}
-    <div style="color:#64748b;font-size:11px">☁️ ${Math.round(seg.weather.cloudCover)}% skydekke</div>
+    ${seg.weather.precipitation > 0 ? `<div style="color:#2563eb">🌧️ ${seg.weather.precipitation.toFixed(1)} mm/h</div>` : ""}
+    <div style="color:#64748b;font-size:11px">☁️ ${Math.round(seg.weather.cloudCover)}% cloud cover</div>
   </div>`;
 }
 

@@ -24,39 +24,39 @@ export function classifySkiConditions(weather: PointWeather): SkiConditions {
 
   if (t <= -15) {
     quality = "good";
-    label = "Kaldt";
+    label = "Cold";
     color = "#93c5fd"; // blue-300
-    waxHint = "Kaldvoks (grønn/blå)";
+    waxHint = "Cold wax (green/blue)";
   } else if (t <= -5) {
     quality = "perfect";
-    label = "Perfekte forhold";
+    label = "Perfect conditions";
     color = "#10b981"; // green
-    waxHint = "Kaldvoks (blå/lilla)";
+    waxHint = "Cold wax (blue/purple)";
   } else if (t <= -1) {
     quality = "perfect";
-    label = "Utmerkede forhold";
+    label = "Excellent conditions";
     color = "#34d399"; // green-400
-    waxHint = "Universal-/violettvoks";
+    waxHint = "Universal/violet wax";
   } else if (t <= 0) {
     quality = "variable";
-    label = "Overgangsføre";
+    label = "Transition snow";
     color = "#f59e0b"; // amber
-    waxHint = "Violett voks eller klister";
+    waxHint = "Violet wax or klister";
   } else if (t <= 3) {
     quality = "wet";
-    label = "Våtsnøføre";
+    label = "Wet snow";
     color = "#f97316"; // orange
-    waxHint = "Klister (rød)";
+    waxHint = "Klister (red)";
   } else {
     quality = "icy";
-    label = "Dårlige forhold";
+    label = "Poor conditions";
     color = "#ef4444"; // red
-    waxHint = "Is/sørpe – klister eller fri";
+    waxHint = "Ice/slush – klister or skating";
   }
 
   // Bonus: fresh snow improves conditions
   if (isSnowing && quality !== "icy") {
-    label = `${label} – nysnø`;
+    label = `${label} – fresh snow`;
   }
 
   return { quality, label, color, waxHint };

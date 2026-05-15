@@ -69,7 +69,7 @@ export function SegmentList({ segments, activeIndex, sport, onActiveChange }: Pr
   if (!segments.length) {
     return (
       <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
-        Laster værdata…
+        Loading weather data…
       </div>
     );
   }

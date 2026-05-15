@@ -50,7 +50,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   try {
     const activity = await getStravaActivity(token, activityId);
-    const encoded = activity.map?.polyline ?? activity.map?.summary_polyline;
+    const encoded = activity.map?.summary_polyline ?? activity.map?.polyline;
 
     if (!encoded) {
       return NextResponse.json(

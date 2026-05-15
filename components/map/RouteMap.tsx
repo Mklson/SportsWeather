@@ -186,16 +186,22 @@ export function RouteMap({
     apply();
   }, [segments, sport, onSegmentClick]);
 
-  // ── Flip direction arrows when route is reversed ───────────────────────
+  // ── Show/hide route and apply direction ────────────────────────────────
+  // Uses setData (empty coords = hidden) rather than setLayoutProperty so the
+  // map reliably reflects the cleared/reversed state.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReadyRef.current) return;
     const src = map.getSource("route-base") as mapboxgl.GeoJSONSource | undefined;
     if (!src) return;
+    if (!showRoute) {
+      src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: [] }, properties: {} });
+      return;
+    }
     const coords = (reversed ? [...route.coordinates].reverse() : route.coordinates)
       .map((c) => [c.lon, c.lat] as [number, number]);
     src.setData({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} });
-  }, [reversed, route.coordinates]);
+  }, [showRoute, reversed, route.coordinates]);
 
   // ── Swap basemap ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -245,13 +251,6 @@ export function RouteMap({
       map.easeTo({ pitch: 0, duration: 600 });
     }
   }, [terrain3d]);
-
-  // ── Show/hide route layer ──────────────────────────────────────────────
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReadyRef.current) return;
-    setRouteLayerVisibility(map, showRoute);
-  }, [showRoute]);
 
   // ── Update Strava segments layer ───────────────────────────────────────
   useEffect(() => {

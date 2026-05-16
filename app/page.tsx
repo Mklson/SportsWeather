@@ -74,8 +74,8 @@ export default async function HomePage({
                 Create account
               </Link>
             </div>
-            <p className="text-xs text-gray-400 text-center">
-              Create a free account to save your routes and access them anytime.
+            <p className="text-sm text-gray-600 text-center max-w-xs">
+              Create a free account to save your routes and access them anytime from your dashboard.
             </p>
           </div>
         )}

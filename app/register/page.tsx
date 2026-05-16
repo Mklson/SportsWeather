@@ -73,33 +73,37 @@ export default function RegisterPage() {
               required
               autoComplete="email"
               placeholder="you@example.com"
-              className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
             <input
+              id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
               placeholder="Min. 6 characters"
-              className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Confirm password</label>
+            <label htmlFor="confirm" className="text-sm font-medium text-gray-700">Confirm password</label>
             <input
+              id="confirm"
+              name="confirm"
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               required
-              autoComplete="new-password"
-              placeholder="••••••••"
-              className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="off"
+              placeholder="Repeat your password"
+              className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 

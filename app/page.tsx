@@ -1,5 +1,8 @@
 import Image from "next/image";
 import { RouteImporter } from "@/components/route/RouteImporter";
+import { FeaturedRoutes } from "@/components/FeaturedRoutes";
+import { getRoute } from "@/lib/db/client";
+import { FEATURED_ROUTE_IDS } from "@/lib/featuredRoutes";
 
 const STRAVA_ERRORS: Record<string, string> = {
   strava_denied:         "You cancelled the Strava connection.",
@@ -9,7 +12,7 @@ const STRAVA_ERRORS: Record<string, string> = {
   strava_fetch_failed:   "Connected to Strava, but could not load activities. Please try again.",
 };
 
-export default function HomePage({
+export default async function HomePage({
   searchParams,
 }: {
   searchParams: { error?: string };
@@ -17,6 +20,10 @@ export default function HomePage({
   const errorMsg = searchParams.error
     ? (STRAVA_ERRORS[searchParams.error] ?? `Unknown error: ${searchParams.error}`)
     : null;
+
+  const featuredRoutes = (
+    await Promise.all(FEATURED_ROUTE_IDS.map((id) => getRoute(id)))
+  ).filter(Boolean) as Awaited<ReturnType<typeof getRoute>>[];
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
@@ -46,6 +53,8 @@ export default function HomePage({
       )}
 
       <RouteImporter />
+
+      <FeaturedRoutes routes={featuredRoutes} />
     </main>
   );
 }

@@ -99,7 +99,15 @@ export default async function StravaActivitiesPage({
 
   return (
     <main className="min-h-screen p-4 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-6">Import from Strava</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-white">Import from Strava</h1>
+        <a
+          href="/api/strava/logout"
+          className="text-sm text-zinc-400 hover:text-white transition-colors"
+        >
+          Disconnect Strava
+        </a>
+      </div>
       <StravaImportPage
         activities={activities.map((a) => ({
           id: a.id,

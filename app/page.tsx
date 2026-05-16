@@ -23,7 +23,7 @@ export default async function HomePage({
 
   const featuredRoutes = (
     await Promise.all(FEATURED_ROUTE_IDS.map((id) => getRoute(id)))
-  ).filter(Boolean) as Awaited<ReturnType<typeof getRoute>>[];
+  ).filter((r): r is NonNullable<typeof r> => r !== null);
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">

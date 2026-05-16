@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { DbRoute, DbWeatherCache } from "@/types";
+import type { DbRoute, DbWeatherCache, StravaSegment } from "@/types";
 
 // Used in Server Components and API routes
 export const supabaseAdmin = createClient(
@@ -56,4 +56,30 @@ export async function saveWeatherCache(
   await supabaseAdmin.from("weather_cache").upsert(cache, {
     onConflict: "route_id,start_time",
   });
+}
+
+export async function getCachedSegments(
+  routeId: string,
+  sport: string
+): Promise<StravaSegment[] | null> {
+  const { data } = await supabaseAdmin
+    .from("segment_cache")
+    .select("segments")
+    .eq("route_id", routeId)
+    .eq("sport", sport)
+    .gte("expires_at", new Date().toISOString())
+    .maybeSingle();
+  return data ? (data.segments as StravaSegment[]) : null;
+}
+
+export async function saveSegmentCache(
+  routeId: string,
+  sport: string,
+  segments: StravaSegment[]
+): Promise<void> {
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await supabaseAdmin.from("segment_cache").upsert(
+    { route_id: routeId, sport, segments, expires_at: expiresAt },
+    { onConflict: "route_id,sport" }
+  );
 }

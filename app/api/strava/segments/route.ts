@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRoute } from "@/lib/db/client";
+import { getRoute, getCachedSegments, saveSegmentCache } from "@/lib/db/client";
 import { exploreSegments, getStarredSegments } from "@/lib/strava";
 import type { Coordinate, StravaSegment } from "@/types";
 
@@ -78,36 +78,50 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const activityType: ActivityType = sport === "cycling" ? "riding" : "running";
-  const chunks = routeChunks(dbRoute.coordinates);
 
   try {
-    // Query all chunks + starred segments in parallel
-    const [exploreBatches, starred] = await Promise.all([
-      Promise.all(chunks.map((chunk) => exploreSegments(token, boundingBox(chunk), activityType))),
+    // Starred segments are user-specific — always fetch live (1 call)
+    // Explore segments are geographic — cache per route for 24 h to save up to 4 calls
+    const [starred, cachedExplore] = await Promise.all([
       getStarredSegments(token),
+      getCachedSegments(routeId, activityType),
     ]);
+
+    let filteredExplore: StravaSegment[];
+
+    if (cachedExplore) {
+      filteredExplore = cachedExplore;
+    } else {
+      const chunks = routeChunks(dbRoute.coordinates);
+      const exploreBatches = await Promise.all(
+        chunks.map((chunk) => exploreSegments(token, boundingBox(chunk), activityType))
+      );
+
+      const seen = new Set<number>();
+      const deduped: StravaSegment[] = [];
+      for (const batch of exploreBatches) {
+        for (const seg of batch) {
+          if (!seen.has(seg.id)) {
+            seen.add(seg.id);
+            deduped.push(seg);
+          }
+        }
+      }
+
+      filteredExplore = deduped.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
+      // Fire-and-forget — don't block the response on the write
+      saveSegmentCache(routeId, activityType, filteredExplore).catch(() => {});
+    }
 
     // Starred segments near the route go first, marked with starred: true
     const starredNearRoute = starred.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
     const starredIds = new Set(starredNearRoute.map((s) => s.id));
 
-    // Deduplicate explore results by ID, skip any already covered by starred
-    const seen = new Set<number>(starredIds);
-    const exploreSegments_: StravaSegment[] = [];
-    for (const batch of exploreBatches) {
-      for (const seg of batch) {
-        if (!seen.has(seg.id)) {
-          seen.add(seg.id);
-          exploreSegments_.push(seg);
-        }
-      }
-    }
-
-    // Keep only segments whose full polyline stays close to the route
-    const filteredExplore = exploreSegments_.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
-
-    // Starred first, then remaining explore results
-    const segments = [...starredNearRoute, ...filteredExplore];
+    // Merge: starred first, then explore results not already in starred
+    const segments = [
+      ...starredNearRoute,
+      ...filteredExplore.filter((s) => !starredIds.has(s.id)),
+    ];
 
     return NextResponse.json({ segments });
   } catch (err) {

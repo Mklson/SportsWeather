@@ -261,7 +261,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 type SheetState = "hidden" | "peek" | "expanded";
 
 const HIDDEN_HEIGHT = 52;
-const PEEK_HEIGHT   = 210;
+const PEEK_HEIGHT   = 270;
 
 interface SheetProps {
   route: Route;

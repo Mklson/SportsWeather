@@ -47,18 +47,18 @@ export default async function StravaActivitiesPage({
         : null;
 
       return (
-        <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
-          <p className="text-yellow-400 text-center font-medium">
+        <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
+          <p className="text-yellow-600 text-center font-medium">
             Strava rate limit reached.
           </p>
-          <p className="text-zinc-400 text-sm text-center">{waitMsg}</p>
+          <p className="text-gray-500 text-sm text-center">{waitMsg}</p>
           {usageInfo && (
-            <p className="text-zinc-600 text-xs text-center font-mono">{usageInfo}</p>
+            <p className="text-gray-400 text-xs text-center font-mono">{usageInfo}</p>
           )}
           {!isDailyLimit && (
             <a
               href="/strava/activities"
-              className="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded-xl font-medium transition-colors"
+              className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors"
             >
               Try again
             </a>
@@ -74,11 +74,11 @@ export default async function StravaActivitiesPage({
 
     // Already retried, or some other error — show manual re-auth.
     return (
-      <main className="min-h-screen p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
-        <p className="text-red-400 text-center">
+      <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
+        <p className="text-red-600 text-center">
           Could not load Strava data. Try logging in again.
         </p>
-        <p className="text-zinc-400 text-xs text-center font-mono">{errorMsg}</p>
+        <p className="text-gray-400 text-xs text-center font-mono">{errorMsg}</p>
         <a
           href="/api/strava/auth?force=1"
           className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
@@ -98,12 +98,12 @@ export default async function StravaActivitiesPage({
   }
 
   return (
-    <main className="min-h-screen p-4 max-w-5xl mx-auto">
+    <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Import from Strava</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Import from Strava</h1>
         <a
           href="/api/strava/logout"
-          className="text-sm text-zinc-400 hover:text-white transition-colors"
+          className="text-sm text-gray-400 hover:text-gray-700 transition-colors"
         >
           Disconnect Strava
         </a>

@@ -122,13 +122,13 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
   return (
     <div className="space-y-4">
       {error && (
-        <p className="text-red-400 text-sm p-3 bg-red-900/20 rounded-lg">{error}</p>
+        <p className="text-red-600 text-sm p-3 bg-red-50 rounded-lg border border-red-200">{error}</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ── Seneste aktiviteter ─────────────────────────────────── */}
         <section>
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Recent activities
           </h2>
           <div className="space-y-2">
@@ -138,21 +138,21 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                 onClick={() => importActivity(a.id)}
                 disabled={importing !== null}
                 className={clsx(
-                  "w-full text-left p-3 rounded-xl bg-gray-800 hover:bg-gray-700",
-                  "border border-gray-700 hover:border-orange-500/50",
+                  "w-full text-left p-3 rounded-xl bg-white hover:bg-orange-50",
+                  "border border-gray-200 hover:border-orange-300",
                   "transition-all flex items-center justify-between gap-3",
                   importing === `act-${a.id}` && "opacity-60 animate-pulse"
                 )}
               >
                 <div className="min-w-0">
-                  <p className="font-medium text-white text-sm truncate">{a.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="font-medium text-gray-900 text-sm truncate">{a.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
                     {format(new Date(a.startDate), "MMM d, yyyy", { locale: enUS })}
                     {" · "}{a.distanceKm.toFixed(1)} km
                     {" · "}{a.type}
                   </p>
                 </div>
-                <span className="text-gray-500 text-xs shrink-0">
+                <span className="text-gray-400 text-xs shrink-0">
                   {importing === `act-${a.id}` ? "Importing…" : "Select →"}
                 </span>
               </button>
@@ -162,8 +162,8 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                 onClick={loadMoreActivities}
                 disabled={actLoadingMore || importing !== null}
                 className={clsx(
-                  "w-full p-3 rounded-xl border border-gray-700 text-gray-400",
-                  "hover:border-gray-500 hover:text-gray-200 transition-colors text-sm",
+                  "w-full p-3 rounded-xl border border-gray-200 text-gray-500",
+                  "hover:border-gray-300 hover:text-gray-700 transition-colors text-sm",
                   actLoadingMore && "opacity-60 animate-pulse"
                 )}
               >
@@ -175,11 +175,11 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
 
         {/* ── Gemte ruter ─────────────────────────────────────────── */}
         <section>
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Saved routes
           </h2>
           {routes.length === 0 ? (
-            <p className="text-gray-500 text-sm p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+            <p className="text-gray-500 text-sm p-4 bg-white rounded-xl border border-gray-200">
               No saved routes found. Create routes in the Strava app to see them here.
             </p>
           ) : (
@@ -190,23 +190,23 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                   onClick={() => importRoute(r)}
                   disabled={importing !== null || !r.hasSummaryPolyline}
                   className={clsx(
-                    "w-full text-left p-3 rounded-xl bg-gray-800",
-                    "border border-gray-700 transition-all flex items-center justify-between gap-3",
+                    "w-full text-left p-3 rounded-xl bg-white",
+                    "border border-gray-200 transition-all flex items-center justify-between gap-3",
                     r.hasSummaryPolyline
-                      ? "hover:bg-gray-700 hover:border-blue-500/50"
+                      ? "hover:bg-blue-50 hover:border-blue-300"
                       : "opacity-50 cursor-not-allowed",
                     importing === `rt-${r.id}` && "opacity-60 animate-pulse"
                   )}
                 >
                   <div className="min-w-0">
-                    <p className="font-medium text-white text-sm truncate">{r.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="font-medium text-gray-900 text-sm truncate">{r.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {(r.distanceM / 1000).toFixed(1)} km
                       {r.elevationGain > 0 && ` · +${Math.round(r.elevationGain)} m`}
                       {" · "}{ROUTE_TYPE[r.type] ?? "Unknown"}
                     </p>
                   </div>
-                  <span className="text-gray-500 text-xs shrink-0">
+                  <span className="text-gray-400 text-xs shrink-0">
                     {importing === `rt-${r.id}`
                       ? "Importing…"
                       : r.hasSummaryPolyline
@@ -220,8 +220,8 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                   onClick={loadMoreRoutes}
                   disabled={rtLoadingMore || importing !== null}
                   className={clsx(
-                    "w-full p-3 rounded-xl border border-gray-700 text-gray-400",
-                    "hover:border-gray-500 hover:text-gray-200 transition-colors text-sm",
+                    "w-full p-3 rounded-xl border border-gray-200 text-gray-500",
+                    "hover:border-gray-300 hover:text-gray-700 transition-colors text-sm",
                     rtLoadingMore && "opacity-60 animate-pulse"
                   )}
                 >

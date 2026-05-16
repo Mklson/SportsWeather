@@ -34,6 +34,16 @@ export async function getRoute(id: string): Promise<DbRoute | null> {
   return data;
 }
 
+export async function getRoutesByUser(userId: string): Promise<DbRoute[]> {
+  const { data, error } = await supabaseAdmin
+    .from("routes")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getCachedWeather(
   routeId: string,
   startTime: Date

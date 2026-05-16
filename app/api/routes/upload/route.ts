@@ -3,12 +3,18 @@ import { parseGpx } from "@/lib/gpx-parser";
 import { parseTcx } from "@/lib/tcx-parser";
 import { totalDistanceKm, totalElevationGain, simplifyRoute } from "@/lib/route-sampler";
 import { saveRoute } from "@/lib/db/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { RouteSource, UploadResponse } from "@/types";
 
 export const runtime = "nodejs"; // xml2js needs Node runtime
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
+    const supabase = createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -49,7 +55,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const name = file.name.replace(/\.(gpx|tcx)$/i, "");
 
     const saved = await saveRoute({
-      user_id: null, // TODO: set from session when auth is wired up
+      user_id: user?.id ?? null,
       name,
       source,
       coordinates,

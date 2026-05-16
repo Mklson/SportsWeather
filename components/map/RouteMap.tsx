@@ -403,9 +403,10 @@ function updateStravaSegments(
 // ─── Direction arrow image ────────────────────────────────────────────────────
 
 function loadDirectionArrowImage(map: mapboxgl.Map, onReady: () => void) {
+  // Arrow must point RIGHT — Mapbox aligns the icon's X+ axis with line direction
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-    <path d="M12 2 L19 16 L12 11.5 L5 16 Z" fill="white" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
-    <path d="M12 2 L19 16 L12 11.5 L5 16 Z" fill="#3b82f6"/>
+    <path d="M22 12 L8 19 L11.5 12 L8 5 Z" fill="white" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M22 12 L8 19 L11.5 12 L8 5 Z" fill="#3b82f6"/>
   </svg>`;
   const img = new Image(24, 24);
   img.onload = () => {

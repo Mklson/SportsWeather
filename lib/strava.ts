@@ -23,7 +23,7 @@ export function buildStravaAuthUrl(state?: string, force = false): string {
 
 export async function exchangeStravaCode(
   code: string
-): Promise<{ access_token: string; refresh_token: string; athlete: unknown }> {
+): Promise<{ access_token: string; refresh_token: string; athlete: { id: number } }> {
   const res = await fetch("https://www.strava.com/oauth/token", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

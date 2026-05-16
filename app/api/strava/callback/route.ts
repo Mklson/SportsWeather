@@ -46,6 +46,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       path: "/",
     });
 
+    response.cookies.set("strava_athlete_id", String(tokens.athlete.id), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 90,
+      path: "/",
+    });
+
     response.cookies.delete("strava_oauth_state");
 
     return response;

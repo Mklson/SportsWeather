@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRoute, getCachedSegments, saveSegmentCache } from "@/lib/db/client";
+import { getRoute, getCachedSegments, saveSegmentCache, getCachedStarred, saveStarredCache } from "@/lib/db/client";
 import { exploreSegments, getStarredSegments } from "@/lib/strava";
 import type { Coordinate, StravaSegment } from "@/types";
 
@@ -78,14 +78,24 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const activityType: ActivityType = sport === "cycling" ? "riding" : "running";
+  const athleteIdRaw = req.cookies.get("strava_athlete_id")?.value;
+  const athleteId = athleteIdRaw ? Number(athleteIdRaw) : null;
 
   try {
-    // Starred segments are user-specific — always fetch live (1 call)
-    // Explore segments are geographic — cache per route for 24 h to save up to 4 calls
-    const [starred, cachedExplore] = await Promise.all([
-      getStarredSegments(token),
+    // Both explore (per route, 24 h) and starred (per athlete, 1 h) are cached
+    const [cachedStarred, cachedExplore] = await Promise.all([
+      athleteId ? getCachedStarred(athleteId) : Promise.resolve(null),
       getCachedSegments(routeId, activityType),
     ]);
+
+    // Fetch starred from Strava only on cache miss
+    let starred: StravaSegment[];
+    if (cachedStarred) {
+      starred = cachedStarred;
+    } else {
+      starred = await getStarredSegments(token);
+      if (athleteId) saveStarredCache(athleteId, starred).catch(() => {});
+    }
 
     let filteredExplore: StravaSegment[];
 

@@ -83,3 +83,21 @@ export async function saveSegmentCache(
     { onConflict: "route_id,sport" }
   );
 }
+
+export async function getCachedStarred(athleteId: number): Promise<StravaSegment[] | null> {
+  const { data } = await supabaseAdmin
+    .from("starred_cache")
+    .select("segments")
+    .eq("athlete_id", athleteId)
+    .gte("expires_at", new Date().toISOString())
+    .maybeSingle();
+  return data ? (data.segments as StravaSegment[]) : null;
+}
+
+export async function saveStarredCache(athleteId: number, segments: StravaSegment[]): Promise<void> {
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+  await supabaseAdmin.from("starred_cache").upsert(
+    { athlete_id: athleteId, segments, expires_at: expiresAt },
+    { onConflict: "athlete_id" }
+  );
+}

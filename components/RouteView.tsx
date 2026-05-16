@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useTransition, useMemo } from "react";
+import { format } from "date-fns";
+import { enUS } from "date-fns/locale";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
@@ -296,6 +298,7 @@ function MobileBottomSheet({
   onStravaSegmentClick,
 }: SheetProps) {
   const [state, setState] = useState<SheetState>("peek");
+  const [controlsOpen, setControlsOpen] = useState(true);
 
   const sheetHeight =
     state === "hidden" ? HIDDEN_HEIGHT :
@@ -343,16 +346,30 @@ function MobileBottomSheet({
         </div>
       </div>
 
-      {/* Time + speed */}
+      {/* Time + speed (collapsible) */}
       {state !== "hidden" && (
-        <div className="flex-shrink-0 px-4 pb-3 pt-2 border-b border-gray-100 space-y-3">
-          <TimeSlider value={startTime} onChange={onTimeChange} />
-          <SpeedSlider
-            sport={sport}
-            speedKmh={speedKmh}
-            onChange={onSpeedChange}
-            coords={route.coordinates}
-          />
+        <div className="flex-shrink-0 border-b border-gray-100">
+          <button
+            onClick={() => setControlsOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2 text-xs text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+          >
+            <span>
+              {format(startTime, "EEE d MMM · HH:mm", { locale: enUS })}
+              {" · "}{speedKmh} km/h
+            </span>
+            {controlsOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          </button>
+          {controlsOpen && (
+            <div className="px-4 pb-3 space-y-3">
+              <TimeSlider value={startTime} onChange={onTimeChange} />
+              <SpeedSlider
+                sport={sport}
+                speedKmh={speedKmh}
+                onChange={onSpeedChange}
+                coords={route.coordinates}
+              />
+            </div>
+          )}
         </div>
       )}
 

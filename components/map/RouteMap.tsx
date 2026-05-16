@@ -404,14 +404,15 @@ function updateStravaSegments(
 
 function loadDirectionArrowImage(map: mapboxgl.Map, onReady: () => void) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-    <path d="M12 3 L18 15 L12 12 L6 15 Z" fill="white" opacity="0.9"/>
+    <path d="M12 2 L19 16 L12 11.5 L5 16 Z" fill="white" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M12 2 L19 16 L12 11.5 L5 16 Z" fill="#3b82f6"/>
   </svg>`;
   const img = new Image(24, 24);
   img.onload = () => {
     if (!map.hasImage("direction-arrow")) map.addImage("direction-arrow", img);
     onReady();
   };
-  img.onerror = onReady; // fail gracefully
+  img.onerror = onReady;
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
@@ -468,9 +469,9 @@ function addRouteLayers(map: mapboxgl.Map, route: Route, fitMap = true) {
     source: "route-base",
     layout: {
       "symbol-placement": "line",
-      "symbol-spacing": 120,
+      "symbol-spacing": 180,
       "icon-image": "direction-arrow",
-      "icon-size": 0.65,
+      "icon-size": 0.9,
       "icon-rotation-alignment": "map",
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,

@@ -60,6 +60,34 @@ function segmentAlongsideRoute(seg: StravaSegment, routeCoords: Coordinate[]): b
   return true;
 }
 
+// Strava segments are one-directional. Check whether the segment's start→end vector
+// is aligned (dot product > 0) or opposed (< 0) to the route's local travel direction.
+// Pass reversed=true to require the segment to go against the forward route direction.
+function segmentDirectionAligned(seg: StravaSegment, routeCoords: Coordinate[], reversed: boolean): boolean {
+  const midLat = (seg.startLatLng[0] + seg.endLatLng[0]) / 2;
+  const midLon = (seg.startLatLng[1] + seg.endLatLng[1]) / 2;
+
+  let closestIdx = 0;
+  let minDist = Infinity;
+  for (let i = 0; i < routeCoords.length; i++) {
+    const dlat = midLat - routeCoords[i].lat;
+    const dlon = midLon - routeCoords[i].lon;
+    const d = dlat * dlat + dlon * dlon;
+    if (d < minDist) { minDist = d; closestIdx = i; }
+  }
+
+  const before = Math.max(0, closestIdx - 5);
+  const after  = Math.min(routeCoords.length - 1, closestIdx + 5);
+  const routeDirLat = routeCoords[after].lat - routeCoords[before].lat;
+  const routeDirLon = routeCoords[after].lon - routeCoords[before].lon;
+
+  const segDirLat = seg.endLatLng[0] - seg.startLatLng[0];
+  const segDirLon = seg.endLatLng[1] - seg.startLatLng[1];
+
+  const dot = segDirLat * routeDirLat + segDirLon * routeDirLon;
+  return reversed ? dot < 0 : dot > 0;
+}
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const token = req.cookies.get("strava_access_token")?.value;
   if (!token) {
@@ -68,6 +96,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const routeId = req.nextUrl.searchParams.get("routeId");
   const sport = req.nextUrl.searchParams.get("sport") ?? "cycling";
+  const reversed = req.nextUrl.searchParams.get("rev") === "true";
   if (!routeId) {
     return NextResponse.json({ error: "routeId required" }, { status: 400 });
   }
@@ -128,10 +157,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const starredIds = new Set(starredNearRoute.map((s) => s.id));
 
     // Merge: starred first, then explore results not already in starred
-    const segments = [
+    const merged = [
       ...starredNearRoute,
       ...filteredExplore.filter((s) => !starredIds.has(s.id)),
     ];
+
+    // Strava segments are one-directional — only keep those whose travel direction
+    // matches the current route direction (forward or reversed).
+    const segments = merged.filter((s) =>
+      segmentDirectionAligned(s, dbRoute.coordinates, reversed)
+    );
 
     return NextResponse.json({ segments });
   } catch (err) {

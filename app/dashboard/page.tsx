@@ -40,8 +40,8 @@ export default async function DashboardPage() {
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8 flex flex-col gap-10">
         {/* Saved routes — front and center */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-gray-900">
               Saved routes
               {savedRoutes.length > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-400">

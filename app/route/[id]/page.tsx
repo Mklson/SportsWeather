@@ -20,7 +20,10 @@ export default async function RoutePage({ params, searchParams }: Props) {
     (validSports.includes(searchParams.sport as SportType) ? (searchParams.sport as SportType) : null) ??
     "cycling";
 
-  const stravaConnected = !!cookies().get("strava_access_token")?.value;
+  const stravaConnected = !!(
+    cookies().get("strava_access_token")?.value ||
+    cookies().get("strava_refresh_token")?.value
+  );
 
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();

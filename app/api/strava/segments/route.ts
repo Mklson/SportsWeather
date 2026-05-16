@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRoute, getCachedSegments, saveSegmentCache, getCachedStarred, saveStarredCache } from "@/lib/db/client";
-import { exploreSegments, getStarredSegments } from "@/lib/strava";
+import { exploreSegments, getStarredSegments, refreshStravaToken } from "@/lib/strava";
 import type { Coordinate, StravaSegment } from "@/types";
 
 export const runtime = "nodejs";
@@ -89,9 +89,21 @@ function segmentDirectionAligned(seg: StravaSegment, routeCoords: Coordinate[], 
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const token = req.cookies.get("strava_access_token")?.value;
+  let token = req.cookies.get("strava_access_token")?.value;
+  const refreshToken = req.cookies.get("strava_refresh_token")?.value;
+  let freshAccessToken: string | null = null;
+
   if (!token) {
-    return NextResponse.json({ error: "Not authenticated with Strava" }, { status: 401 });
+    if (!refreshToken) {
+      return NextResponse.json({ error: "Not authenticated with Strava" }, { status: 401 });
+    }
+    try {
+      const tokens = await refreshStravaToken(refreshToken);
+      token = tokens.access_token;
+      freshAccessToken = tokens.access_token;
+    } catch {
+      return NextResponse.json({ error: "Strava token refresh failed" }, { status: 401 });
+    }
   }
 
   const routeId = req.nextUrl.searchParams.get("routeId");
@@ -168,7 +180,17 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       segmentDirectionAligned(s, dbRoute.coordinates, reversed)
     );
 
-    return NextResponse.json({ segments });
+    const response = NextResponse.json({ segments });
+    if (freshAccessToken) {
+      response.cookies.set("strava_access_token", freshAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 21600,
+        path: "/",
+      });
+    }
+    return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });

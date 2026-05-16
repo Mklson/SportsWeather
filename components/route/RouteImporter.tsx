@@ -8,11 +8,15 @@ import clsx from "clsx";
 
 type Tab = "upload" | "strava" | "ski";
 
-export function RouteImporter() {
+interface Props {
+  onSuccess?: (routeId: string) => void;
+}
+
+export function RouteImporter({ onSuccess }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("upload");
   const [isDragging, setIsDragging] = useState(false);
-  const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "uploading" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const uploadFile = useCallback(
@@ -28,13 +32,18 @@ export function RouteImporter() {
           throw new Error(error ?? `HTTP ${res.status}`);
         }
         const { route } = (await res.json()) as UploadResponse;
-        router.push(`/route/${route.id}`);
+        if (onSuccess) {
+          setStatus("saved");
+          onSuccess(route.id);
+        } else {
+          router.push(`/route/${route.id}`);
+        }
       } catch (err) {
         setStatus("error");
         setErrorMsg(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [router]
+    [router, onSuccess]
   );
 
   const handleFile = useCallback(
@@ -148,6 +157,11 @@ export function RouteImporter() {
       {status === "uploading" && (
         <p className="text-center text-blue-600 text-sm animate-pulse">
           Uploading and parsing file…
+        </p>
+      )}
+      {status === "saved" && (
+        <p className="text-center text-green-600 text-sm font-medium">
+          Route saved — find it in your saved routes above.
         </p>
       )}
       {status === "error" && errorMsg && (

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getRoutesByUser } from "@/lib/db/client";
 import { SavedRoutes } from "@/components/SavedRoutes";
-import { RouteImporter } from "@/components/route/RouteImporter";
+import { DashboardRouteImporter } from "@/components/DashboardRouteImporter";
 import { LogoutButton } from "@/components/LogoutButton";
 
 export default async function DashboardPage() {
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
             Every route you add is saved to your account and appears above — one click to open and see the weather along the way.
           </p>
           <div className="bg-white rounded-2xl border border-gray-200 p-6 flex justify-center">
-            <RouteImporter />
+            <DashboardRouteImporter />
           </div>
         </section>
       </main>

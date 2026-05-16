@@ -22,9 +22,10 @@ interface Props {
   route: Route;
   initialSport?: SportType;
   stravaConnected?: boolean;
+  backHref?: string;
 }
 
-export function RouteView({ route, initialSport = "cycling", stravaConnected = false }: Props) {
+export function RouteView({ route, initialSport = "cycling", stravaConnected = false, backHref = "/" }: Props) {
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -102,8 +103,8 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
       <div className="md:hidden relative overflow-hidden bg-white" style={{ height: "100dvh" }}>
         {/* Back nav — floats above map */}
         <div className="absolute top-2 right-2 z-20 flex gap-1.5">
-          <Link href="/" className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200 hover:bg-white transition-colors">
-            ← Home
+          <Link href={backHref} className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200 hover:bg-white transition-colors">
+            ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
           </Link>
           {stravaConnected && (
             <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-orange-200 hover:bg-white transition-colors">
@@ -175,8 +176,8 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           {/* Back navigation */}
           <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-2">
-              <Link href="/" className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
-                ← Home
+              <Link href={backHref} className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
+                ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
               </Link>
               {stravaConnected && (
                 <>
@@ -405,7 +406,7 @@ function MobileBottomSheet({
 
       {state === "expanded" && !stravaConnected && (
         <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-6 text-center">
-          Connect to Strava from the home page to see segments along the route
+          Connect to Strava from your dashboard to see segments along the route
         </div>
       )}
     </div>

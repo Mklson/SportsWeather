@@ -4,8 +4,6 @@ import { useState, useCallback, useTransition, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
-import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
 import type { Route, SportType, StravaSegment, WeatherSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
 import { SpeedSlider } from "./SpeedSlider";
@@ -298,7 +296,6 @@ function MobileBottomSheet({
   onStravaSegmentClick,
 }: SheetProps) {
   const [state, setState] = useState<SheetState>("peek");
-  const [controlsOpen, setControlsOpen] = useState(true);
 
   const sheetHeight =
     state === "hidden" ? HIDDEN_HEIGHT :
@@ -346,30 +343,16 @@ function MobileBottomSheet({
         </div>
       </div>
 
-      {/* Time + speed — collapsible */}
+      {/* Time + speed */}
       {state !== "hidden" && (
-        <div className="flex-shrink-0 border-b border-gray-100">
-          <button
-            onClick={() => setControlsOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
-          >
-            <span className="font-medium capitalize">
-              {format(startTime, "EEE d MMM, HH:mm", { locale: enUS })}
-              {" · "}{speedKmh} km/h
-            </span>
-            {controlsOpen ? <ChevronDownIcon /> : <ChevronUpIcon />}
-          </button>
-          {controlsOpen && (
-            <div className="px-4 pb-3 space-y-3">
-              <TimeSlider value={startTime} onChange={onTimeChange} />
-              <SpeedSlider
-                sport={sport}
-                speedKmh={speedKmh}
-                onChange={onSpeedChange}
-                coords={route.coordinates}
-              />
-            </div>
-          )}
+        <div className="flex-shrink-0 px-4 pb-3 pt-2 border-b border-gray-100 space-y-3">
+          <TimeSlider value={startTime} onChange={onTimeChange} />
+          <SpeedSlider
+            sport={sport}
+            speedKmh={speedKmh}
+            onChange={onSpeedChange}
+            coords={route.coordinates}
+          />
         </div>
       )}
 

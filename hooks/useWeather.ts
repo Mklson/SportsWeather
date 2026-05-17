@@ -8,7 +8,8 @@ export function useWeather(
   startTime: Date,
   overrideCoords?: Coordinate[],
   speedKmh?: number,
-  sport?: SportType
+  sport?: SportType,
+  initialSegments?: WeatherSegment[]
 ) {
   const rounded = new Date(startTime);
   rounded.setMinutes(0, 0, 0);
@@ -23,10 +24,20 @@ export function useWeather(
     ? ["/api/weather/post", routeId, rounded.toISOString(), speedKmh ?? 0]
     : null;
 
+  const serverFallback: WeatherResponse | undefined = initialSegments
+    ? { segments: initialSegments, fetchedAt: new Date().toISOString() }
+    : undefined;
+
   const { data: getData, error: getError, isLoading: getLoading } = useSWR(
     getKey,
     (url: string) => fetch(url).then((r) => r.json() as Promise<WeatherResponse>),
-    { revalidateOnFocus: false, dedupingInterval: 3600 * 1000 }
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 3600 * 1000,
+      // Server gave us fresh data — skip the client fetch for the initial hour
+      fallbackData: serverFallback,
+      revalidateIfStale: !initialSegments,
+    }
   );
 
   const { data: postData, error: postError, isLoading: postLoading } = useSWR(
@@ -51,8 +62,8 @@ export function useWeather(
     { revalidateOnFocus: false, dedupingInterval: 3600 * 1000 }
   );
 
-  const data    = reversed ? postData  : getData;
-  const error   = reversed ? postError : getError;
+  const data      = reversed ? postData    : getData;
+  const error     = reversed ? postError   : getError;
   const isLoading = reversed ? postLoading : getLoading;
 
   const segments: WeatherSegment[] = data?.segments ?? [];

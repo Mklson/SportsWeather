@@ -23,9 +23,10 @@ interface Props {
   initialSport?: SportType;
   stravaConnected?: boolean;
   backHref?: string;
+  initialSegments?: WeatherSegment[];
 }
 
-export function RouteView({ route, initialSport = "cycling", stravaConnected = false, backHref = "/" }: Props) {
+export function RouteView({ route, initialSport = "cycling", stravaConnected = false, backHref = "/", initialSegments }: Props) {
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -58,7 +59,8 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
     startTime,
     reversed ? reversedCoords : undefined,
     speedKmh,
-    sport
+    sport,
+    initialSegments
   );
 
   const stravaSegKey = stravaConnected

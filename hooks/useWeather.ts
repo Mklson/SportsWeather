@@ -13,19 +13,34 @@ export function useWeather(
   const rounded = new Date(startTime);
   rounded.setMinutes(0, 0, 0);
   const reversed = !!overrideCoords;
-  const key = ["/api/weather", routeId, rounded.toISOString(), reversed ? "rev" : "fwd", speedKmh ?? 0] as const;
 
-  const { data, error, isLoading } = useSWR(
-    key,
+  // GET for the normal forward case (CDN-cacheable).
+  // POST only when reversed — full coord array can't go in a URL.
+  const getKey = reversed
+    ? null
+    : `/api/weather?routeId=${routeId}&startTime=${encodeURIComponent(rounded.toISOString())}&speedKmh=${speedKmh ?? 0}&sport=${sport ?? ""}`;
+  const postKey = reversed
+    ? ["/api/weather/post", routeId, rounded.toISOString(), speedKmh ?? 0]
+    : null;
+
+  const { data: getData, error: getError, isLoading: getLoading } = useSWR(
+    getKey,
+    (url: string) => fetch(url).then((r) => r.json() as Promise<WeatherResponse>),
+    { revalidateOnFocus: false, dedupingInterval: 3600 * 1000 }
+  );
+
+  const { data: postData, error: postError, isLoading: postLoading } = useSWR(
+    postKey,
     async () => {
-      const body = reversed
-        ? { coordinates: overrideCoords, startTime: rounded.toISOString(), speedKmh, sport }
-        : { routeId, startTime: rounded.toISOString(), speedKmh, sport };
-
       const res = await fetch("/api/weather", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          coordinates: overrideCoords,
+          startTime: rounded.toISOString(),
+          speedKmh,
+          sport,
+        }),
       });
       if (!res.ok) {
         const { error } = await res.json();
@@ -33,13 +48,12 @@ export function useWeather(
       }
       return res.json() as Promise<WeatherResponse>;
     },
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 3600 * 1000,
-      onSuccess: (d) => console.log("[weather] OK –", d.segments.length, "segmenter"),
-      onError:   (e) => console.error("[weather] FEIL:", e.message),
-    }
+    { revalidateOnFocus: false, dedupingInterval: 3600 * 1000 }
   );
+
+  const data    = reversed ? postData  : getData;
+  const error   = reversed ? postError : getError;
+  const isLoading = reversed ? postLoading : getLoading;
 
   const segments: WeatherSegment[] = data?.segments ?? [];
 

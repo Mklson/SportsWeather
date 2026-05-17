@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { DbRoute, DbWeatherCache, StravaSegment } from "@/types";
+import type { DbRoute, DbRouteSummary, DbWeatherCache, StravaSegment } from "@/types";
 
 // Used in Server Components and API routes
 export const supabaseAdmin = createClient(
@@ -34,14 +34,14 @@ export async function getRoute(id: string): Promise<DbRoute | null> {
   return data;
 }
 
-export async function getRoutesByUser(userId: string): Promise<DbRoute[]> {
+export async function getRoutesByUser(userId: string): Promise<DbRouteSummary[]> {
   const { data, error } = await supabaseAdmin
     .from("routes")
-    .select("*")
+    .select("id, name, sport, distance_km, elevation_gain_m, created_at, source, external_id, user_id")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as DbRouteSummary[];
 }
 
 export async function getCachedWeather(

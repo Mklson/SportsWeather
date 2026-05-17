@@ -130,6 +130,8 @@ export interface UploadResponse {
 
 // ─── Database schema types (mirrors Supabase tables) ──────────────────────
 
+export type DbRouteSummary = Omit<DbRoute, "coordinates">;
+
 export interface DbRoute {
   id: string;
   user_id: string | null;

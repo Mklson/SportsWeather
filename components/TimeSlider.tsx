@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId } from "react";
+import { useCallback, useId, useMemo } from "react";
 import { format, addHours, startOfHour } from "date-fns";
 import { enUS } from "date-fns/locale";
 
@@ -12,7 +12,8 @@ interface Props {
 
 export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
   const sliderId = useId();
-  const base = startOfHour(new Date());
+  // Stable reference within the same hour so handleChange doesn't recreate every render.
+  const base = useMemo(() => startOfHour(new Date()), []);
 
   const currentOffset = Math.round(
     (value.getTime() - base.getTime()) / (1000 * 60 * 60)
@@ -52,7 +53,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
         step={1}
         value={clampedOffset}
         onChange={handleChange}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600"
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600 touch-none"
         aria-label="Select start time"
       />
 

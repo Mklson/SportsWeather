@@ -102,15 +102,18 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   }, []);
 
 
-  const visibleStravaSegments = mapBounds
-    ? stravaSegments.filter((seg) =>
-        seg.coordinates.some(
-          (c) =>
-            c.lat >= mapBounds.south && c.lat <= mapBounds.north &&
-            c.lon >= mapBounds.west  && c.lon <= mapBounds.east
+  const visibleStravaSegments = useMemo(
+    () => mapBounds
+      ? stravaSegments.filter((seg) =>
+          seg.coordinates.some(
+            (c) =>
+              c.lat >= mapBounds.south && c.lat <= mapBounds.north &&
+              c.lon >= mapBounds.west  && c.lon <= mapBounds.east
+          )
         )
-      )
-    : stravaSegments;
+      : stravaSegments,
+    [mapBounds, stravaSegments]
+  );
 
   return (
     <>
@@ -141,7 +144,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             segments={cleared ? [] : segments}
             showRoute={!cleared}
             activeSegmentIndex={null}
-            onSegmentClick={() => {}}
             sport={sport}
             stravaSegments={cleared ? [] : stravaSegments}
             activeStravaSegmentId={activeStravaId}
@@ -178,7 +180,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             segments={cleared ? [] : segments}
             showRoute={!cleared}
             activeSegmentIndex={null}
-            onSegmentClick={() => {}}
             sport={sport}
             stravaSegments={cleared ? [] : stravaSegments}
             activeStravaSegmentId={activeStravaId}
@@ -316,15 +317,17 @@ function MobileBottomSheet({
   const [state, setState] = useState<SheetState>("peek");
   const [controlsOpen, setControlsOpen] = useState(true);
 
-  const sheetHeight =
-    state === "hidden" ? HIDDEN_HEIGHT :
-    state === "peek"   ? PEEK_HEIGHT :
-    "72dvh";
+  // Use transform instead of height so the animation runs on the GPU compositor
+  // thread without causing layout reflow on every frame.
+  const translateY =
+    state === "hidden" ? `calc(72dvh - ${HIDDEN_HEIGHT}px)` :
+    state === "peek"   ? `calc(72dvh - ${PEEK_HEIGHT}px)` :
+    "0px";
 
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
-      style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
+      style={{ height: "72dvh", transform: `translateY(${translateY})`, transition: "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)", willChange: "transform" }}
     >
       {/* Header — always visible */}
       <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-100">

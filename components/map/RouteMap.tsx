@@ -5,7 +5,10 @@ import mapboxgl from "mapbox-gl";
 import type { Route, WeatherSegment, SportType, StravaSegment } from "@/types";
 import { classifySkiConditions } from "@/lib/ski-conditions";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
+
+// Module-level cache so SVGs are only encoded and decoded once across all map instances.
+const _imageCache = new Map<string, HTMLImageElement>();;
 
 // ─── Basemap ──────────────────────────────────────────────────────────────────
 
@@ -416,11 +419,6 @@ function loadMapImages(map: mapboxgl.Map, onReady: () => void) {
     <path d="M22 12 L8 19 L11.5 12 L8 5 Z" fill="white" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
     <path d="M22 12 L8 19 L11.5 12 L8 5 Z" fill="#3b82f6"/>
   </svg>`;
-  const img = new Image(24, 24);
-  img.onload = () => {
-    if (!map.hasImage("direction-arrow")) map.addImage("direction-arrow", img);
-    onReady();
-  };
   const windArrow = (color: string) =>
     `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
       <line x1="12" y1="21" x2="12" y2="5" stroke="rgba(0,0,0,0.4)" stroke-width="4" stroke-linecap="round"/>
@@ -441,8 +439,21 @@ function loadMapImages(map: mapboxgl.Map, onReady: () => void) {
 
   for (const [name, svg] of toLoad) {
     if (map.hasImage(name)) { done(); continue; }
+
+    // Use cached HTMLImageElement if available — skips SVG re-encoding and decode on every map init.
+    const cached = _imageCache.get(name);
+    if (cached) {
+      map.addImage(name, cached);
+      done();
+      continue;
+    }
+
     const img = new Image(24, 24);
-    img.onload = () => { if (!map.hasImage(name)) map.addImage(name, img); done(); };
+    img.onload = () => {
+      _imageCache.set(name, img);
+      if (!map.hasImage(name)) map.addImage(name, img);
+      done();
+    };
     img.onerror = done;
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   }

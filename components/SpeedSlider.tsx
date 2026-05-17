@@ -1,8 +1,8 @@
 "use client";
 
-import { useId } from "react";
+import { useMemo, useId } from "react";
 import type { SportType } from "@/types";
-import { estimateTotalDuration } from "@/lib/route-sampler";
+import { haversineMetres, gradeAdjustedSpeed } from "@/lib/route-sampler";
 import type { Coordinate } from "@/types";
 
 const SPORT_CONFIG: Record<SportType, { min: number; max: number; default: number; unit: string; pace?: boolean }> = {
@@ -37,7 +37,27 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
   const id = useId();
   const cfg = SPORT_CONFIG[sport];
 
-  const estimatedHours = estimateTotalDuration(coords, speedKmh, sport);
+  // Haversine is expensive — pre-compute per-segment (distM, grade) once per route,
+  // then derive duration with cheap arithmetic on every speed change.
+  const routeSegments = useMemo(() => {
+    const segs: { distM: number; grade: number }[] = [];
+    for (let i = 1; i < coords.length; i++) {
+      const distM = haversineMetres(coords[i - 1], coords[i]);
+      const prevEle = coords[i - 1].ele ?? 0;
+      const currEle = coords[i].ele ?? 0;
+      segs.push({ distM, grade: distM > 0 ? ((currEle - prevEle) / distM) * 100 : 0 });
+    }
+    return segs;
+  }, [coords]);
+
+  const estimatedHours = useMemo(() => {
+    let total = 0;
+    for (const { distM, grade } of routeSegments) {
+      total += (distM / 1000) / gradeAdjustedSpeed(speedKmh, grade, sport);
+    }
+    return total;
+  }, [routeSegments, speedKmh, sport]);
+
   const durationLabel  = formatDuration(estimatedHours);
 
   const speedLabel = cfg.pace
@@ -60,7 +80,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
         step={1}
         value={speedKmh}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600"
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600 touch-none"
         aria-label="Select pace"
       />
       <div className="flex justify-between text-xs text-gray-400">

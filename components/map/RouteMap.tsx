@@ -656,8 +656,8 @@ function updateWindMarkers(map: mapboxgl.Map, segments: WeatherSegment[]) {
 function buildWindField(
   segments: WeatherSegment[]
 ): Array<{ lat: number; lon: number; seg: WeatherSegment }> {
-  const BUFFER_KM = 0.5;
-  const STEP_KM   = 2.0;
+  const BUFFER_KM = 0.6;
+  const STEP_KM   = 1.2;
 
   const lats  = segments.map((s) => s.coordinate.lat);
   const lons  = segments.map((s) => s.coordinate.lon);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, useMemo } from "react";
+import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
 import Link from "next/link";
@@ -43,6 +43,19 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const [cleared, setCleared] = useState(false);
   const [, startTransition] = useTransition();
 
+  // Debounced values for weather — sliders update display instantly but the
+  // SWR key (and any map re-render) only changes 400ms after the user stops.
+  const [weatherSpeed, setWeatherSpeed] = useState(speedKmh);
+  const [weatherTime, setWeatherTime] = useState(startTime);
+  useEffect(() => {
+    const t = setTimeout(() => setWeatherSpeed(speedKmh), 400);
+    return () => clearTimeout(t);
+  }, [speedKmh]);
+  useEffect(() => {
+    const t = setTimeout(() => setWeatherTime(startTime), 400);
+    return () => clearTimeout(t);
+  }, [startTime]);
+
   const resetMap = useCallback(() => setCleared(true), []);
 
   const handleBoundsChange = useCallback((b: { west: number; south: number; east: number; north: number }) => {
@@ -56,9 +69,9 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
   const { segments } = useWeather(
     route.id,
-    startTime,
+    weatherTime,
     reversed ? reversedCoords : undefined,
-    speedKmh,
+    weatherSpeed,
     sport,
     initialSegments
   );
@@ -80,7 +93,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
   const handleSpeedChange = useCallback((s: number) => {
     setCleared(false);
-    startTransition(() => setSpeedKmh(s));
+    setSpeedKmh(s);
   }, []);
 
   const handleToggleReverse = useCallback(() => {
@@ -358,7 +371,7 @@ function MobileBottomSheet({
           >
             <span>
               {format(startTime, "EEE d MMM · HH:mm", { locale: enUS })}
-              {" · "}{speedKmh} km/h
+              {" · "}{sport === "running" ? `${Math.floor(60 / speedKmh)}:${String(Math.round((60 / speedKmh % 1) * 60)).padStart(2, "0")} /km` : `${speedKmh} km/h`}
             </span>
             {controlsOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </button>

@@ -79,7 +79,6 @@ export function RouteMap({
   const containerRef       = useRef<HTMLDivElement>(null);
   const mapRef             = useRef<mapboxgl.Map | null>(null);
   const popupRef           = useRef<mapboxgl.Popup | null>(null);
-  const windMarkersRef     = useRef<mapboxgl.Marker[]>([]);
   const wxMarkersRef       = useRef<mapboxgl.Marker[]>([]);
   const stravaMarkersRef   = useRef<mapboxgl.Marker[]>([]);
   const pendingRef         = useRef<(() => void) | null>(null);
@@ -118,7 +117,7 @@ export function RouteMap({
       mapRef.current.remove();
       mapRef.current = null;
       mapReadyRef.current = false;
-      [windMarkersRef, wxMarkersRef, stravaMarkersRef].forEach((r) => {
+      [wxMarkersRef, stravaMarkersRef].forEach((r) => {
         r.current.forEach((m) => m.remove());
         r.current = [];
       });
@@ -148,12 +147,20 @@ export function RouteMap({
     });
 
     map.on("load", () => {
-      if (mapRef.current !== map) return; // Component unmounted before load fired
+      if (mapRef.current !== map) return;
       mapReadyRef.current = true;
-      loadDirectionArrowImage(map, () => {
+      loadMapImages(map, () => {
         if (mapRef.current !== map) return;
         if (latestShowRouteRef.current) addRouteLayers(map, route);
         addStravaSegmentLayers(map);
+        addWindLayer(map);
+        // Wire wind-arrow clicks once — persists across style changes on the same map instance
+        map.on("click", "wind-arrows", (e) => {
+          const idx = e.features?.[0]?.properties?.segIndex;
+          if (idx !== undefined && idx !== null) latestOnSegmentClickRef.current?.(Number(idx));
+        });
+        map.on("mouseenter", "wind-arrows", () => { map.getCanvas().style.cursor = "pointer"; });
+        map.on("mouseleave", "wind-arrows", () => { map.getCanvas().style.cursor = ""; });
         if (pendingRef.current) {
           pendingRef.current();
           pendingRef.current = null;
@@ -175,7 +182,7 @@ export function RouteMap({
     if (!map) return;
 
     const apply = () => {
-      updateWindMarkers(map, segments, windMarkersRef, onSegmentClick);
+      updateWindMarkers(map, segments);
       updateWeatherMarkers(map, segments, wxMarkersRef, sport, onSegmentClick);
     };
 
@@ -224,8 +231,8 @@ export function RouteMap({
     if (!map || !mapReadyRef.current) return;
 
     mapReadyRef.current = false;
-    // Remove all markers – they are DOM nodes and survive setStyle()
-    [windMarkersRef, wxMarkersRef, stravaMarkersRef].forEach((r) => {
+    // Weather pill markers are DOM nodes that survive setStyle() — must remove manually
+    [wxMarkersRef, stravaMarkersRef].forEach((r) => {
       r.current.forEach((m) => m.remove());
       r.current = [];
     });
@@ -234,7 +241,7 @@ export function RouteMap({
     map.once("style.load", () => {
       if (latestTerrain3dRef.current) addTerrain(map);
       mapReadyRef.current = true;
-      loadDirectionArrowImage(map, () => {
+      loadMapImages(map, () => {
         if (latestShowRouteRef.current) {
           addRouteLayers(map, route, false); // basemap swap — keep current viewport
           if (latestReversedRef.current) {
@@ -246,7 +253,8 @@ export function RouteMap({
           }
         }
         addStravaSegmentLayers(map);
-        updateWindMarkers(map, latestSegmentsRef.current, windMarkersRef, latestOnSegmentClickRef.current);
+        addWindLayer(map);
+        updateWindMarkers(map, latestSegmentsRef.current);
         updateWeatherMarkers(map, latestSegmentsRef.current, wxMarkersRef, latestSportRef.current, latestOnSegmentClickRef.current);
         updateStravaSegments(map, latestStravaRef.current ?? [], latestActiveStravaIdRef.current ?? null, stravaMarkersRef, latestOnStravaClickRef.current);
       });
@@ -400,11 +408,11 @@ function updateStravaSegments(
   } : empty());
 }
 
-// ─── Direction arrow image ────────────────────────────────────────────────────
+// ─── Map image loading ────────────────────────────────────────────────────────
 
-function loadDirectionArrowImage(map: mapboxgl.Map, onReady: () => void) {
-  // Arrow must point RIGHT — Mapbox aligns the icon's X+ axis with line direction
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+function loadMapImages(map: mapboxgl.Map, onReady: () => void) {
+  // Direction arrow must point RIGHT — Mapbox aligns X+ axis with line direction
+  const directionArrow = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
     <path d="M22 12 L8 19 L11.5 12 L8 5 Z" fill="white" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
     <path d="M22 12 L8 19 L11.5 12 L8 5 Z" fill="#3b82f6"/>
   </svg>`;
@@ -413,8 +421,58 @@ function loadDirectionArrowImage(map: mapboxgl.Map, onReady: () => void) {
     if (!map.hasImage("direction-arrow")) map.addImage("direction-arrow", img);
     onReady();
   };
-  img.onerror = onReady;
-  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  const windArrow = (color: string) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <line x1="12" y1="21" x2="12" y2="5" stroke="rgba(0,0,0,0.4)" stroke-width="4" stroke-linecap="round"/>
+      <polyline points="7,11 12,5 17,11" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="12" y1="21" x2="12" y2="5" stroke="${color}" stroke-width="2.2" stroke-linecap="round"/>
+      <polyline points="7,11 12,5 17,11" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
+  const toLoad: Array<[string, string]> = [
+    ["direction-arrow", directionArrow],
+    ["wind-tailwind",   windArrow("#22c55e")],
+    ["wind-crosswind",  windArrow("#f59e0b")],
+    ["wind-headwind",   windArrow("#ef4444")],
+  ];
+
+  let remaining = toLoad.length;
+  const done = () => { if (--remaining === 0) onReady(); };
+
+  for (const [name, svg] of toLoad) {
+    if (map.hasImage(name)) { done(); continue; }
+    const img = new Image(24, 24);
+    img.onload = () => { if (!map.hasImage(name)) map.addImage(name, img); done(); };
+    img.onerror = done;
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
+}
+
+// ─── Wind layer (GPU symbol layer — no DOM markers) ───────────────────────────
+
+function addWindLayer(map: mapboxgl.Map) {
+  if (!map.getSource("wind-field")) {
+    map.addSource("wind-field", { type: "geojson", data: empty() });
+  }
+  if (!map.getLayer("wind-arrows")) {
+    map.addLayer({
+      id: "wind-arrows",
+      type: "symbol",
+      source: "wind-field",
+      layout: {
+        "icon-image": ["concat", "wind-", ["get", "windClass"]] as mapboxgl.Expression,
+        "icon-rotate": ["get", "direction"] as mapboxgl.Expression,
+        "icon-rotation-alignment": "map",
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "icon-size": [
+          "interpolate", ["linear"], ["get", "speed"],
+          0, 0.7, 10, 1.0, 20, 1.35,
+        ] as mapboxgl.Expression,
+      },
+      paint: { "icon-opacity": 0.88 },
+    });
+  }
 }
 
 // ─── Route layers ─────────────────────────────────────────────────────────────
@@ -571,29 +629,26 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
   return wrap;
 }
 
-// ─── Wind arrow markers (Windy-inspired) ─────────────────────────────────────
+// ─── Wind arrow layer (GPU symbol layer — updates GeoJSON, zero DOM cost) ────
 
-function updateWindMarkers(
-  map: mapboxgl.Map,
-  segments: WeatherSegment[],
-  ref: React.MutableRefObject<mapboxgl.Marker[]>,
-  onSegmentClick?: (i: number) => void
-) {
-  ref.current.forEach((m) => m.remove());
-  ref.current = [];
-  if (!segments.length) return;
+function updateWindMarkers(map: mapboxgl.Map, segments: WeatherSegment[]) {
+  const src = map.getSource("wind-field") as mapboxgl.GeoJSONSource | undefined;
+  if (!src) return;
+  if (!segments.length) { src.setData(empty()); return; }
 
   const field = buildWindField(segments);
-
-  field.forEach(({ lat, lon, seg }) => {
-    const el = makeWindyArrowEl(seg);
-    if (onSegmentClick) el.addEventListener("click", () => onSegmentClick(seg.index));
-
-    ref.current.push(
-      new mapboxgl.Marker({ element: el, anchor: "center" })
-        .setLngLat([lon, lat])
-        .addTo(map)
-    );
+  src.setData({
+    type: "FeatureCollection",
+    features: field.map(({ lat, lon, seg }) => ({
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [lon, lat] },
+      properties: {
+        windClass: seg.windClass,
+        direction: (seg.weather.windDirection + 180) % 360,
+        speed: seg.weather.windSpeed,
+        segIndex: seg.index,
+      },
+    })),
   });
 }
 
@@ -601,8 +656,8 @@ function updateWindMarkers(
 function buildWindField(
   segments: WeatherSegment[]
 ): Array<{ lat: number; lon: number; seg: WeatherSegment }> {
-  const BUFFER_KM = 1.2;
-  const STEP_KM   = 0.75;
+  const BUFFER_KM = 0.5;
+  const STEP_KM   = 2.0;
 
   const lats  = segments.map((s) => s.coordinate.lat);
   const lons  = segments.map((s) => s.coordinate.lon);
@@ -641,74 +696,6 @@ function buildWindField(
   return points;
 }
 
-function makeWindyArrowEl(seg: WeatherSegment): HTMLElement {
-  const speed     = seg.weather.windSpeed;
-  const direction = (seg.weather.windDirection + 180) % 360;
-  const color     = windClassColor(seg.windClass);
-  const SIZE      = 26;
-
-  // Shaft length scales with wind speed: calm(~1 m/s)=4 units, gale(18+ m/s)=14 units
-  const shaftLen  = 4 + Math.min(speed / 18, 1) * 10;
-  const baseY     = 17;
-  const tipY      = +(baseY - shaftLen).toFixed(1);
-  const headSize  = +(Math.max(2.5, shaftLen * 0.32)).toFixed(1);
-  const headY     = +(tipY + headSize).toFixed(1);
-  const d = `M10,${baseY} L10,${tipY} M${10 - headSize},${headY} L10,${tipY} L${10 + headSize},${headY}`;
-
-  const el = document.createElement("div");
-  el.style.width   = `${SIZE}px`;
-  el.style.height  = `${SIZE}px`;
-  el.style.cursor  = "pointer";
-  el.style.opacity = "0.88";
-  el.title = `${speed.toFixed(1)} m/s`;
-
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("width",   `${SIZE}`);
-  svg.setAttribute("height",  `${SIZE}`);
-  svg.setAttribute("viewBox", "0 0 20 20");
-  svg.style.transform  = `rotate(${direction}deg)`;
-  svg.style.overflow   = "visible";
-
-  const halo = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  halo.setAttribute("d", d);
-  halo.setAttribute("stroke", "rgba(0,0,0,0.5)");
-  halo.setAttribute("stroke-width", "4");
-  halo.setAttribute("stroke-linecap", "round");
-  halo.setAttribute("stroke-linejoin", "round");
-  halo.setAttribute("fill", "none");
-  svg.appendChild(halo);
-
-  const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  arrow.setAttribute("d", d);
-  arrow.setAttribute("stroke", color);
-  arrow.setAttribute("stroke-width", "2.2");
-  arrow.setAttribute("stroke-linecap", "round");
-  arrow.setAttribute("stroke-linejoin", "round");
-  arrow.setAttribute("fill", "none");
-  svg.appendChild(arrow);
-
-  el.appendChild(svg);
-  return el;
-}
-
-/** Arrow colour by wind class (tailwind = green, crosswind = amber, headwind = red). */
-function windClassColor(wc: WeatherSegment["windClass"]): string {
-  if (wc === "tailwind")  return "#22c55e"; // green
-  if (wc === "crosswind") return "#f59e0b"; // amber
-  return "#ef4444";                          // red  (headwind)
-}
-
-/** Windy speed colour scale (m/s). */
-function windSpeedColor(ms: number): string {
-  if (ms < 1)  return "#b0e0ff"; // near calm – light blue
-  if (ms < 3)  return "#4fc3f7"; // gentle – sky blue
-  if (ms < 6)  return "#29b09d"; // light – teal
-  if (ms < 9)  return "#a8d830"; // moderate – yellow-green
-  if (ms < 12) return "#f5c518"; // fresh – amber
-  if (ms < 17) return "#f07800"; // strong – orange
-  if (ms < 22) return "#e02020"; // gale – red
-  return "#9b1dca";               // storm – purple
-}
 
 // ─── Popup ────────────────────────────────────────────────────────────────────
 

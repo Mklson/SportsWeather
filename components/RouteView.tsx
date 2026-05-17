@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
 import Link from "next/link";
@@ -41,8 +41,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const [speedKmh, setSpeedKmh] = useState(() => DEFAULT_SPEED_KMH[initialSport]);
   const [mapBounds, setMapBounds] = useState<{ west: number; south: number; east: number; north: number } | null>(null);
   const [cleared, setCleared] = useState(false);
-  const [, startTransition] = useTransition();
-
   // Debounced values for weather — sliders update display instantly but the
   // SWR key (and any map re-render) only changes 400ms after the user stops.
   const [weatherSpeed, setWeatherSpeed] = useState(speedKmh);
@@ -88,7 +86,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
   const handleTimeChange = useCallback((date: Date) => {
     setCleared(false);
-    startTransition(() => setStartTime(date));
+    setStartTime(date);
   }, []);
 
   const handleSpeedChange = useCallback((s: number) => {

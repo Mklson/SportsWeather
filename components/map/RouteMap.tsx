@@ -609,12 +609,14 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
   const temp = `${Math.round(seg.weather.temperature)}°`;
   const rain = seg.weather.precipitation > 0
     ? `<span style="font-size:11px;opacity:0.85"> ${seg.weather.precipitation.toFixed(1)}mm</span>` : "";
+  const windColor = seg.windClass === "tailwind" ? "#22c55e" : seg.windClass === "crosswind" ? "#f59e0b" : "#ef4444";
+  const wind = `<span style="color:${windColor};font-size:10px;font-weight:600"> ${Math.round(seg.weather.windSpeed)}m/s</span>`;
 
   if (sport === "skiing") {
     const ski = classifySkiConditions(seg.weather);
     pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span><span style="color:${ski.color};font-size:10px;font-weight:600">${ski.label.split(" ")[0]}</span>${rain}`;
   } else {
-    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span><span style="color:${text}">${rain}</span>`;
+    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span>${wind}${rain}`;
   }
 
   const stem = document.createElement("div");
@@ -652,8 +654,8 @@ function updateWindMarkers(map: mapboxgl.Map, segments: WeatherSegment[]) {
 function buildWindField(
   segments: WeatherSegment[]
 ): Array<{ lat: number; lon: number; seg: WeatherSegment }> {
-  const BUFFER_KM = 0.6;
-  const STEP_KM   = 1.2;
+  const BUFFER_KM = 1.5;
+  const STEP_KM   = 0.8;
 
   const lats  = segments.map((s) => s.coordinate.lat);
   const lons  = segments.map((s) => s.coordinate.lon);

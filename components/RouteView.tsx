@@ -262,6 +262,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
               onChange={handleSpeedChange}
               coords={route.coordinates}
             />
+            <WindBreakdownBar segments={segments} />
           </div>
 
           {/* Legend */}
@@ -427,6 +428,7 @@ function MobileBottomSheet({
                 onChange={onSpeedChange}
                 coords={route.coordinates}
               />
+              <WindBreakdownBar segments={weatherSegments} />
             </div>
           )}
         </div>
@@ -552,6 +554,34 @@ function windClassBorderColor(wc: WeatherSegment["windClass"] | null): string {
   if (wc === "crosswind") return "#f59e0b";
   if (wc === "headwind")  return "#ef4444";
   return "#e5e7eb";
+}
+
+function WindBreakdownBar({ segments }: { segments: WeatherSegment[] }) {
+  const totalKm = segments.reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
+  if (totalKm === 0) return null;
+
+  const tail  = segments.filter(s => s.windClass === "tailwind").reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
+  const head  = segments.filter(s => s.windClass === "headwind").reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
+  const cross = totalKm - tail - head;
+
+  const tailPct  = Math.round((tail  / totalKm) * 100);
+  const headPct  = Math.round((head  / totalKm) * 100);
+  const crossPct = 100 - tailPct - headPct;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex overflow-hidden rounded-full h-2.5">
+        {tailPct  > 0 && <div style={{ width: `${tailPct}%`,  backgroundColor: "#22c55e" }} />}
+        {crossPct > 0 && <div style={{ width: `${crossPct}%`, backgroundColor: "#f59e0b" }} />}
+        {headPct  > 0 && <div style={{ width: `${headPct}%`,  backgroundColor: "#ef4444" }} />}
+      </div>
+      <div className="flex justify-between text-xs font-medium">
+        <span style={{ color: "#22c55e" }}>{tailPct}% tail</span>
+        <span style={{ color: "#f59e0b" }}>{crossPct}% cross</span>
+        <span style={{ color: "#ef4444" }}>{headPct}% head</span>
+      </div>
+    </div>
+  );
 }
 
 function StravaSegmentList({

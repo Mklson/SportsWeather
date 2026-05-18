@@ -41,6 +41,8 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const [speedKmh, setSpeedKmh] = useState(() => DEFAULT_SPEED_KMH[initialSport]);
   const [mapBounds, setMapBounds] = useState<{ west: number; south: number; east: number; north: number } | null>(null);
   const [cleared, setCleared] = useState(false);
+  const [starredOnly, setStarredOnly] = useState(true);
+  const handleToggleStarredOnly = useCallback(() => setStarredOnly((v) => !v), []);
   // Debounced values for weather — sliders update display instantly but the
   // SWR key (and any map re-render) only changes 400ms after the user stops.
   const [weatherSpeed, setWeatherSpeed] = useState(speedKmh);
@@ -100,18 +102,30 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   }, []);
 
 
-  const visibleStravaSegments = useMemo(
-    () => mapBounds
-      ? stravaSegments.filter((seg) =>
+  const starredCount = useMemo(
+    () => stravaSegments.filter((s) => s.starred).length,
+    [stravaSegments]
+  );
+
+  // Star-filtered segments for the map (draws route lines)
+  const mapStravaSegments = useMemo(
+    () => starredOnly ? stravaSegments.filter((s) => s.starred) : stravaSegments,
+    [starredOnly, stravaSegments]
+  );
+
+  // Star-filtered + map-bounds filtered segments for the sidebar/sheet list
+  const listStravaSegments = useMemo(() => {
+    const base = starredOnly ? stravaSegments.filter((s) => s.starred) : stravaSegments;
+    return mapBounds
+      ? base.filter((seg) =>
           seg.coordinates.some(
             (c) =>
               c.lat >= mapBounds.south && c.lat <= mapBounds.north &&
               c.lon >= mapBounds.west  && c.lon <= mapBounds.east
           )
         )
-      : stravaSegments,
-    [mapBounds, stravaSegments]
-  );
+      : base;
+  }, [mapBounds, stravaSegments, starredOnly]);
 
   return (
     <>
@@ -143,7 +157,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             showRoute={!cleared}
             activeSegmentIndex={null}
             sport={sport}
-            stravaSegments={cleared ? [] : stravaSegments}
+            stravaSegments={cleared ? [] : mapStravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={handleStravaSegmentClick}
             onBoundsChange={handleBoundsChange}
@@ -160,12 +174,16 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           reversed={reversed}
           onToggleReverse={handleToggleReverse}
           stravaConnected={stravaConnected}
-          stravaSegments={visibleStravaSegments}
+          stravaSegments={listStravaSegments}
           weatherSegments={segments}
           stravaLoading={stravaLoading}
           stravaError={(stravaError as { error?: string } | null)?.error ?? (stravaError instanceof Error ? stravaError.message : null)}
           activeStravaId={activeStravaId}
           onStravaSegmentClick={handleStravaSegmentClick}
+          starredOnly={starredOnly}
+          onToggleStarredOnly={handleToggleStarredOnly}
+          starredCount={starredCount}
+          totalCount={stravaSegments.length}
         />
       </div>
 
@@ -179,7 +197,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             showRoute={!cleared}
             activeSegmentIndex={null}
             sport={sport}
-            stravaSegments={cleared ? [] : stravaSegments}
+            stravaSegments={cleared ? [] : mapStravaSegments}
             activeStravaSegmentId={activeStravaId}
             onStravaSegmentClick={handleStravaSegmentClick}
             onBoundsChange={handleBoundsChange}
@@ -246,8 +264,16 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           {/* Strava segments */}
           {stravaConnected && (
             <>
-              <div className="px-4 py-2 border-b border-gray-200 bg-white">
+              <div className="px-4 py-2 border-b border-gray-200 bg-white flex items-center justify-between">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</p>
+                {!stravaLoading && stravaSegments.length > 0 && (
+                  <button
+                    onClick={handleToggleStarredOnly}
+                    className="text-xs font-medium text-amber-500 hover:text-amber-700 transition-colors"
+                  >
+                    {starredOnly ? `★ ${starredCount} · Show all` : `All ${stravaSegments.length} · ★ only`}
+                  </button>
+                )}
               </div>
               {stravaLoading && (
                 <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">
@@ -260,7 +286,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
                 </div>
               )}
               {!stravaLoading && (
-                <StravaSegmentList segments={visibleStravaSegments} weatherSegments={segments} activeId={activeStravaId} onSelect={handleStravaSegmentClick} />
+                <StravaSegmentList segments={listStravaSegments} weatherSegments={segments} activeId={activeStravaId} onSelect={handleStravaSegmentClick} starredOnly={starredOnly} />
               )}
             </>
           )}
@@ -293,6 +319,10 @@ interface SheetProps {
   stravaError: string | null;
   activeStravaId: number | null;
   onStravaSegmentClick: (id: number) => void;
+  starredOnly: boolean;
+  onToggleStarredOnly: () => void;
+  starredCount: number;
+  totalCount: number;
 }
 
 function MobileBottomSheet({
@@ -311,6 +341,10 @@ function MobileBottomSheet({
   stravaError,
   activeStravaId,
   onStravaSegmentClick,
+  starredOnly,
+  onToggleStarredOnly,
+  starredCount,
+  totalCount,
 }: SheetProps) {
   const [state, setState] = useState<SheetState>("peek");
   const [controlsOpen, setControlsOpen] = useState(true);
@@ -400,6 +434,17 @@ function MobileBottomSheet({
       {/* Strava segments — only when expanded */}
       {state === "expanded" && stravaConnected && (
         <>
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-100">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</span>
+            {!stravaLoading && totalCount > 0 && (
+              <button
+                onClick={onToggleStarredOnly}
+                className="text-xs font-medium text-amber-500 active:text-amber-700"
+              >
+                {starredOnly ? `★ ${starredCount} · Show all` : `All ${totalCount} · ★ only`}
+              </button>
+            )}
+          </div>
           {stravaLoading && (
             <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-orange-500 animate-pulse">
               Loading Strava segments…
@@ -412,7 +457,7 @@ function MobileBottomSheet({
           )}
           {!stravaLoading && (
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <StravaSegmentList segments={stravaSegments} weatherSegments={weatherSegments} activeId={activeStravaId} onSelect={onStravaSegmentClick} />
+              <StravaSegmentList segments={stravaSegments} weatherSegments={weatherSegments} activeId={activeStravaId} onSelect={onStravaSegmentClick} starredOnly={starredOnly} />
             </div>
           )}
         </>
@@ -504,16 +549,20 @@ function StravaSegmentList({
   weatherSegments,
   activeId,
   onSelect,
+  starredOnly = false,
 }: {
   segments: StravaSegment[];
   weatherSegments: WeatherSegment[];
   activeId: number | null;
   onSelect: (id: number) => void;
+  starredOnly?: boolean;
 }) {
   if (!segments.length) {
     return (
       <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-4 text-center">
-        No Strava segments found along this route
+        {starredOnly
+          ? "No starred segments along this route — tap ★ to show all"
+          : "No Strava segments found along this route"}
       </div>
     );
   }

@@ -164,21 +164,25 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       saveSegmentCache(routeId, activityType, filteredExplore).catch(() => {});
     }
 
-    // Starred segments near the route go first, marked with starred: true
+    // Starred segments near the route go first
     const starredNearRoute = starred.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
-    const starredIds = new Set(starredNearRoute.map((s) => s.id));
+    const starredNearIds = new Set(starredNearRoute.map((s) => s.id));
+    // All starred IDs (regardless of proximity) — used to stamp explore-cache copies
+    const allStarredIds = new Set(starred.map((s) => s.id));
 
     // Merge: starred first, then explore results not already in starred
     const merged = [
       ...starredNearRoute,
-      ...filteredExplore.filter((s) => !starredIds.has(s.id)),
+      ...filteredExplore.filter((s) => !starredNearIds.has(s.id)),
     ];
 
     // Strava segments are one-directional — only keep those whose travel direction
     // matches the current route direction (forward or reversed).
-    const segments = merged.filter((s) =>
-      segmentDirectionAligned(s, dbRoute.coordinates, reversed)
-    );
+    // Final pass: stamp starred:true on any segment whose ID is in the user's starred list
+    // (explore-cached copies of starred segments arrive without the starred field).
+    const segments = merged
+      .filter((s) => segmentDirectionAligned(s, dbRoute.coordinates, reversed))
+      .map((s) => allStarredIds.has(s.id) ? { ...s, starred: true as const } : s);
 
     const response = NextResponse.json({ segments });
     if (freshAccessToken) {

@@ -135,8 +135,16 @@ export function RouteMap({
     });
 
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
     mapRef.current = map;
+
+    // iOS Safari: without this, removing maximumScale from viewport allows page zoom on pinch.
+    // gesturestart/gesturechange are iOS-only events that fire before Mapbox sees the touch.
+    // preventDefault here stops page zoom while Mapbox's touch-action:none on the canvas
+    // ensures it still receives the raw touch events for map zoom.
+    const blockGesture = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart",  blockGesture, { passive: false });
+    document.addEventListener("gesturechange", blockGesture, { passive: false });
 
     map.on("moveend", () => {
       const b = map.getBounds();
@@ -172,6 +180,8 @@ export function RouteMap({
       map.remove();
       mapRef.current = null;
       mapReadyRef.current = false;
+      document.removeEventListener("gesturestart",  blockGesture);
+      document.removeEventListener("gesturechange", blockGesture);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.id]);

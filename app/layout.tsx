@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,  // prevents iOS Safari from intercepting pinch as page zoom so Mapbox handles it
+  // No maximumScale — setting it to 1 causes iOS Safari to swallow ALL pinch events,
+  // so Mapbox never receives them. Pinch page-zoom is prevented per-page via gesturestart listeners.
   themeColor: "#030712",
 };
 

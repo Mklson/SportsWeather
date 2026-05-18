@@ -65,7 +65,7 @@ export function SavedRoutes({ routes }: Props) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
       {localRoutes.map((route) => (
-        <div key={route.id} className="flex items-center gap-3 px-3 py-2.5 group">
+        <div key={route.id} className="relative flex items-center gap-3 px-3 py-2.5 group">
           {confirmId === route.id ? (
             /* Inline confirm row */
             <>
@@ -73,32 +73,35 @@ export function SavedRoutes({ routes }: Props) {
               <button
                 onClick={() => handleDelete(route.id)}
                 disabled={deletingId === route.id}
-                className="text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                className="relative z-10 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
               >
                 Delete
               </button>
               <button
                 onClick={() => setConfirmId(null)}
-                className="text-xs font-medium text-gray-500 hover:text-gray-800 px-2 py-1 transition-colors"
+                className="relative z-10 text-xs font-medium text-gray-500 hover:text-gray-800 px-2 py-1 transition-colors"
               >
                 Cancel
               </button>
             </>
           ) : (
-            /* Normal row */
+            /* Normal row — Link covers the whole row so anywhere is tappable on mobile */
             <>
-              <span className="text-base shrink-0 w-6 text-center">
+              <Link
+                href={`/route/${route.id}`}
+                className="absolute inset-0"
+                style={{ touchAction: "manipulation" }}
+                aria-label={route.name}
+              />
+              <span className="relative text-base shrink-0 w-6 text-center pointer-events-none">
                 {sportEmoji(route.sport)}
               </span>
 
-              <Link
-                href={`/route/${route.id}`}
-                className="flex-1 text-sm font-medium text-gray-900 hover:text-blue-700 transition-colors truncate min-w-0"
-              >
+              <span className="relative flex-1 text-sm font-medium text-gray-900 group-hover:text-blue-700 transition-colors truncate min-w-0 pointer-events-none">
                 {route.name}
-              </Link>
+              </span>
 
-              <div className="flex items-center gap-2.5 text-xs text-gray-400 shrink-0">
+              <div className="relative flex items-center gap-2.5 text-xs text-gray-400 shrink-0 pointer-events-none">
                 {formatDist(route.distance_km) && (
                   <span>{formatDist(route.distance_km)}</span>
                 )}
@@ -116,7 +119,7 @@ export function SavedRoutes({ routes }: Props) {
               <button
                 onClick={() => setConfirmId(route.id)}
                 title="Delete route"
-                className="shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ml-1"
+                className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ml-1"
                 aria-label="Delete route"
               >
                 <TrashIcon />

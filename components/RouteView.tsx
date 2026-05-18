@@ -133,23 +133,34 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
       <div className="md:hidden relative bg-white" style={{ height: "100dvh" }}>
         {/* Back nav — fixed so iOS touch-action:none on the Mapbox canvas can't swallow taps */}
         <div className="fixed top-2 right-2 z-50 flex gap-1.5 md:hidden">
-          <Link href={backHref} className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200 hover:bg-white transition-colors">
+          <Link
+            href={backHref}
+            style={{ touchAction: "manipulation" }}
+            className="flex items-center gap-1 bg-white/90 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200"
+          >
             ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
           </Link>
           {stravaConnected && (
-            <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-orange-200 hover:bg-white transition-colors">
+            <Link
+              href="/strava/activities"
+              prefetch={false}
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-1 bg-white/90 text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-orange-200"
+            >
               ← Strava
             </Link>
           )}
           <button
             onClick={resetMap}
             title="Clear map"
-            className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200 hover:bg-white transition-colors"
+            style={{ touchAction: "manipulation" }}
+            className="flex items-center gap-1 bg-white/90 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200"
           >
             <ResetIcon /> Clear
           </button>
         </div>
-        <div className="absolute inset-0">
+        {/* touch-action:none on the wrapper ensures iOS passes the full touch chain (incl. pinch) to Mapbox */}
+        <div className="absolute inset-0" style={{ touchAction: "none" }}>
           <RouteMap
             key={route.id}
             route={route}

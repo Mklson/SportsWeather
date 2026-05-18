@@ -340,7 +340,7 @@ export function RouteMap({
   ];
 
   return (
-    <div ref={containerRef} className="w-full h-full relative">
+    <div ref={containerRef} className="w-full h-full relative" style={{ touchAction: "none" }}>
       <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
         <div className="flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
           {basemapOptions.map(({ key, label }) => (

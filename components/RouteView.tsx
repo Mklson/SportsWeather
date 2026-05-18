@@ -150,9 +150,11 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         all touches in the canvas area regardless of z-index. Keeping the nav bar
         outside the canvas area (non-overlapping) is the only reliable fix.
       */}
-      <div className="md:hidden flex flex-col bg-white" style={{ height: "100dvh" }}>
-        {/* Top nav bar — above the map, never overlaps the Mapbox canvas */}
-        <div className="flex-shrink-0 flex items-center justify-between px-3 bg-white border-b border-gray-200" style={{ minHeight: "44px" }}>
+      <div className="md:hidden flex flex-col bg-white" style={{ height: "100dvh", touchAction: "pan-x pan-y" }}>
+        {/* Top nav bar — above the map, never overlaps the Mapbox canvas.
+            relative+z-30: ensures taps here win over the bottom sheet (z-20) and canvas if
+            any sub-pixel overflow causes an invisible overlap on iOS. */}
+        <div className="flex-shrink-0 flex items-center justify-between px-3 bg-white border-b border-gray-200 relative z-30" style={{ minHeight: "44px" }}>
           <span className="text-xs font-semibold text-gray-800 truncate">{route.name}</span>
           <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
             <Link
@@ -182,8 +184,9 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             </button>
           </div>
         </div>
-        {/* Map fills remaining height */}
-        <div className="flex-1 min-h-0 relative">
+        {/* Map fills remaining height — overflow-hidden clips the canvas to this
+            container so it cannot bleed into the nav bar and eat touch events. */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
         <div className="absolute inset-0">
           <RouteMap
             key={route.id}

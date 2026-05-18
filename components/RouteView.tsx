@@ -159,8 +159,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             <ResetIcon /> Clear
           </button>
         </div>
-        {/* touch-action:none on the wrapper ensures iOS passes the full touch chain (incl. pinch) to Mapbox */}
-        <div className="absolute inset-0" style={{ touchAction: "none" }}>
+        <div className="absolute inset-0">
           <RouteMap
             key={route.id}
             route={route}

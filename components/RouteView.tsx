@@ -130,9 +130,9 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   return (
     <>
       {/* ── Mobile layout ─────────────────────────────────────────────── */}
-      <div className="md:hidden relative overflow-hidden bg-white" style={{ height: "100dvh" }}>
-        {/* Back nav — floats above map */}
-        <div className="absolute top-2 right-2 z-20 flex gap-1.5">
+      <div className="md:hidden relative bg-white" style={{ height: "100dvh" }}>
+        {/* Back nav — fixed so iOS touch-action:none on the Mapbox canvas can't swallow taps */}
+        <div className="fixed top-2 right-2 z-50 flex gap-1.5 md:hidden">
           <Link href={backHref} className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200 hover:bg-white transition-colors">
             ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
           </Link>

@@ -204,6 +204,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       .map((s) => allStarredIds.has(s.id) ? { ...s, starred: true as const } : s);
 
     const response = NextResponse.json({ segments });
+    response.headers.set("Cache-Control", "no-store");
     if (freshAccessToken) {
       response.cookies.set("strava_access_token", freshAccessToken, {
         httpOnly: true,

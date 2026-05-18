@@ -379,7 +379,7 @@ function MobileBottomSheet({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
+      className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
       style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
     >
       {/* Header — always visible */}

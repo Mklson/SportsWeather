@@ -164,22 +164,26 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       saveSegmentCache(routeId, activityType, filteredExplore).catch(() => {});
     }
 
-    // Starred segments near the route go first
-    const starredNearRoute = starred.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
-    const starredNearIds = new Set(starredNearRoute.map((s) => s.id));
-    // All starred IDs (regardless of proximity) — used to stamp explore-cache copies
+    // All starred IDs — used to stamp any copy that reaches the client
     const allStarredIds = new Set(starred.map((s) => s.id));
 
-    // Merge: starred first, then explore results not already in starred
+    // Segments near the route that are starred (may have coordinates:[] from the summary endpoint)
+    const starredNearRoute = starred.filter((s) => segmentAlongsideRoute(s, dbRoute.coordinates));
+    const starredNearIds = new Set(starredNearRoute.map((s) => s.id));
+
+    // Index explore results by id — these always have full polyline coordinates
+    const exploreById = new Map(filteredExplore.map((s) => [s.id, s]));
+
+    // Merge: starred segments go first, but prefer the explore copy (full coordinates)
+    // over the starred-API copy (coordinates:[] — no polyline in summary response).
     const merged = [
-      ...starredNearRoute,
+      ...starredNearRoute.map((s) => exploreById.get(s.id) ?? s),
       ...filteredExplore.filter((s) => !starredNearIds.has(s.id)),
     ];
 
     // Strava segments are one-directional — only keep those whose travel direction
     // matches the current route direction (forward or reversed).
-    // Final pass: stamp starred:true on any segment whose ID is in the user's starred list
-    // (explore-cached copies of starred segments arrive without the starred field).
+    // Stamp starred:true on any segment whose ID is in the user's starred list.
     const segments = merged
       .filter((s) => segmentDirectionAligned(s, dbRoute.coordinates, reversed))
       .map((s) => allStarredIds.has(s.id) ? { ...s, starred: true as const } : s);

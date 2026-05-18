@@ -395,9 +395,10 @@ function updateStravaSegments(
   markersRef.current.forEach((m) => m.remove());
   markersRef.current = [];
 
-  src.setData(segments.length ? {
+  const drawable = segments.filter((seg) => seg.coordinates.length >= 2);
+  src.setData(drawable.length ? {
     type: "FeatureCollection",
-    features: segments.map((seg) => ({
+    features: drawable.map((seg) => ({
       type: "Feature" as const,
       geometry: {
         type: "LineString" as const,

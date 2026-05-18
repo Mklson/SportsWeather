@@ -58,6 +58,20 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
   const resetMap = useCallback(() => setCleared(true), []);
 
+  // iOS Safari: prevent browser-level page zoom so Mapbox receives pinch events.
+  // Without this, a pinch zooms the page, offsetting all touch coordinates — buttons
+  // become unreachable and Mapbox never gets the gesture. This is the per-page
+  // gesturestart suppression noted in layout.tsx.
+  useEffect(() => {
+    const prevent = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", prevent, { passive: false });
+    document.addEventListener("gesturechange", prevent, { passive: false });
+    return () => {
+      document.removeEventListener("gesturestart", prevent);
+      document.removeEventListener("gesturechange", prevent);
+    };
+  }, []);
+
   const handleBoundsChange = useCallback((b: { west: number; south: number; east: number; north: number }) => {
     setMapBounds(b);
   }, []);

@@ -165,6 +165,9 @@ export function RouteMap({
           pendingRef.current();
           pendingRef.current = null;
         }
+        // iOS: after client-side navigation the canvas dimensions may be stale.
+        // A deferred resize ensures Mapbox recalculates after the browser layout settles.
+        requestAnimationFrame(() => { if (mapRef.current === map) map.resize(); });
       });
     });
 

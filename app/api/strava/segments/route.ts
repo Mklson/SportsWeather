@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRoute, getCachedSegments, saveSegmentCache, getCachedStarred, saveStarredCache } from "@/lib/db/client";
-import { exploreSegments, getStarredSegments, refreshStravaToken } from "@/lib/strava";
+import { exploreSegments, getStarredSegments, getSegmentById, refreshStravaToken } from "@/lib/strava";
 import type { Coordinate, StravaSegment } from "@/types";
 
 export const runtime = "nodejs";
@@ -176,10 +176,25 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     // Merge: starred segments go first, but prefer the explore copy (full coordinates)
     // over the starred-API copy (coordinates:[] — no polyline in summary response).
-    const merged = [
+    let merged: StravaSegment[] = [
       ...starredNearRoute.map((s) => exploreById.get(s.id) ?? s),
       ...filteredExplore.filter((s) => !starredNearIds.has(s.id)),
     ];
+
+    // Strava's /segments/starred returns summary objects with no polyline.
+    // For starred segments that the explore endpoint didn't cover, fetch full
+    // segment details individually so we always have drawable coordinates.
+    const needsCoords = merged.filter((s) => s.starred && s.coordinates.length < 2);
+    if (needsCoords.length > 0) {
+      const detailed = await Promise.all(
+        needsCoords.map((s) => getSegmentById(token, s.id).catch(() => null))
+      );
+      const detailedById = new Map<number, StravaSegment>();
+      for (const s of detailed) {
+        if (s && s.coordinates.length >= 2) detailedById.set(s.id, s);
+      }
+      merged = merged.map((s) => detailedById.get(s.id) ?? s);
+    }
 
     // Strava segments are one-directional — only keep those whose travel direction
     // matches the current route direction (forward or reversed).

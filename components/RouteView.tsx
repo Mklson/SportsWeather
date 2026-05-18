@@ -130,35 +130,46 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   return (
     <>
       {/* ── Mobile layout ─────────────────────────────────────────────── */}
-      <div className="md:hidden relative bg-white" style={{ height: "100dvh" }}>
-        {/* Back nav — fixed so iOS touch-action:none on the Mapbox canvas can't swallow taps */}
-        <div className="fixed top-2 right-2 z-50 flex gap-1.5 md:hidden">
-          <Link
-            href={backHref}
-            style={{ touchAction: "manipulation" }}
-            className="flex items-center gap-1 bg-white/90 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200"
-          >
-            ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
-          </Link>
-          {stravaConnected && (
+      {/*
+        The top nav bar sits in a flex column ABOVE the map container.
+        Mapbox sets touch-action:none on its canvas via JS; on iOS this absorbs
+        all touches in the canvas area regardless of z-index. Keeping the nav bar
+        outside the canvas area (non-overlapping) is the only reliable fix.
+      */}
+      <div className="md:hidden flex flex-col bg-white" style={{ height: "100dvh" }}>
+        {/* Top nav bar — above the map, never overlaps the Mapbox canvas */}
+        <div className="flex-shrink-0 flex items-center justify-between px-3 bg-white border-b border-gray-200" style={{ minHeight: "44px" }}>
+          <span className="text-xs font-semibold text-gray-800 truncate">{route.name}</span>
+          <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
             <Link
-              href="/strava/activities"
-              prefetch={false}
+              href={backHref}
               style={{ touchAction: "manipulation" }}
-              className="flex items-center gap-1 bg-white/90 text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-orange-200"
+              className="flex items-center gap-1 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 active:bg-gray-200"
             >
-              ← Strava
+              ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
             </Link>
-          )}
-          <button
-            onClick={resetMap}
-            title="Clear map"
-            style={{ touchAction: "manipulation" }}
-            className="flex items-center gap-1 bg-white/90 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow border border-gray-200"
-          >
-            <ResetIcon /> Clear
-          </button>
+            {stravaConnected && (
+              <Link
+                href="/strava/activities"
+                prefetch={false}
+                style={{ touchAction: "manipulation" }}
+                className="flex items-center gap-1 text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-orange-50 active:bg-orange-100"
+              >
+                ← Strava
+              </Link>
+            )}
+            <button
+              onClick={resetMap}
+              title="Clear map"
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-1 text-gray-500 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 active:bg-gray-200"
+            >
+              <ResetIcon /> Clear
+            </button>
+          </div>
         </div>
+        {/* Map fills remaining height */}
+        <div className="flex-1 min-h-0 relative">
         <div className="absolute inset-0">
           <RouteMap
             key={route.id}
@@ -195,6 +206,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           starredCount={starredCount}
           totalCount={stravaSegments.length}
         />
+        </div>
       </div>
 
       {/* ── Desktop layout ─────────────────────────────────────────────── */}

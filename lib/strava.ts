@@ -189,6 +189,28 @@ export function stravaRouteTypeToSport(routeType: number): SportType {
   return "running"; // 2=run, 3=walk/hike
 }
 
+export async function getSegmentById(token: string, segmentId: number): Promise<StravaSegment | null> {
+  const res = await fetch(`${STRAVA_API}/segments/${segmentId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const s: any = await res.json();
+  return {
+    id: s.id,
+    name: s.name,
+    distanceM: s.distance,
+    avgGrade: s.average_grade,
+    elevDifference: s.total_elevation_gain ?? 0,
+    climbCategory: s.climb_category ?? 0,
+    startLatLng: s.start_latlng,
+    endLatLng: s.end_latlng,
+    coordinates: s.map?.polyline ? decodePolyline(s.map.polyline) : [],
+    starred: true,
+  };
+}
+
 /** Decode Google Encoded Polyline to Coordinate array. */
 export function decodePolyline(encoded: string): Coordinate[] {
   const decoded = polyline.decode(encoded);

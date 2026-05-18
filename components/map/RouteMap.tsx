@@ -138,15 +138,6 @@ export function RouteMap({
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
     mapRef.current = map;
 
-    // iOS Safari: prevent two-finger page zoom on the map container.
-    // touchmove with 2+ touches would trigger iOS page zoom; preventDefault stops that
-    // while Mapbox's own handlers still receive the touch events and zoom the map.
-    // Scoped to the container so it doesn't affect the rest of the page.
-    const blockPinchZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) e.preventDefault();
-    };
-    containerRef.current?.addEventListener("touchmove", blockPinchZoom, { passive: false });
-
     map.on("moveend", () => {
       const b = map.getBounds();
       if (b) latestOnBoundsChangeRef.current?.({
@@ -181,7 +172,6 @@ export function RouteMap({
       map.remove();
       mapRef.current = null;
       mapReadyRef.current = false;
-      containerRef.current?.removeEventListener("touchmove", blockPinchZoom);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.id]);

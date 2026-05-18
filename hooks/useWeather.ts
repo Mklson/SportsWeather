@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import useSWR from "swr";
 import type { Coordinate, SportType, WeatherResponse, WeatherSegment } from "@/types";
 
@@ -24,6 +25,11 @@ export function useWeather(
     ? ["/api/weather/post", routeId, rounded.toISOString(), speedKmh ?? 0]
     : null;
 
+  // Only suppress the client fetch for the exact key the server pre-fetched.
+  // When the user changes time or speed the key changes and we must fetch fresh data.
+  const initialGetKeyRef = useRef(getKey);
+  const isInitialKey = getKey !== null && getKey === initialGetKeyRef.current;
+
   const serverFallback: WeatherResponse | undefined = initialSegments
     ? { segments: initialSegments, fetchedAt: new Date().toISOString() }
     : undefined;
@@ -34,9 +40,8 @@ export function useWeather(
     {
       revalidateOnFocus: false,
       dedupingInterval: 3600 * 1000,
-      // Server gave us fresh data — skip the client fetch for the initial hour
-      fallbackData: serverFallback,
-      revalidateIfStale: !initialSegments,
+      fallbackData: isInitialKey ? serverFallback : undefined,
+      revalidateIfStale: isInitialKey ? !initialSegments : undefined,
     }
   );
 

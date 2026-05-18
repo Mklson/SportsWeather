@@ -315,17 +315,15 @@ function MobileBottomSheet({
   const [state, setState] = useState<SheetState>("peek");
   const [controlsOpen, setControlsOpen] = useState(true);
 
-  // Use transform instead of height so the animation runs on the GPU compositor
-  // thread without causing layout reflow on every frame.
-  const translateY =
-    state === "hidden" ? `calc(72dvh - ${HIDDEN_HEIGHT}px)` :
-    state === "peek"   ? `calc(72dvh - ${PEEK_HEIGHT}px)` :
-    "0px";
+  const sheetHeight =
+    state === "hidden" ? HIDDEN_HEIGHT :
+    state === "peek"   ? PEEK_HEIGHT :
+    "72dvh";
 
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
-      style={{ height: "72dvh", transform: `translateY(${translateY})`, transition: "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)", willChange: "transform" }}
+      style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
     >
       {/* Header — always visible */}
       <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-100">

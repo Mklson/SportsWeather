@@ -113,13 +113,6 @@ export function RouteMap({
     if (!containerRef.current) return;
     const container = containerRef.current;
 
-    // iOS Safari: call preventDefault on multi-touch touchstart to prevent the browser
-    // from competing with Mapbox's pinch-zoom handler. touch-action:none (below) is the
-    // CSS equivalent, but iOS WebKit does not reliably inherit it from ancestor elements,
-    // so we also block it explicitly here at the nearest JS level.
-    const blockPageZoom = (e: TouchEvent) => { if (e.touches.length > 1) e.preventDefault(); };
-    container.addEventListener("touchstart", blockPageZoom, { passive: false });
-
     // Destroy any existing map so a new route always gets a clean canvas
     if (mapRef.current) {
       mapRef.current.remove();
@@ -181,7 +174,6 @@ export function RouteMap({
     });
 
     return () => {
-      container.removeEventListener("touchstart", blockPageZoom);
       map.remove();
       mapRef.current = null;
       mapReadyRef.current = false;

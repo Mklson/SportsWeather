@@ -60,19 +60,6 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
   const resetMap = useCallback(() => setCleared(true), []);
 
-  // iOS Safari: prevent browser-level page zoom without breaking Mapbox pinch zoom.
-  // gesturestart/preventDefault was suppressing touchmove delivery to Mapbox's canvas,
-  // so the map never received the movement data it needs to zoom. Instead we prevent
-  // the browser's default on touchmove for multi-touch — by the time the event bubbles
-  // to the document, Mapbox has already processed it on the canvas (touch-action:none).
-  useEffect(() => {
-    const preventPinchZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) e.preventDefault();
-    };
-    document.addEventListener("touchmove", preventPinchZoom, { passive: false });
-    return () => document.removeEventListener("touchmove", preventPinchZoom);
-  }, []);
-
   const handleBoundsChange = useCallback((b: { west: number; south: number; east: number; north: number }) => {
     setMapBounds(b);
   }, []);
@@ -185,11 +172,9 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             </button>
           </div>
         </div>
-        {/* Map fills remaining height — overflow-hidden clips the canvas to this
-            container so it cannot bleed into the nav bar and eat touch events.
-            isolation:isolate creates a stacking context so the bottom sheet (z-20)
-            is fully contained here and can never escape to cover the nav bar (z-30). */}
-        <div className="flex-1 min-h-0 relative overflow-hidden" style={{ isolation: "isolate" }}>
+        {/* Map fills remaining height — overflow-hidden clips the canvas so it cannot
+            bleed into the nav bar and steal touch events there. */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
         <div className="absolute inset-0">
           <RouteMap
             key={route.id}
@@ -400,7 +385,7 @@ function MobileBottomSheet({
   return (
     <div
       className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
-      style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
+      style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)", touchAction: "pan-y" }}
     >
       {/* Header — always visible */}
       <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-100">

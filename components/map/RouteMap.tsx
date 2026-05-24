@@ -166,8 +166,9 @@ export function RouteMap({
           pendingRef.current = null;
         }
         // iOS: after client-side navigation the canvas dimensions may be stale.
-        // A deferred resize ensures Mapbox recalculates after the browser layout settles.
+        // Two deferred resizes: first on next frame, second after layout fully settles (~500ms).
         requestAnimationFrame(() => { if (mapRef.current === map) map.resize(); });
+        setTimeout(() => { if (mapRef.current === map) map.resize(); }, 500);
       });
     });
 

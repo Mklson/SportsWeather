@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
 import Link from "next/link";
@@ -28,7 +27,6 @@ interface Props {
 }
 
 export function RouteView({ route, initialSport = "cycling", stravaConnected = false, backHref = "/", initialSegments }: Props) {
-  const router = useRouter();
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -146,7 +144,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           <span className="text-xs font-semibold text-gray-800 truncate">{route.name}</span>
           <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
             <button
-              onClick={() => router.push(backHref)}
+              onClick={() => { window.location.href = backHref; }}
               style={{ touchAction: "manipulation" }}
               className="flex items-center gap-1 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 active:bg-gray-200"
             >
@@ -175,7 +173,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         {/* Map fills remaining height — overflow-hidden clips the canvas so it cannot
             bleed into the nav bar and steal touch events there. */}
         <div className="flex-1 min-h-0 relative overflow-hidden">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0" style={{ touchAction: "none" }}>
           <RouteMap
             key={route.id}
             route={route}

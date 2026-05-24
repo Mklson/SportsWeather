@@ -4,4 +4,5 @@
 export const FEATURED_ROUTE_IDS: string[] = [
   "946d7ba3-2307-4fed-a6ec-11fded024bd4",
   "77e3ee8c-06f0-4fbe-9fac-38aad1159c8a",
+  "21bc9e5e-c155-409f-8368-ed9d464d4324",
 ];

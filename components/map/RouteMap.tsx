@@ -111,6 +111,14 @@ export function RouteMap({
   // preventing the old map's canvas from overlapping the new one even briefly.
   useLayoutEffect(() => {
     if (!containerRef.current) return;
+    const container = containerRef.current;
+
+    // iOS Safari: call preventDefault on multi-touch touchstart to prevent the browser
+    // from competing with Mapbox's pinch-zoom handler. touch-action:none (below) is the
+    // CSS equivalent, but iOS WebKit does not reliably inherit it from ancestor elements,
+    // so we also block it explicitly here at the nearest JS level.
+    const blockPageZoom = (e: TouchEvent) => { if (e.touches.length > 1) e.preventDefault(); };
+    container.addEventListener("touchstart", blockPageZoom, { passive: false });
 
     // Destroy any existing map so a new route always gets a clean canvas
     if (mapRef.current) {
@@ -173,6 +181,7 @@ export function RouteMap({
     });
 
     return () => {
+      container.removeEventListener("touchstart", blockPageZoom);
       map.remove();
       mapRef.current = null;
       mapReadyRef.current = false;
@@ -334,7 +343,7 @@ export function RouteMap({
   ];
 
   return (
-    <div ref={containerRef} className="w-full h-full relative">
+    <div ref={containerRef} className="w-full h-full relative" style={{ touchAction: "none" }}>
       <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
         <div className="flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
           {basemapOptions.map(({ key, label }) => (

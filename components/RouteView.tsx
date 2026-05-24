@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
 import Link from "next/link";
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function RouteView({ route, initialSport = "cycling", stravaConnected = false, backHref = "/", initialSegments }: Props) {
+  const router = useRouter();
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -58,18 +60,17 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
 
   const resetMap = useCallback(() => setCleared(true), []);
 
-  // iOS Safari: prevent browser-level page zoom so Mapbox receives pinch events.
-  // Without this, a pinch zooms the page, offsetting all touch coordinates — buttons
-  // become unreachable and Mapbox never gets the gesture. This is the per-page
-  // gesturestart suppression noted in layout.tsx.
+  // iOS Safari: prevent browser-level page zoom without breaking Mapbox pinch zoom.
+  // gesturestart/preventDefault was suppressing touchmove delivery to Mapbox's canvas,
+  // so the map never received the movement data it needs to zoom. Instead we prevent
+  // the browser's default on touchmove for multi-touch — by the time the event bubbles
+  // to the document, Mapbox has already processed it on the canvas (touch-action:none).
   useEffect(() => {
-    const prevent = (e: Event) => e.preventDefault();
-    document.addEventListener("gesturestart", prevent, { passive: false });
-    document.addEventListener("gesturechange", prevent, { passive: false });
-    return () => {
-      document.removeEventListener("gesturestart", prevent);
-      document.removeEventListener("gesturechange", prevent);
+    const preventPinchZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault();
     };
+    document.addEventListener("touchmove", preventPinchZoom, { passive: false });
+    return () => document.removeEventListener("touchmove", preventPinchZoom);
   }, []);
 
   const handleBoundsChange = useCallback((b: { west: number; south: number; east: number; north: number }) => {
@@ -157,13 +158,13 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         <div className="flex-shrink-0 flex items-center justify-between px-3 bg-white border-b border-gray-200 relative z-30" style={{ minHeight: "44px" }}>
           <span className="text-xs font-semibold text-gray-800 truncate">{route.name}</span>
           <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
-            <Link
-              href={backHref}
+            <button
+              onClick={() => router.push(backHref)}
               style={{ touchAction: "manipulation" }}
               className="flex items-center gap-1 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 active:bg-gray-200"
             >
               ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
-            </Link>
+            </button>
             {stravaConnected && (
               <Link
                 href="/strava/activities"

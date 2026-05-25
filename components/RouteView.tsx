@@ -18,6 +18,8 @@ const RouteMap = dynamic(
   { ssr: false, loading: () => <MapSkeleton /> }
 );
 
+const EMPTY_STRAVA_SEGMENTS: StravaSegment[] = [];
+
 interface Props {
   route: Route;
   initialSport?: SportType;
@@ -56,6 +58,18 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
     return () => clearTimeout(t);
   }, [startTime]);
 
+  // iOS Safari intercepts pinch gestures as page-level zoom unless we prevent
+  // gesturestart/gesturechange at the document level on this page.
+  useEffect(() => {
+    const prevent = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", prevent, { passive: false });
+    document.addEventListener("gesturechange", prevent, { passive: false });
+    return () => {
+      document.removeEventListener("gesturestart", prevent);
+      document.removeEventListener("gesturechange", prevent);
+    };
+  }, []);
+
   const resetMap = useCallback(() => setCleared(true), []);
 
   const handleBoundsChange = useCallback((b: { west: number; south: number; east: number; north: number }) => {
@@ -84,7 +98,10 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
     (url: string) => fetch(url).then((r) => r.json()),
     { revalidateOnFocus: false }
   );
-  const stravaSegments = stravaSegData?.segments ?? [];
+  // Stable reference when not logged in — a fresh [] each render causes the
+  // fitBounds effect in RouteMap to re-run on every pan/zoom (moveend → setMapBounds
+  // → re-render → new [] reference → effect fires → fitBounds back to route).
+  const stravaSegments = stravaSegData?.segments ?? EMPTY_STRAVA_SEGMENTS;
 
   const handleTimeChange = useCallback((date: Date) => {
     setCleared(false);

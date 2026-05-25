@@ -170,9 +170,11 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
             </button>
           </div>
         </div>
-        {/* Map fills remaining height — overflow-hidden clips the canvas so it cannot
-            bleed into the nav bar and steal touch events there. */}
-        <div className="flex-1 min-h-0 relative overflow-hidden">
+        {/* Map fills remaining height.
+            isolation:isolate creates a stacking context so iOS Safari clips the
+            MobileBottomSheet's pointer-events hit area to this container — without it,
+            iOS extends the absolute z-20 sheet's touch area across the entire map. */}
+        <div className="flex-1 min-h-0 relative overflow-hidden" style={{ isolation: "isolate" }}>
         <div className="absolute inset-0">
           <RouteMap
             key={route.id}

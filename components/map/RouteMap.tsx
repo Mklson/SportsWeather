@@ -142,6 +142,18 @@ export function RouteMap({
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
     mapRef.current = map;
 
+    // Set touch-action:none as inline style on canvas elements immediately after
+    // map creation. Mapbox also sets this via CSS classes, but iOS Safari (and some
+    // Windows touch paths) may not honour the CSS value until a DOM mutation fires
+    // elsewhere in the tree. An inline style takes effect immediately without
+    // requiring that trigger and survives handler cycling.
+    const forceCanvasTouchAction = () => {
+      containerRef.current
+        ?.querySelectorAll<HTMLElement>(".mapboxgl-canvas-container, .mapboxgl-canvas")
+        .forEach((el) => { el.style.touchAction = "none"; });
+    };
+    forceCanvasTouchAction();
+
     let iosTouchFixTimer: ReturnType<typeof setTimeout> | undefined;
 
     map.on("moveend", () => {
@@ -155,6 +167,8 @@ export function RouteMap({
     map.on("load", () => {
       if (mapRef.current !== map) return;
       mapReadyRef.current = true;
+      // Re-apply inline touch-action after load in case Mapbox recreated canvas elements.
+      forceCanvasTouchAction();
       loadMapImages(map, () => {
         if (mapRef.current !== map) return;
         if (latestShowRouteRef.current) addRouteLayers(map, route);
@@ -174,20 +188,21 @@ export function RouteMap({
         // Deferred resize: first on next frame, second after layout fully settles.
         requestAnimationFrame(() => { if (mapRef.current === map) map.resize(); });
         setTimeout(() => { if (mapRef.current === map) map.resize(); }, 500);
-        // iOS / Windows-touch fix: cycle touch handlers at 1000ms so the browser
-        // re-evaluates touch-action:none on the canvas container.  Cycling the
-        // Mapbox CSS classes alone is not enough — browsers only honour the
-        // re-evaluation after a real DOM mutation elsewhere in the tree.  When
-        // Strava is connected, the SWR re-render ~1s after mount provides that
-        // mutation; when logged out there is no SWR re-render, so we call
-        // setTouchInitPhase to trigger one via React reconciliation.
+        // Interaction wake-up: cycle all touch/scroll handlers at 1000ms and force a
+        // repaint. Without a Strava SWR re-render (logged-out users) the Mapbox render
+        // loop and touch-action compositing can be stale; cycling + repaint ensures the
+        // map is fully interactive regardless of auth state.
         iosTouchFixTimer = setTimeout(() => {
           if (mapRef.current !== map) return;
           map.resize();
+          map.scrollZoom.disable();
+          map.scrollZoom.enable();
           map.dragPan.disable();
           map.dragPan.enable();
           map.touchZoomRotate.disable();
           map.touchZoomRotate.enable();
+          forceCanvasTouchAction();
+          map.triggerRepaint();
           setTouchInitPhase((v) => v + 1);
         }, 1000);
       });

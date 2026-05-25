@@ -75,6 +75,10 @@ export function RouteMap({
 }: Props) {
   const [basemap, setBasemap] = useState<Basemap>("outdoors");
   const [terrain3d, setTerrain3d] = useState(false);
+  // Incremented once by the iOS/touch-action fix timer so that a real React DOM
+  // mutation occurs after the Mapbox handler cycling — browsers only re-evaluate
+  // touch-action:none after a DOM mutation, and without Strava SWR there is none.
+  const [touchInitPhase, setTouchInitPhase] = useState(0);
 
   const containerRef       = useRef<HTMLDivElement>(null);
   const mapRef             = useRef<mapboxgl.Map | null>(null);
@@ -138,10 +142,6 @@ export function RouteMap({
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
     mapRef.current = map;
 
-    // iOS Safari: touch-action:none on the canvas may not be evaluated until
-    // Mapbox's touch handlers are cycled after a real DOM mutation. We schedule
-    // a disable→enable at 1000ms to replicate the re-evaluation that otherwise
-    // only happens when Strava SWR causes a re-render ~1s after mount.
     let iosTouchFixTimer: ReturnType<typeof setTimeout> | undefined;
 
     map.on("moveend", () => {
@@ -174,8 +174,13 @@ export function RouteMap({
         // Deferred resize: first on next frame, second after layout fully settles.
         requestAnimationFrame(() => { if (mapRef.current === map) map.resize(); });
         setTimeout(() => { if (mapRef.current === map) map.resize(); }, 500);
-        // iOS touch fix: cycle touch handlers at 1000ms so the browser re-evaluates
-        // touch-action:none on the canvas container.
+        // iOS / Windows-touch fix: cycle touch handlers at 1000ms so the browser
+        // re-evaluates touch-action:none on the canvas container.  Cycling the
+        // Mapbox CSS classes alone is not enough — browsers only honour the
+        // re-evaluation after a real DOM mutation elsewhere in the tree.  When
+        // Strava is connected, the SWR re-render ~1s after mount provides that
+        // mutation; when logged out there is no SWR re-render, so we call
+        // setTouchInitPhase to trigger one via React reconciliation.
         iosTouchFixTimer = setTimeout(() => {
           if (mapRef.current !== map) return;
           map.resize();
@@ -183,6 +188,7 @@ export function RouteMap({
           map.dragPan.enable();
           map.touchZoomRotate.disable();
           map.touchZoomRotate.enable();
+          setTouchInitPhase((v) => v + 1);
         }, 1000);
       });
     });
@@ -350,7 +356,7 @@ export function RouteMap({
   ];
 
   return (
-    <div ref={containerRef} className="w-full h-full relative">
+    <div ref={containerRef} className="w-full h-full relative" data-touch-phase={touchInitPhase}>
       <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
         <div className="flex rounded-lg overflow-hidden shadow border border-gray-200 text-xs font-semibold">
           {basemapOptions.map(({ key, label }) => (

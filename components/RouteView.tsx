@@ -173,7 +173,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
         {/* Map fills remaining height — overflow-hidden clips the canvas so it cannot
             bleed into the nav bar and steal touch events there. */}
         <div className="flex-1 min-h-0 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ touchAction: "none" }}>
+        <div className="absolute inset-0">
           <RouteMap
             key={route.id}
             route={route}

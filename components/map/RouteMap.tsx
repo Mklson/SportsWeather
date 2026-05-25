@@ -111,7 +111,6 @@ export function RouteMap({
   // preventing the old map's canvas from overlapping the new one even briefly.
   useLayoutEffect(() => {
     if (!containerRef.current) return;
-    const container = containerRef.current;
 
     // Destroy any existing map so a new route always gets a clean canvas
     if (mapRef.current) {
@@ -138,6 +137,12 @@ export function RouteMap({
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
     mapRef.current = map;
+
+    // iOS Safari: touch-action:none on the canvas may not be evaluated until
+    // Mapbox's touch handlers are cycled after a real DOM mutation. We schedule
+    // a disable→enable at 1000ms to replicate the re-evaluation that otherwise
+    // only happens when Strava SWR causes a re-render ~1s after mount.
+    let iosTouchFixTimer: ReturnType<typeof setTimeout> | undefined;
 
     map.on("moveend", () => {
       const b = map.getBounds();
@@ -166,14 +171,24 @@ export function RouteMap({
           pendingRef.current();
           pendingRef.current = null;
         }
-        // iOS: after client-side navigation the canvas dimensions may be stale.
-        // Two deferred resizes: first on next frame, second after layout fully settles (~500ms).
+        // Deferred resize: first on next frame, second after layout fully settles.
         requestAnimationFrame(() => { if (mapRef.current === map) map.resize(); });
         setTimeout(() => { if (mapRef.current === map) map.resize(); }, 500);
+        // iOS touch fix: cycle touch handlers at 1000ms so the browser re-evaluates
+        // touch-action:none on the canvas container.
+        iosTouchFixTimer = setTimeout(() => {
+          if (mapRef.current !== map) return;
+          map.resize();
+          map.dragPan.disable();
+          map.dragPan.enable();
+          map.touchZoomRotate.disable();
+          map.touchZoomRotate.enable();
+        }, 1000);
       });
     });
 
     return () => {
+      if (iosTouchFixTimer !== undefined) clearTimeout(iosTouchFixTimer);
       map.remove();
       mapRef.current = null;
       mapReadyRef.current = false;

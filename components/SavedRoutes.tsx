@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { DbRouteSummary } from "@/types";
 import { format } from "date-fns";
@@ -87,7 +86,7 @@ export function SavedRoutes({ routes }: Props) {
           ) : (
             /* Normal row — Link covers the whole row so anywhere is tappable on mobile */
             <>
-              <Link
+              <a
                 href={`/route/${route.id}`}
                 className="absolute inset-0"
                 style={{ touchAction: "manipulation" }}
@@ -97,7 +96,7 @@ export function SavedRoutes({ routes }: Props) {
                 {sportEmoji(route.sport)}
               </span>
 
-              <span className="relative flex-1 text-sm font-medium text-gray-900 group-hover:text-blue-700 transition-colors truncate min-w-0 pointer-events-none">
+              <span className="relative flex-1 text-sm font-medium text-gray-900 truncate min-w-0 pointer-events-none">
                 {route.name}
               </span>
 

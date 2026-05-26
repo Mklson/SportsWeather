@@ -34,6 +34,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Protect admin routes — must be logged in as ADMIN_EMAIL
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    if (!user || user.email !== process.env.ADMIN_EMAIL) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+
   // Redirect authenticated users away from login/register
   if (
     user &&
@@ -47,5 +54,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/login", "/register"],
 };

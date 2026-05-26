@@ -569,17 +569,19 @@ function nearestWindClass(
 }
 
 
-function weatherEmoji(code: string, t: number): string {
+function weatherEmoji(code: string): string {
   const c = code.toLowerCase();
+  const isNight    = c.includes("_night");
+  const isTwilight = c.includes("_polartwilight");
   if (c.includes("thunder"))      return "⛈️";
   if (c.includes("heavyrain"))    return "⛈️";
   if (c.includes("rain"))         return "🌧️";
   if (c.includes("snow"))         return "❄️";
   if (c.includes("sleet"))        return "🌨️";
   if (c.includes("fog"))          return "🌫️";
-  if (c.includes("clearsky"))     return t < 0 ? "🌙" : "☀️";
-  if (c.includes("fair"))         return "🌤️";
-  if (c.includes("partlycloudy")) return "⛅";
+  if (c.includes("clearsky"))     return isNight ? "🌙" : isTwilight ? "🌅" : "☀️";
+  if (c.includes("fair"))         return isNight ? "🌙" : isTwilight ? "🌅" : "🌤️";
+  if (c.includes("partlycloudy")) return isNight ? "☁️" : "⛅";
   return "☁️";
 }
 
@@ -681,7 +683,7 @@ function StravaSegmentList({
               </div>
               {wx && (
                 <span className="shrink-0 flex items-center gap-1 text-sm font-semibold text-gray-700">
-                  <span className="text-base">{weatherEmoji(wx.weather.symbolCode, wx.weather.temperature)}</span>
+                  <span className="text-base">{weatherEmoji(wx.weather.symbolCode)}</span>
                   <span>{Math.round(wx.weather.temperature)}°</span>
                   {wx.weather.precipitation > 0.1 && (
                     <span className="text-blue-500 font-medium">{wx.weather.precipitation.toFixed(1)}mm</span>

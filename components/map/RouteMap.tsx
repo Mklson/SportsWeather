@@ -647,7 +647,7 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
     "line-height:1",
   ].join(";");
 
-  const icon = weatherEmoji(seg.weather.symbolCode, seg.weather.temperature);
+  const icon = weatherEmoji(seg.weather.symbolCode);
   const temp = `${Math.round(seg.weather.temperature)}°`;
   const rain = seg.weather.precipitation > 0
     ? `<span style="font-size:11px;opacity:0.85"> ${seg.weather.precipitation.toFixed(1)}mm</span>` : "";
@@ -740,7 +740,7 @@ function buildWindField(
 // ─── Popup ────────────────────────────────────────────────────────────────────
 
 function buildPopupHtml(seg: WeatherSegment, sport: SportType): string {
-  const icon = weatherEmoji(seg.weather.symbolCode, seg.weather.temperature);
+  const icon = weatherEmoji(seg.weather.symbolCode);
   const ski  = sport === "skiing" ? classifySkiConditions(seg.weather) : null;
   const windLabel = seg.windClass === "tailwind" ? "Tailwind" : seg.windClass === "crosswind" ? "Crosswind" : "Headwind";
 
@@ -757,17 +757,19 @@ function buildPopupHtml(seg: WeatherSegment, sport: SportType): string {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function weatherEmoji(code: string, t: number): string {
+function weatherEmoji(code: string): string {
   const c = code.toLowerCase();
+  const isNight    = c.includes("_night");
+  const isTwilight = c.includes("_polartwilight");
   if (c.includes("heavyrain"))     return "⛈️";
   if (c.includes("rain"))          return "🌧️";
   if (c.includes("snow"))          return "❄️";
   if (c.includes("sleet"))         return "🌨️";
   if (c.includes("fog"))           return "🌫️";
   if (c.includes("thunder"))       return "⛈️";
-  if (c.includes("clearsky"))      return t < 0 ? "🌙" : "☀️";
-  if (c.includes("fair"))          return "🌤️";
-  if (c.includes("partlycloudy"))  return "⛅";
+  if (c.includes("clearsky"))      return isNight ? "🌙" : isTwilight ? "🌅" : "☀️";
+  if (c.includes("fair"))          return isNight ? "🌙" : isTwilight ? "🌅" : "🌤️";
+  if (c.includes("partlycloudy"))  return isNight ? "☁️" : "⛅";
   return "☁️";
 }
 

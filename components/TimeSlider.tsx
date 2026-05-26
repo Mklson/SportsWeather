@@ -4,6 +4,8 @@ import { useCallback, useId, useMemo } from "react";
 import { format, addHours, startOfHour } from "date-fns";
 import { enUS } from "date-fns/locale";
 
+const FORECAST_HOURS = 9 * 24; // MET Norway provides ~9 days ahead
+
 interface Props {
   value: Date;
   onChange: (date: Date) => void;
@@ -14,11 +16,13 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
   const sliderId = useId();
   // Stable reference within the same hour so handleChange doesn't recreate every render.
   const base = useMemo(() => startOfHour(new Date()), []);
+  const maxDate = useMemo(() => addHours(base, FORECAST_HOURS), [base]);
 
   const currentOffset = Math.round(
     (value.getTime() - base.getTime()) / (1000 * 60 * 60)
   );
   const clampedOffset = Math.max(0, Math.min(rangeHours, currentOffset));
+  const beyondForecast = value > maxDate;
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +41,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
 
   const formattedDate = format(value, "EEEE, MMMM d, HH:mm", { locale: enUS });
   const inputValue = format(value, "yyyy-MM-dd'T'HH:mm");
+  const maxValue = format(maxDate, "yyyy-MM-dd'T'HH:mm");
 
   return (
     <div className="space-y-2">
@@ -60,11 +65,19 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
       <input
         type="datetime-local"
         value={inputValue}
+        max={maxValue}
         onChange={handleDateInput}
-        className="w-full bg-white border border-gray-200 rounded-lg
-                   px-2.5 py-1 text-gray-600 text-xs focus:outline-none
-                   focus:ring-2 focus:ring-blue-400"
+        className={`w-full bg-white border rounded-lg px-2.5 py-1 text-gray-600 text-xs
+                    focus:outline-none focus:ring-2 focus:ring-blue-400
+                    ${beyondForecast ? "border-amber-400" : "border-gray-200"}`}
       />
+
+      {beyondForecast && (
+        <p className="text-xs text-amber-600 flex items-center gap-1">
+          <span>⚠️</span>
+          Weather forecasts are only available up to 9 days ahead. Showing the last available forecast instead.
+        </p>
+      )}
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
-import { getRoute, getCachedWeather } from "@/lib/db/client";
+import { getRoute } from "@/lib/db/client";
 import { notFound } from "next/navigation";
 import { RouteView } from "@/components/RouteView";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { simplifyRoute } from "@/lib/route-sampler";
-import type { SportType, WeatherSegment } from "@/types";
+import type { SportType } from "@/types";
 
 interface Props {
   params: { id: string };
@@ -30,13 +30,6 @@ export default async function RoutePage({ params, searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser();
   const backHref = user ? "/dashboard" : "/";
 
-  // Prefetch weather from Supabase cache only (fast, ~50ms) — no MET API call here.
-  // If not cached yet, the client fires its normal SWR fetch.
-  const start = new Date();
-  start.setMinutes(0, 0, 0);
-  const cachedWeather = await getCachedWeather(route.id, start).catch(() => null) ?? null;
-  const initialSegments: WeatherSegment[] | undefined = cachedWeather?.segments ?? undefined;
-
   // Apply a looser simplification (50m) for the client payload.
   // Stored coords use 10m tolerance; 50m is invisible on screen but ~60% fewer points.
   const displayCoords = simplifyRoute(route.coordinates, 50);
@@ -57,7 +50,6 @@ export default async function RoutePage({ params, searchParams }: Props) {
       initialSport={sport}
       stravaConnected={stravaConnected}
       backHref={backHref}
-      initialSegments={initialSegments}
     />
   );
 }

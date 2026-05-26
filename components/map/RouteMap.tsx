@@ -613,12 +613,17 @@ function updateWeatherMarkers(
 
 function pillColors(symbolCode: string, precipitation: number, cloudCover: number): { bg: string; text: string; border: string } {
   const c = symbolCode.toLowerCase();
+  const isNight = c.includes("_night") || c.includes("_polartwilight");
   if (c.includes("thunder"))       return { bg: "#111827", text: "#fef08a", border: "rgba(254,240,138,0.4)" };
   if (precipitation > 7)           return { bg: "#1f2937", text: "#f3f4f6", border: "rgba(255,255,255,0.12)" };
   if (precipitation > 4)           return { bg: "#374151", text: "#f3f4f6", border: "rgba(255,255,255,0.14)" };
   if (precipitation > 2)           return { bg: "#6b7280", text: "#f9fafb", border: "rgba(255,255,255,0.18)" };
   if (precipitation > 0.5)         return { bg: "#9ca3af", text: "#111827", border: "rgba(0,0,0,0.14)" };
   if (precipitation > 0.1)         return { bg: "#d1d5db", text: "#111827", border: "rgba(0,0,0,0.13)" };
+  if (isNight) {
+    if (cloudCover > 75)           return { bg: "#1e293b", text: "#e2e8f0", border: "rgba(255,255,255,0.12)" };
+    return                                { bg: "#0f172a", text: "#f1f5f9", border: "rgba(148,163,184,0.3)" };
+  }
   if (cloudCover > 75)             return { bg: "#e5e7eb", text: "#111827", border: "rgba(0,0,0,0.12)" };
   if (cloudCover > 40)             return { bg: "#f3f4f6", text: "#0f172a", border: "rgba(0,0,0,0.12)" };
   return                                  { bg: "#ffffff", text: "#0f172a", border: "rgba(0,0,0,0.15)" };
@@ -628,6 +633,7 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
   const wrap = document.createElement("div");
   wrap.style.cssText = "cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;pointer-events:auto";
 
+  const isNight = seg.weather.symbolCode.toLowerCase().includes("_night") || seg.weather.symbolCode.toLowerCase().includes("_polartwilight");
   const { bg, text, border } = pillColors(seg.weather.symbolCode, seg.weather.precipitation, seg.weather.cloudCover);
 
   const pill = document.createElement("div");
@@ -662,7 +668,7 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
   }
 
   const stem = document.createElement("div");
-  stem.style.cssText = "width:2px;height:10px;background:rgba(0,0,0,0.25);border-radius:0 0 2px 2px";
+  stem.style.cssText = `width:2px;height:10px;background:${isNight ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)"};border-radius:0 0 2px 2px`;
 
   wrap.appendChild(pill);
   wrap.appendChild(stem);

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { RouteWXIcon } from "@/components/RouteWXIcon";
+import Image from "next/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
@@ -45,7 +45,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="flex flex-col items-center gap-3">
           <Link href="/">
-            <RouteWXIcon size={52} className="drop-shadow-md" />
+            <Image src="/weather-icon.png" alt="RouteWX" width={52} height={52} className="drop-shadow-md" />
           </Link>
           <h1 className="text-2xl font-bold text-blue-900">Create account</h1>
           <p className="text-sm text-gray-500">Free — no credit card needed</p>

@@ -4,8 +4,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getRoutesByUser } from "@/lib/db/client";
 import { SavedRoutes } from "@/components/SavedRoutes";
 import { DashboardRouteImporter } from "@/components/DashboardRouteImporter";
+import Image from "next/image";
 import { LogoutButton } from "@/components/LogoutButton";
-import { RouteWXIcon } from "@/components/RouteWXIcon";
 
 export default async function DashboardPage() {
   const supabase = createSupabaseServerClient();
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <header className="bg-blue-900 text-white px-4 py-3 flex items-center gap-3 shadow-md">
         <Link href="/" className="flex items-center gap-2.5 mr-auto">
-          <RouteWXIcon size={32} className="drop-shadow" />
+          <Image src="/weather-icon.png" alt="RouteWX" width={32} height={32} className="drop-shadow" />
           <span className="font-bold text-lg tracking-tight">RouteWX</span>
         </Link>
         <span className="text-blue-300 text-sm hidden sm:block truncate max-w-[200px]">

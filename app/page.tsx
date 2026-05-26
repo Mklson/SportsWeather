@@ -1,6 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
 import { RouteImporter } from "@/components/route/RouteImporter";
-import { RouteWXIcon } from "@/components/RouteWXIcon";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { getRoute } from "@/lib/db/client";
 import { FEATURED_ROUTE_IDS } from "@/lib/featuredRoutes";
@@ -34,7 +34,7 @@ export default async function HomePage({
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
       <div className="flex flex-col items-center gap-4">
         <div className="flex items-center gap-4">
-          <RouteWXIcon size={72} className="drop-shadow-xl" />
+          <Image src="/weather-icon.png" alt="RouteWX icon" width={72} height={72} priority className="drop-shadow-xl" />
           <h1 className="text-4xl font-bold tracking-tight text-blue-900">
             RouteWX
           </h1>

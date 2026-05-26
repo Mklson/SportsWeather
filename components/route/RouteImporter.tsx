@@ -110,22 +110,6 @@ export function RouteImporter({ onSuccess }: Props) {
             />
           </label>
 
-          {/* Sporet.no guide */}
-          <details className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
-            <summary className="cursor-pointer text-blue-700 font-medium select-none">
-              ⛷️ Import from Sporet.no
-            </summary>
-            <ol className="mt-3 space-y-2 text-gray-600 list-decimal list-inside">
-              <li>Open the <strong>Sporet app</strong> on your phone</li>
-              <li>Find the trail you want to use</li>
-              <li>Tap the trail → <strong>Share</strong> → <strong>Export GPX</strong></li>
-              <li>Send the GPX file to yourself (email, AirDrop, etc.)</li>
-              <li>Upload it here</li>
-            </ol>
-            <p className="mt-3 text-gray-400 text-xs">
-              Sporet.no has no open API, but GPX export works great.
-            </p>
-          </details>
         </div>
       )}
 

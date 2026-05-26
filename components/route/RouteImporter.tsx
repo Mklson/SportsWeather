@@ -3,10 +3,9 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { UploadResponse } from "@/types";
-import { OsmTrailSearch } from "@/components/trail/OsmTrailSearch";
 import clsx from "clsx";
 
-type Tab = "upload" | "strava" | "ski";
+type Tab = "upload" | "strava";
 
 interface Props {
   onSuccess?: (routeId: string) => void;
@@ -67,7 +66,6 @@ export function RouteImporter({ onSuccess }: Props) {
         {([
           { id: "upload", label: "📁 Upload GPX/TCX" },
           { id: "strava", label: "🟠 Strava" },
-          { id: "ski",    label: "⛷️ Cross country" },
         ] as { id: Tab; label: string }[]).map((t) => (
           <button
             key={t.id}
@@ -89,7 +87,7 @@ export function RouteImporter({ onSuccess }: Props) {
         <div className="space-y-3">
           <label
             className={clsx(
-              "flex flex-col items-center justify-center gap-3 p-8 rounded-2xl border-2 border-dashed",
+              "flex flex-col items-center justify-center gap-2 sm:gap-3 p-5 sm:p-8 rounded-2xl border-2 border-dashed",
               "cursor-pointer transition-colors",
               isDragging
                 ? "border-blue-400 bg-blue-50"
@@ -99,10 +97,10 @@ export function RouteImporter({ onSuccess }: Props) {
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
           >
-            <span className="text-4xl">📁</span>
+            <span className="text-2xl sm:text-4xl">📁</span>
             <div className="text-center">
-              <p className="text-gray-800 font-medium">Drop GPX or TCX here</p>
-              <p className="text-gray-400 text-sm mt-1">or click to select a file</p>
+              <p className="text-gray-800 font-medium text-sm sm:text-base">Drop GPX or TCX here</p>
+              <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">or click to select a file</p>
             </div>
             <input
               type="file"
@@ -144,16 +142,6 @@ export function RouteImporter({ onSuccess }: Props) {
         </a>
       )}
 
-      {/* ── Ski trails tab ──────────────────────────────────────────── */}
-      {tab === "ski" && (
-        <div className="space-y-3">
-          <p className="text-sm text-gray-500">
-            Search thousands of marked cross country trails from OpenStreetMap.
-          </p>
-          <OsmTrailSearchLight />
-        </div>
-      )}
-
       {status === "uploading" && (
         <p className="text-center text-blue-600 text-sm animate-pulse">
           Uploading and parsing file…
@@ -167,19 +155,6 @@ export function RouteImporter({ onSuccess }: Props) {
       {status === "error" && errorMsg && (
         <p className="text-center text-red-500 text-sm">{errorMsg}</p>
       )}
-    </div>
-  );
-}
-
-// Light-themed OSM search wrapper
-function OsmTrailSearchLight() {
-  return (
-    <div className="[&_input]:bg-white [&_input]:border-gray-300 [&_input]:text-gray-800
-                    [&_input::placeholder]:text-gray-400
-                    [&_ul_button]:bg-white [&_ul_button]:border-gray-200
-                    [&_ul_button]:hover:bg-gray-50 [&_ul_button_p]:text-gray-800
-                    [&_ul_button_p:last-child]:text-gray-400 [&_p]:text-gray-500">
-      <OsmTrailSearch />
     </div>
   );
 }

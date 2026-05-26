@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchRouteWeather } from "@/lib/met-api";
-import { getRoute, getCachedWeather, saveWeatherCache } from "@/lib/db/client";
+import { getRoute } from "@/lib/db/client";
 import type { WeatherRequest, WeatherResponse, Coordinate } from "@/types";
 
 export const runtime = "nodejs";
@@ -21,17 +21,6 @@ async function resolveWeather(
   let coords: Coordinate[] = coordinates ?? [];
 
   if (routeId) {
-    const cached = await getCachedWeather(routeId, start);
-    if (cached) {
-      const res = NextResponse.json({
-        segments: cached.segments,
-        fetchedAt: cached.fetched_at,
-        fromCache: true,
-      } satisfies WeatherResponse & { fromCache: boolean });
-      res.headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=300");
-      return res;
-    }
-
     const dbRoute = await getRoute(routeId);
     if (!dbRoute) {
       return NextResponse.json({ error: "Route not found" }, { status: 404 });
@@ -49,21 +38,9 @@ async function resolveWeather(
   const validSport = (["cycling", "running", "skiing"] as const).find((s) => s === sport);
   const segments = await fetchRouteWeather(coords, start, 1000, 20, speedKmh, validSport);
 
-  if (routeId && segments.length > 0) {
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-    await saveWeatherCache({
-      route_id: routeId,
-      start_time: start.toISOString(),
-      segments,
-      fetched_at: new Date().toISOString(),
-      expires_at: expiresAt.toISOString(),
-    }).catch(() => {});
-  }
-
   const res = NextResponse.json({ segments, fetchedAt: new Date().toISOString() } satisfies WeatherResponse);
-  if (routeId) {
-    res.headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=300");
-  }
+  // Cache by full URL (includes speedKmh) at the CDN level
+  res.headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=300");
   return res;
 }
 

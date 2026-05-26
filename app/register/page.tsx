@@ -47,7 +47,7 @@ export default function RegisterPage() {
           <Link href="/">
             <Image
               src="/weather-icon.png"
-              alt="SportsWeather"
+              alt="RouteWX"
               width={52}
               height={52}
               className="drop-shadow-md"

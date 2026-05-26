@@ -10,7 +10,7 @@ import { windStrengthFromMs } from "@/types";
 import type { SportType } from "@/types";
 
 const MET_BASE = "https://api.met.no/weatherapi/locationforecast/2.0/compact";
-const USER_AGENT = "SportsWeather/1.0 github.com/your-org/sportsweather";
+const USER_AGENT = "RouteWX/1.0 github.com/your-org/routewx";
 
 interface MetTimeseries {
   time: string;

@@ -6,6 +6,7 @@ import { getRoutesByUser } from "@/lib/db/client";
 import { SavedRoutes } from "@/components/SavedRoutes";
 import { DashboardRouteImporter } from "@/components/DashboardRouteImporter";
 import { LogoutButton } from "@/components/LogoutButton";
+import { RouteWXLogo } from "@/components/RouteWXLogo";
 
 export default async function DashboardPage() {
   const supabase = createSupabaseServerClient();
@@ -24,12 +25,12 @@ export default async function DashboardPage() {
         <Link href="/" className="flex items-center gap-2.5 mr-auto">
           <Image
             src="/weather-icon.png"
-            alt="SportsWeather"
+            alt="RouteWX"
             width={32}
             height={32}
             className="drop-shadow"
           />
-          <span className="font-bold text-lg tracking-tight">SportsWeather</span>
+          <RouteWXLogo className="font-bold text-lg tracking-tight" />
         </Link>
         <span className="text-blue-300 text-sm hidden sm:block truncate max-w-[200px]">
           {user.email}

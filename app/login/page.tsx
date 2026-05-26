@@ -37,14 +37,14 @@ export default function LoginPage() {
           <Link href="/">
             <Image
               src="/weather-icon.png"
-              alt="SportsWeather"
+              alt="RouteWX"
               width={52}
               height={52}
               className="drop-shadow-md"
             />
           </Link>
           <h1 className="text-2xl font-bold text-blue-900">Sign in</h1>
-          <p className="text-sm text-gray-500">Welcome back to SportsWeather</p>
+          <p className="text-sm text-gray-500">Welcome back to RouteWX</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

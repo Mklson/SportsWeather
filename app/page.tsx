@@ -1,7 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { RouteImporter } from "@/components/route/RouteImporter";
-import { RouteWXLogo } from "@/components/RouteWXLogo";
+import { RouteWXIcon } from "@/components/RouteWXIcon";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { getRoute } from "@/lib/db/client";
 import { FEATURED_ROUTE_IDS } from "@/lib/featuredRoutes";
@@ -35,21 +34,19 @@ export default async function HomePage({
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
       <div className="flex flex-col items-center gap-4">
         <div className="flex items-center gap-4">
-          <Image
-            src="/weather-icon.png"
-            alt="RouteWX icon"
-            width={72}
-            height={72}
-            priority
-            className="drop-shadow-xl"
-          />
+          <RouteWXIcon size={72} className="drop-shadow-xl" />
           <h1 className="text-4xl font-bold tracking-tight text-blue-900">
-            <RouteWXLogo />
+            RouteWX
           </h1>
         </div>
-        <p className="text-gray-500 text-lg text-center">
+        <p className="text-sm text-gray-500 text-center max-w-xs">
           Upload a route and see wind, rain and temperature along the way
         </p>
+        {!user && (
+          <p className="text-sm text-gray-500 text-center max-w-xs">
+            Create a free account to save your routes and access them anytime from your dashboard.
+          </p>
+        )}
 
         {/* Auth buttons */}
         {user ? (
@@ -60,24 +57,19 @@ export default async function HomePage({
             Go to my dashboard →
           </Link>
         ) : (
-          <div className="flex flex-col items-center gap-2 mt-1">
-            <div className="flex gap-3">
-              <Link
-                href="/login"
-                className="border border-gray-300 hover:border-gray-400 text-gray-700 font-medium px-5 py-2 rounded-xl text-sm transition-colors"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm"
-              >
-                Create account
-              </Link>
-            </div>
-            <p className="text-sm text-gray-600 text-center max-w-xs">
-              Create a free account to save your routes and access them anytime from your dashboard.
-            </p>
+          <div className="flex gap-3 mt-1">
+            <Link
+              href="/login"
+              className="border border-gray-300 hover:border-gray-400 text-gray-700 font-medium px-5 py-2 rounded-xl text-sm transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/register"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm"
+            >
+              Create account
+            </Link>
           </div>
         )}
       </div>

@@ -252,9 +252,9 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
           {/* Back navigation */}
           <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-2">
-              <Link href={backHref} className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
+              <button onClick={() => { window.location.href = backHref; }} className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
                 ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
-              </Link>
+              </button>
               {stravaConnected && (
                 <>
                   <span className="text-gray-300">|</span>

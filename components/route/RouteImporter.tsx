@@ -87,7 +87,7 @@ export function RouteImporter({ onSuccess }: Props) {
         <div className="space-y-3">
           <label
             className={clsx(
-              "flex flex-col items-center justify-center gap-2 sm:gap-3 p-5 sm:p-8 rounded-2xl border-2 border-dashed",
+              "flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed",
               "cursor-pointer transition-colors",
               isDragging
                 ? "border-blue-400 bg-blue-50"
@@ -97,10 +97,10 @@ export function RouteImporter({ onSuccess }: Props) {
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
           >
-            <span className="text-2xl sm:text-4xl">📁</span>
+            <span className="text-2xl">📁</span>
             <div className="text-center">
-              <p className="text-gray-800 font-medium text-sm sm:text-base">Drop GPX or TCX here</p>
-              <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">or click to select a file</p>
+              <p className="text-gray-800 font-medium text-sm">Drop GPX or TCX here</p>
+              <p className="text-gray-400 text-xs mt-0.5">or click to select a file</p>
             </div>
             <input
               type="file"

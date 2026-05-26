@@ -119,7 +119,7 @@ export function SavedRoutes({ routes }: Props) {
               <button
                 onClick={() => setConfirmId(route.id)}
                 title="Delete route"
-                className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ml-1"
+                className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto ml-1"
                 aria-label="Delete route"
               >
                 <TrashIcon />

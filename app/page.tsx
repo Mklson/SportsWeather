@@ -32,18 +32,15 @@ export default async function HomePage({
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex items-center gap-4">
-          <Image src="/weather-icon.png" alt="RouteWX icon" width={72} height={72} priority className="drop-shadow-xl" />
-          <h1 className="text-4xl font-bold tracking-tight text-blue-900">
-            RouteWX
-          </h1>
+      <div className="flex flex-col items-center gap-0">
+        <div className="flex items-center">
+          <Image src="/Logo visual with name.png" alt="AEROUTE" width={560} height={160} priority className="h-36 w-auto drop-shadow-xl" />
         </div>
-        <p className="text-sm text-gray-500 text-center max-w-xs">
+        <p className="text-sm text-gray-500 text-center max-w-xs -mt-2">
           Upload a route and see wind, rain and temperature along the way
         </p>
         {!user && (
-          <p className="text-sm text-gray-500 text-center max-w-xs">
+          <p className="text-sm text-gray-500 text-center max-w-xs mt-3">
             Create a free account to save your routes and access them anytime from your dashboard.
           </p>
         )}
@@ -52,12 +49,12 @@ export default async function HomePage({
         {user ? (
           <Link
             href="/dashboard"
-            className="mt-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
           >
             Go to my dashboard →
           </Link>
         ) : (
-          <div className="flex gap-3 mt-1">
+          <div className="flex gap-3 mt-4">
             <Link
               href="/login"
               className="border border-gray-300 hover:border-gray-400 text-gray-700 font-medium px-5 py-2 rounded-xl text-sm transition-colors"

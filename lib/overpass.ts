@@ -2,7 +2,7 @@ import type { OsmTrail, Coordinate } from "@/types";
 
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const USER_AGENT = "RouteWX/1.0";
+const USER_AGENT = "AEROUTE/1.0";
 
 interface NominatimResult {
   boundingbox: [string, string, string, string];

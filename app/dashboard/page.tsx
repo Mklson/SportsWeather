@@ -22,8 +22,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <header className="bg-blue-900 text-white px-4 py-3 flex items-center gap-3 shadow-md">
         <Link href="/" className="flex items-center gap-2.5 mr-auto">
-          <Image src="/weather-icon.png" alt="RouteWX" width={32} height={32} className="drop-shadow" />
-          <span className="font-bold text-lg tracking-tight">RouteWX</span>
+          <Image src="/Logo visual with name.png" alt="AEROUTE" width={140} height={36} className="h-8 w-auto drop-shadow" />
         </Link>
         <span className="text-blue-300 text-sm hidden sm:block truncate max-w-[200px]">
           {user.email}

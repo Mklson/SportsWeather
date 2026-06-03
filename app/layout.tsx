@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RouteWX – Route Weather Planner",
+  title: "AEROUTE – Route Weather Planner",
   description: "See weather along your route – tailwind, rain and temperature visualized on map",
-  icons: { icon: "/weather-icon.png", apple: "/weather-icon.png" },
+  icons: { icon: "/Logo visual.png", apple: "/Logo visual.png" },
 };
 
 export const viewport: Viewport = {

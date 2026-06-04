@@ -88,11 +88,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="flex flex-col items-center gap-0">
           <Link href="/">
-            <div className="flex items-center overflow-hidden" style={{ marginTop: '-24px' }}>
-              <Image src="/Logo with text on side.png" alt="AEROUTE" width={560} height={160} priority className="h-56 w-auto drop-shadow-xl" style={{ marginTop: '-24px' }} />
-            </div>
+            <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-56 w-auto drop-shadow-xl" />
           </Link>
-          <p className="text-sm text-gray-500 -mt-12">Welcome back to AEROUTE</p>
+          <p className="text-sm text-gray-500">Welcome back to AEROUTE</p>
         </div>
 
         <Suspense>

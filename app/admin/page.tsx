@@ -35,7 +35,7 @@ export default async function AdminPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="flex items-stretch shadow-md">
         <Link href="/" className="flex items-center px-4 py-2 bg-white">
-          <Image src="/Logo with text on side.png" alt="AEROUTE" width={480} height={120} style={{ height: '120px', width: 'auto' }} className="drop-shadow" />
+          <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={480} height={120} style={{ height: '120px', width: 'auto' }} className="drop-shadow" />
         </Link>
         <div className="flex items-center gap-3 px-4 py-2 flex-1 justify-end" style={{ backgroundColor: '#003087' }}>
           <span className="text-white text-sm font-semibold hidden sm:block">Admin</span>

@@ -32,11 +32,9 @@ export default async function HomePage({
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
-      <div className="flex flex-col items-center gap-0">
-        <div className="flex items-center overflow-hidden" style={{ marginTop: '-24px' }}>
-          <Image src="/Logo with text on side.png" alt="AEROUTE" width={560} height={160} priority className="h-56 w-auto drop-shadow-xl" style={{ marginTop: '-24px' }} />
-        </div>
-        <p className="text-sm text-gray-500 text-center max-w-xs -mt-12">
+      <div className="flex flex-col items-center gap-2">
+        <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-56 w-auto drop-shadow-xl" />
+        <p className="text-sm text-gray-500 text-center max-w-xs">
           Upload a route and see wind, rain and temperature along the way
         </p>
         {!user && (

@@ -65,7 +65,7 @@ export interface StravaActivity {
   name: string;
   distanceM: number;
   movingTimeS: number;
-  average_moving_speed?: number; // m/s
+  average_speed?: number; // m/s
   map: { summary_polyline: string };
   start_date: string;
   type: string;

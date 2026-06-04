@@ -63,8 +63,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const distanceKm = totalDistanceKm(coordinates);
     const elevationGainM = totalElevationGain(coordinates);
 
-    const defaultSpeedKmh = activity.average_moving_speed
-      ? Math.round(activity.average_moving_speed * 3.6 * 10) / 10
+    const defaultSpeedKmh = activity.average_speed
+      ? Math.round(activity.average_speed * 3.6 * 10) / 10
       : null;
 
     const saved = await saveRoute({

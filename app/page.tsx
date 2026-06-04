@@ -33,10 +33,10 @@ export default async function HomePage({
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
       <div className="flex flex-col items-center gap-0">
-        <div className="flex items-center">
-          <Image src="/Logo visual with name.png" alt="AEROUTE" width={560} height={160} priority className="h-36 w-auto drop-shadow-xl" />
+        <div className="flex items-center overflow-hidden" style={{ marginTop: '-24px' }}>
+          <Image src="/Logo with text on side.png" alt="AEROUTE" width={560} height={160} priority className="h-56 w-auto drop-shadow-xl" style={{ marginTop: '-24px' }} />
         </div>
-        <p className="text-sm text-gray-500 text-center max-w-xs -mt-2">
+        <p className="text-sm text-gray-500 text-center max-w-xs -mt-12">
           Upload a route and see wind, rain and temperature along the way
         </p>
         {!user && (
@@ -63,7 +63,7 @@ export default async function HomePage({
             </Link>
             <Link
               href="/register"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm"
+              className="text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm" style={{ backgroundColor: '#003087' }}
             >
               Create account
             </Link>

@@ -22,7 +22,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <header className="bg-blue-900 text-white px-4 py-3 flex items-center gap-3 shadow-md">
         <Link href="/" className="flex items-center gap-2.5 mr-auto">
-          <Image src="/Logo visual with name.png" alt="AEROUTE" width={140} height={36} className="h-8 w-auto drop-shadow" />
+          <Image src="/Logo with text on side.png" alt="AEROUTE" width={220} height={56} style={{ height: '56px', width: 'auto' }} className="drop-shadow" />
         </Link>
         <span className="text-blue-300 text-sm hidden sm:block truncate max-w-[200px]">
           {user.email}

@@ -63,6 +63,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const distanceKm = totalDistanceKm(coordinates);
     const elevationGainM = totalElevationGain(coordinates);
 
+    const defaultSpeedKmh = activity.average_moving_speed
+      ? Math.round(activity.average_moving_speed * 3.6 * 10) / 10
+      : null;
+
     const saved = await saveRoute({
       user_id: null,
       name: activity.name,
@@ -72,6 +76,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       elevation_gain_m: elevationGainM || null,
       external_id: String(activityId),
       sport: stravaActivityTypeToSport(activity.type),
+      default_speed_kmh: defaultSpeedKmh,
     } as Parameters<typeof saveRoute>[0]);
 
     const response: UploadResponse = {

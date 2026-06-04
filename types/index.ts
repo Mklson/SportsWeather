@@ -65,6 +65,7 @@ export interface StravaActivity {
   name: string;
   distanceM: number;
   movingTimeS: number;
+  average_moving_speed?: number; // m/s
   map: { summary_polyline: string };
   start_date: string;
   type: string;
@@ -142,6 +143,7 @@ export interface DbRoute {
   elevation_gain_m: number | null;
   external_id: string | null;
   sport: SportType | null;
+  default_speed_kmh: number | null;
   created_at: string;
 }
 

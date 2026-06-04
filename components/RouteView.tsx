@@ -23,12 +23,13 @@ const EMPTY_STRAVA_SEGMENTS: StravaSegment[] = [];
 interface Props {
   route: Route;
   initialSport?: SportType;
+  initialSpeedKmh?: number;
   stravaConnected?: boolean;
   backHref?: string;
   initialSegments?: WeatherSegment[];
 }
 
-export function RouteView({ route, initialSport = "cycling", stravaConnected = false, backHref = "/", initialSegments }: Props) {
+export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, stravaConnected = false, backHref = "/", initialSegments }: Props) {
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -40,7 +41,7 @@ export function RouteView({ route, initialSport = "cycling", stravaConnected = f
   const handleStravaSegmentClick = useCallback((id: number) => {
     setActiveStravaId((prev) => (prev === id ? null : id));
   }, []);
-  const [speedKmh, setSpeedKmh] = useState(() => DEFAULT_SPEED_KMH[initialSport]);
+  const [speedKmh, setSpeedKmh] = useState(() => initialSpeedKmh ?? DEFAULT_SPEED_KMH[initialSport]);
   const [mapBounds, setMapBounds] = useState<{ west: number; south: number; east: number; north: number } | null>(null);
   const [cleared, setCleared] = useState(false);
   const [starredOnly, setStarredOnly] = useState(true);

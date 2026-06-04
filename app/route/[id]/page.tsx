@@ -48,6 +48,7 @@ export default async function RoutePage({ params, searchParams }: Props) {
         sport: route.sport ?? undefined,
       }}
       initialSport={sport}
+      initialSpeedKmh={route.default_speed_kmh ?? undefined}
       stravaConnected={stravaConnected}
       backHref={backHref}
     />

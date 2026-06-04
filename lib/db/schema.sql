@@ -16,6 +16,7 @@ create table if not exists routes (
   elevation_gain_m numeric(8,1),
   external_id   text,             -- Strava/Garmin activity id
   sport         text check (sport in ('cycling', 'skiing', 'running')),
+  default_speed_kmh numeric(5,1),
   created_at    timestamptz not null default now()
 );
 

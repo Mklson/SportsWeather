@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function ResetPasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,39 +16,14 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-
-    // PKCE flow: code in query param
-    const code = searchParams.get("code");
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          setError("Invalid or expired reset link. Please request a new one.");
-        } else {
-          setReady(true);
-        }
-      });
-      return;
-    }
-
-    // Implicit flow: tokens arrive in the URL hash — Supabase client
-    // processes the hash automatically and fires PASSWORD_RECOVERY
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
         setReady(true);
+      } else {
+        setError("Invalid or expired reset link. Please request a new one.");
       }
     });
-
-    // If neither a code nor a hash token is present after a short delay,
-    // show the invalid-link error
-    const timer = setTimeout(() => {
-      setError("Invalid or expired reset link. Please request a new one.");
-    }, 3000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timer);
-    };
-  }, [searchParams]);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

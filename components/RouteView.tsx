@@ -190,14 +190,14 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
               <button
                 onClick={handleSave}
                 disabled={saveState === "saving"}
-                style={{ touchAction: "manipulation", backgroundColor: '#003087' }}
-                className="flex items-center gap-1 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg disabled:opacity-50"
+                style={{ touchAction: "manipulation" }}
+                className="text-xs font-medium text-blue-600 active:text-blue-800 disabled:opacity-50"
               >
                 {saveState === "saving" ? "Saving…" : "Save"}
               </button>
             )}
             {saveState === "saved" && (
-              <span className="text-xs font-semibold text-green-600 px-2.5 py-1.5">Saved ✓</span>
+              <span className="text-xs font-medium text-green-600">Saved ✓</span>
             )}
             <button
               onClick={resetMap}
@@ -290,14 +290,13 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
               <button
                 onClick={handleSave}
                 disabled={saveState === "saving"}
-                className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-50"
-                style={{ backgroundColor: '#003087' }}
+                className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
               >
                 {saveState === "saving" ? "Saving…" : "Save to my account"}
               </button>
             )}
             {saveState === "saved" && (
-              <span className="text-xs font-semibold text-green-600">Saved ✓</span>
+              <span className="text-xs font-medium text-green-600">Saved ✓</span>
             )}
             <button
               onClick={resetMap}

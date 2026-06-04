@@ -27,9 +27,10 @@ interface Props {
   stravaConnected?: boolean;
   backHref?: string;
   initialSegments?: WeatherSegment[];
+  canSave?: boolean;
 }
 
-export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, stravaConnected = false, backHref = "/", initialSegments }: Props) {
+export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, stravaConnected = false, backHref = "/", initialSegments, canSave = false }: Props) {
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -44,6 +45,13 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
   const [speedKmh, setSpeedKmh] = useState(() => initialSpeedKmh ?? DEFAULT_SPEED_KMH[initialSport]);
   const [mapBounds, setMapBounds] = useState<{ west: number; south: number; east: number; north: number } | null>(null);
   const [cleared, setCleared] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+
+  async function handleSave() {
+    setSaveState("saving");
+    const res = await fetch(`/api/routes/${route.id}`, { method: "PATCH" });
+    setSaveState(res.ok ? "saved" : "idle");
+  }
   const [starredOnly, setStarredOnly] = useState(true);
   const handleToggleStarredOnly = useCallback(() => setStarredOnly((v) => !v), []);
   // Debounced values for weather — sliders update display instantly but the
@@ -178,6 +186,19 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 ← Strava
               </Link>
             )}
+            {canSave && saveState !== "saved" && (
+              <button
+                onClick={handleSave}
+                disabled={saveState === "saving"}
+                style={{ touchAction: "manipulation", backgroundColor: '#003087' }}
+                className="flex items-center gap-1 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg disabled:opacity-50"
+              >
+                {saveState === "saving" ? "Saving…" : "Save"}
+              </button>
+            )}
+            {saveState === "saved" && (
+              <span className="text-xs font-semibold text-green-600 px-2.5 py-1.5">Saved ✓</span>
+            )}
             <button
               onClick={resetMap}
               title="Clear map"
@@ -265,6 +286,19 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 </>
               )}
             </div>
+            {canSave && saveState !== "saved" && (
+              <button
+                onClick={handleSave}
+                disabled={saveState === "saving"}
+                className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                style={{ backgroundColor: '#003087' }}
+              >
+                {saveState === "saving" ? "Saving…" : "Save to my account"}
+              </button>
+            )}
+            {saveState === "saved" && (
+              <span className="text-xs font-semibold text-green-600">Saved ✓</span>
+            )}
             <button
               onClick={resetMap}
               title="Clear map"

@@ -29,6 +29,7 @@ export default async function RoutePage({ params, searchParams }: Props) {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   const backHref = user ? "/dashboard" : "/";
+  const canSave = !!user && !route.user_id;
 
   // Apply a looser simplification (50m) for the client payload.
   // Stored coords use 10m tolerance; 50m is invisible on screen but ~60% fewer points.
@@ -51,6 +52,7 @@ export default async function RoutePage({ params, searchParams }: Props) {
       initialSpeedKmh={route.default_speed_kmh ?? undefined}
       stravaConnected={stravaConnected}
       backHref={backHref}
+      canSave={canSave}
     />
   );
 }

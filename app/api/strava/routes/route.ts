@@ -66,6 +66,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       elevation_gain_m: elevationGainM || null,
       external_id: `strava-route:${routeId}`,
       sport: stravaRouteTypeToSport(type),
+      default_speed_kmh: null,
     } as Parameters<typeof saveRoute>[0]);
 
     const response: UploadResponse = {

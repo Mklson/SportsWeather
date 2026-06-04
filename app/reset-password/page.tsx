@@ -16,20 +16,39 @@ function ResetPasswordForm() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    // PKCE flow: code in query param
     const code = searchParams.get("code");
-    if (!code) {
-      setError("Invalid or expired reset link. Please request a new one.");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          setError("Invalid or expired reset link. Please request a new one.");
+        } else {
+          setReady(true);
+        }
+      });
       return;
     }
 
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
-        setError("Invalid or expired reset link. Please request a new one.");
-      } else {
+    // Implicit flow: tokens arrive in the URL hash — Supabase client
+    // processes the hash automatically and fires PASSWORD_RECOVERY
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
         setReady(true);
       }
     });
+
+    // If neither a code nor a hash token is present after a short delay,
+    // show the invalid-link error
+    const timer = setTimeout(() => {
+      setError("Invalid or expired reset link. Please request a new one.");
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -71,7 +90,9 @@ function ResetPasswordForm() {
     );
   }
 
-  if (!ready) return null;
+  if (!ready) {
+    return <p className="text-center text-sm text-gray-400">Verifying link…</p>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -133,7 +154,7 @@ export default function ResetPasswordPage() {
           </Link>
           <p className="text-sm text-gray-500 -mt-12">Choose a new password</p>
         </div>
-        <Suspense>
+        <Suspense fallback={<p className="text-center text-sm text-gray-400">Verifying link…</p>}>
           <ResetPasswordForm />
         </Suspense>
       </div>

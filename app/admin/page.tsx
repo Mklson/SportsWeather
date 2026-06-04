@@ -9,7 +9,8 @@ export default async function AdminPage() {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user || user.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
+  if (!user) redirect("/login");
+  if (user.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
 
   // Fetch all auth users
   const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });

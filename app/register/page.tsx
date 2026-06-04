@@ -43,11 +43,12 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
       <div className="w-full max-w-sm flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-2">
           <Link href="/">
-            <Image src="/Logo visual.png" alt="AEROUTE" width={52} height={52} className="drop-shadow-md" />
+            <div className="flex items-center overflow-hidden" style={{ marginTop: '-24px' }}>
+              <Image src="/Logo with text on side.png" alt="AEROUTE" width={560} height={160} priority className="h-56 w-auto drop-shadow-xl" style={{ marginTop: '-24px' }} />
+            </div>
           </Link>
-          <h1 className="text-2xl font-bold text-blue-900">Create account</h1>
           <p className="text-sm text-gray-500">Free — no credit card needed</p>
         </div>
 

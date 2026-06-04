@@ -45,7 +45,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2">
           <Link href="/">
-            <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-24 w-auto drop-shadow-xl" />
+            <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-32 w-auto drop-shadow-xl" />
           </Link>
           <p className="text-sm text-gray-500">Free — no credit card needed</p>
         </div>

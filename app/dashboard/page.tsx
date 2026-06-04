@@ -25,7 +25,7 @@ export default async function DashboardPage() {
           <Image src="/Logo with text on side.png" alt="AEROUTE" width={480} height={120} style={{ height: '120px', width: 'auto' }} className="drop-shadow" />
         </Link>
         <div className="flex items-center gap-3 px-4 py-2 flex-1 justify-end" style={{ backgroundColor: '#003087' }}>
-          <span className="text-blue-300 text-sm hidden sm:block truncate max-w-[200px]">
+          <span className="text-white text-sm font-semibold hidden sm:block truncate max-w-[200px]">
             {user.email}
           </span>
           <LogoutButton />

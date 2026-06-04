@@ -82,7 +82,7 @@ export default async function HomePage({
       <FeaturedRoutes routes={featuredRoutes} />
 
       <footer className="w-full flex justify-center pb-4">
-        <Link href="/login" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
+        <Link href="/login?next=/admin" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
           Admin
         </Link>
       </footer>

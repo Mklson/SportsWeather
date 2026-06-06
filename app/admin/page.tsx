@@ -44,9 +44,17 @@ export default async function AdminPage() {
       </header>
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-baseline gap-3 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <span className="text-gray-400 text-sm">{users.length} total</span>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+            <span className="text-gray-400 text-sm">{users.length} total</span>
+          </div>
+          <Link
+            href="/admin/featured"
+            className="text-sm text-blue-600 hover:underline font-medium"
+          >
+            Manage featured routes →
+          </Link>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">

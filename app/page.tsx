@@ -2,8 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { RouteImporter } from "@/components/route/RouteImporter";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
-import { getRoute } from "@/lib/db/client";
-import { FEATURED_ROUTE_IDS } from "@/lib/featuredRoutes";
+import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const STRAVA_ERRORS: Record<string, string> = {
@@ -26,8 +25,9 @@ export default async function HomePage({
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  const featuredRouteIds = await getFeaturedRouteIds();
   const featuredRoutes = (
-    await Promise.all(FEATURED_ROUTE_IDS.map((id) => getRoute(id)))
+    await Promise.all(featuredRouteIds.map((id) => getRoute(id)))
   ).filter((r): r is NonNullable<typeof r> => r !== null);
 
   return (

@@ -55,3 +55,15 @@ create policy "Anyone reads weather cache"
 
 create policy "Service role writes weather cache"
   on weather_cache for insert with check (true);
+
+-- ─── Featured routes ────────────────────────────────────────────────────────
+
+create table if not exists featured_routes (
+  route_id  uuid primary key references routes(id) on delete cascade,
+  added_at  timestamptz not null default now()
+);
+
+alter table featured_routes enable row level security;
+
+create policy "Anyone can view featured routes"
+  on featured_routes for select using (true);

@@ -111,3 +111,26 @@ export async function saveStarredCache(athleteId: number, segments: StravaSegmen
     { onConflict: "athlete_id" }
   );
 }
+
+export async function getFeaturedRouteIds(): Promise<string[]> {
+  const { data } = await supabaseAdmin
+    .from("featured_routes")
+    .select("route_id")
+    .order("added_at", { ascending: true });
+  return (data ?? []).map((r: { route_id: string }) => r.route_id);
+}
+
+export async function addFeaturedRoute(routeId: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("featured_routes")
+    .insert({ route_id: routeId });
+  if (error) throw error;
+}
+
+export async function removeFeaturedRoute(routeId: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("featured_routes")
+    .delete()
+    .eq("route_id", routeId);
+  if (error) throw error;
+}

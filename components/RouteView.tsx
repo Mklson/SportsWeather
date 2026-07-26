@@ -9,6 +9,7 @@ import useSWR from "swr";
 import type { Route, SportType, StravaSegment, WeatherSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
 import { SpeedSlider } from "./SpeedSlider";
+import { SkiWaxBar } from "./route/SkiWaxBar";
 import { useWeather } from "@/hooks/useWeather";
 import { DEFAULT_SPEED_KMH } from "@/lib/route-sampler";
 import clsx from "clsx";
@@ -270,104 +271,113 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             reversed={reversed}
           />
         </div>
-        <aside className="w-80 overflow-y-auto flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
-          {/* Back navigation */}
-          <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
-            <div className="flex items-center gap-2">
-              <button onClick={() => { window.location.href = backHref; }} className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
-                ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
-              </button>
-              {stravaConnected && (
-                <>
-                  <span className="text-gray-300">|</span>
-                  <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
-                    ← Strava
-                  </Link>
-                </>
-              )}
-            </div>
-            {canSave && saveState !== "saved" && (
-              <button
-                onClick={handleSave}
-                disabled={saveState === "saving"}
-                className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
-              >
-                {saveState === "saving" ? "Saving…" : "Save to my account"}
-              </button>
-            )}
-            {saveState === "saved" && (
-              <span className="text-xs font-medium text-green-600">Saved ✓</span>
-            )}
-            <button
-              onClick={resetMap}
-              title="Clear map"
-              className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
-            >
-              <ResetIcon /> Reset map
-            </button>
-          </div>
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200 bg-white">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
-                <p className="text-gray-500 text-sm mt-0.5">
-                  {route.distanceKm.toFixed(1)} km
-                  {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m elevation` : ""}
-                </p>
-                <SourceBadge source={route.source} />
-              </div>
-              <ReverseButton reversed={reversed} onToggle={handleToggleReverse} />
-            </div>
-          </div>
-
-          {/* Time + speed */}
-          <div className="p-4 border-b border-gray-200 bg-white space-y-4">
-            <TimeSlider value={startTime} onChange={handleTimeChange} />
-            <SpeedSlider
-              sport={sport}
-              speedKmh={speedKmh}
-              onChange={handleSpeedChange}
-              coords={route.coordinates}
-            />
-            <WindBreakdownBar segments={segments} />
-          </div>
-
-          {/* Legend */}
-          <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
-            <LegendItem color="#10b981" label="Tailwind" />
-            <LegendItem color="#f59e0b" label="Crosswind" />
-            <LegendItem color="#ef4444" label="Headwind" />
-          </div>
-
-          {/* Strava segments */}
-          {stravaConnected && (
-            <>
-              <div className="px-4 py-2 border-b border-gray-200 bg-white flex items-center justify-between">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</p>
-                {!stravaLoading && stravaSegments.length > 0 && (
-                  <button
-                    onClick={handleToggleStarredOnly}
-                    className="text-xs font-medium text-amber-500 hover:text-amber-700 transition-colors"
-                  >
-                    {starredOnly ? `★ ${starredCount} · Show all` : `All ${stravaSegments.length} · ★ only`}
-                  </button>
+        <aside className="w-80 flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+            {/* Back navigation */}
+            <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
+              <div className="flex items-center gap-2">
+                <button onClick={() => { window.location.href = backHref; }} className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
+                  ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
+                </button>
+                {stravaConnected && (
+                  <>
+                    <span className="text-gray-300">|</span>
+                    <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
+                      ← Strava
+                    </Link>
+                  </>
                 )}
               </div>
-              {stravaLoading && (
-                <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">
-                  Loading segments…
+              {canSave && saveState !== "saved" && (
+                <button
+                  onClick={handleSave}
+                  disabled={saveState === "saving"}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
+                >
+                  {saveState === "saving" ? "Saving…" : "Save to my account"}
+                </button>
+              )}
+              {saveState === "saved" && (
+                <span className="text-xs font-medium text-green-600">Saved ✓</span>
+              )}
+              <button
+                onClick={resetMap}
+                title="Clear map"
+                className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
+              >
+                <ResetIcon /> Reset map
+              </button>
+            </div>
+            {/* Header */}
+            <div className="p-4 border-b border-gray-200 bg-white">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
+                  <p className="text-gray-500 text-sm mt-0.5">
+                    {route.distanceKm.toFixed(1)} km
+                    {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m elevation` : ""}
+                  </p>
+                  <SourceBadge source={route.source} />
                 </div>
-              )}
-              {stravaError && (
-                <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                  {String(stravaError)}
+                <ReverseButton reversed={reversed} onToggle={handleToggleReverse} />
+              </div>
+            </div>
+
+            {/* Time + speed */}
+            <div className="p-4 border-b border-gray-200 bg-white space-y-4">
+              <TimeSlider value={startTime} onChange={handleTimeChange} />
+              <SpeedSlider
+                sport={sport}
+                speedKmh={speedKmh}
+                onChange={handleSpeedChange}
+                coords={route.coordinates}
+              />
+              <WindBreakdownBar segments={segments} />
+            </div>
+
+            {/* Legend */}
+            <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
+              <LegendItem color="#10b981" label="Tailwind" />
+              <LegendItem color="#f59e0b" label="Crosswind" />
+              <LegendItem color="#ef4444" label="Headwind" />
+            </div>
+
+            {/* Strava segments */}
+            {stravaConnected && (
+              <>
+                <div className="px-4 py-2 border-b border-gray-200 bg-white flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</p>
+                  {!stravaLoading && stravaSegments.length > 0 && (
+                    <button
+                      onClick={handleToggleStarredOnly}
+                      className="text-xs font-medium text-amber-500 hover:text-amber-700 transition-colors"
+                    >
+                      {starredOnly ? `★ ${starredCount} · Show all` : `All ${stravaSegments.length} · ★ only`}
+                    </button>
+                  )}
                 </div>
-              )}
-              {!stravaLoading && (
-                <StravaSegmentList segments={listStravaSegments} weatherSegments={segments} activeId={activeStravaId} onSelect={handleStravaSegmentClick} starredOnly={starredOnly} />
-              )}
-            </>
+                {stravaLoading && (
+                  <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">
+                    Loading segments…
+                  </div>
+                )}
+                {stravaError && (
+                  <div className="m-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                    {String(stravaError)}
+                  </div>
+                )}
+                {!stravaLoading && (
+                  <StravaSegmentList segments={listStravaSegments} weatherSegments={segments} activeId={activeStravaId} onSelect={handleStravaSegmentClick} starredOnly={starredOnly} />
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Ski wax recommendation — pinned at the bottom, cross-country only */}
+          {sport === "skiing" && (
+            <div className="flex-shrink-0">
+              <SkiWaxBar segments={segments} />
+            </div>
           )}
         </aside>
       </div>
@@ -434,10 +444,20 @@ function MobileBottomSheet({
     "72dvh";
 
   return (
-    <div
-      className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
-      style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
-    >
+    <>
+      {/* Ski wax recommendation — pinned directly above the sheet, tracks its height, cross-country only */}
+      {sport === "skiing" && (
+        <div
+          className="absolute left-0 right-0 z-20 rounded-t-2xl overflow-hidden"
+          style={{ bottom: sheetHeight, transition: "bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
+        >
+          <SkiWaxBar segments={weatherSegments} />
+        </div>
+      )}
+      <div
+        className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
+        style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
+      >
       {/* Header — always visible */}
       <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-100">
         <div className="min-w-0 flex-1">
@@ -548,7 +568,8 @@ function MobileBottomSheet({
           Connect to Strava from your dashboard to see segments along the route
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

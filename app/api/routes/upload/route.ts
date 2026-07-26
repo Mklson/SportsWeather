@@ -4,7 +4,7 @@ import { parseTcx } from "@/lib/tcx-parser";
 import { totalDistanceKm, totalElevationGain, simplifyRoute } from "@/lib/route-sampler";
 import { saveRoute } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { RouteSource, UploadResponse } from "@/types";
+import type { RouteSource, SportType, UploadResponse } from "@/types";
 
 export const runtime = "nodejs"; // xml2js needs Node runtime
 
@@ -17,6 +17,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
+    const sportRaw = formData.get("sport") as string | null;
+    const sport: SportType | null =
+      sportRaw === "cycling" || sportRaw === "running" || sportRaw === "skiing" ? sportRaw : null;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       distance_km: distanceKm,
       elevation_gain_m: elevationGainM > 0 ? elevationGainM : null,
       external_id: null,
-      sport: null,
+      sport,
       default_speed_kmh: null,
     });
 
@@ -75,6 +78,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         distanceKm,
         elevationGainM,
         createdAt: saved.created_at,
+        sport: saved.sport ?? undefined,
       },
     };
 

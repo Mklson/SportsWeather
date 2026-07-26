@@ -36,6 +36,16 @@ export interface OsmTrail {
   area?: string;
 }
 
+// ─── Kartverket trail database ─────────────────────────────────────────────
+
+export interface KartverketTrail {
+  id: string; // Kartverket gml:id
+  name: string;
+  sport: SportType; // derived from the WFS feature type (Fotrute/Skiløype/Sykkelrute)
+  distanceKm: number;
+  coordinates: Coordinate[];
+}
+
 // ─── Geo primitives ────────────────────────────────────────────────────────
 
 export interface Coordinate {

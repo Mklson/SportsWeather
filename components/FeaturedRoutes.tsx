@@ -43,7 +43,7 @@ export function FeaturedRoutes({ routes }: { routes: DbRoute[] }) {
 
   return (
     <div className="w-full max-w-md">
-      <p className="mb-3 text-center text-sm font-medium text-gray-400 uppercase tracking-wide">
+      <p className="mb-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide">
         Try a sample route
       </p>
       <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(routes.length, 2)}, 1fr)` }}>

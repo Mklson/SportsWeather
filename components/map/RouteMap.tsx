@@ -594,7 +594,9 @@ function updateWeatherMarkers(
   ref.current = [];
   if (!segments.length) return;
 
-  const spacingKm = sport === "cycling" ? 5 : 2;
+  // Running covers hiking/walking, and cross-country skiing shares the same density —
+  // these routes are typically shorter than cycling, so markers sit 50% closer (2km → ~1.33km).
+  const spacingKm = sport === "cycling" ? 5 : 2 / 1.5;
   let lastKm = -spacingKm;
   segments.forEach((seg) => {
     if (seg.endKm - lastKm < spacingKm) return;

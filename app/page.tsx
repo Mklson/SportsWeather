@@ -1,9 +1,32 @@
 import Image from "next/image";
 import Link from "next/link";
-import { RouteImporter } from "@/components/route/RouteImporter";
+import clsx from "clsx";
+import { RouteImporter, StravaIcon } from "@/components/route/RouteImporter";
+import { KartverketTrailSearch } from "@/components/trail/KartverketTrailSearch";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const IMPORT_SOURCES = [
+  {
+    href: "/api/strava/auth",
+    label: "Strava",
+    className: "bg-[#FC4C02] hover:bg-[#e04300] text-white",
+    icon: <StravaIcon />,
+  },
+  {
+    href: "https://ut.no",
+    label: "UT.no",
+    className: "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300",
+    icon: <span className="text-lg leading-none">🥾</span>,
+  },
+  {
+    href: "https://connect.garmin.com",
+    label: "Garmin",
+    className: "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300",
+    icon: <span className="text-lg leading-none">⌚</span>,
+  },
+];
 
 const STRAVA_ERRORS: Record<string, string> = {
   strava_denied:         "You cancelled the Strava connection.",
@@ -34,25 +57,21 @@ export default async function HomePage({
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
       <div className="flex flex-col items-center gap-2">
         <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-24 w-auto drop-shadow-xl" />
-        <p className="text-sm text-gray-500 text-center max-w-xs">
-          Upload a route and see wind, rain and temperature along the way
-        </p>
-        {!user && (
-          <p className="text-sm text-gray-500 text-center max-w-xs mt-3">
+      </div>
+
+      {user ? (
+        <Link
+          href="/dashboard"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
+        >
+          Go to my dashboard →
+        </Link>
+      ) : (
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-gray-500 text-center max-w-xs">
             Create a free account to save your routes and access them anytime from your dashboard.
           </p>
-        )}
-
-        {/* Auth buttons */}
-        {user ? (
-          <Link
-            href="/dashboard"
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
-          >
-            Go to my dashboard →
-          </Link>
-        ) : (
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3">
             <Link
               href="/login"
               className="border border-gray-300 hover:border-gray-400 text-gray-700 font-medium px-5 py-2 rounded-xl text-sm transition-colors"
@@ -66,8 +85,8 @@ export default async function HomePage({
               Create account
             </Link>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="w-full max-w-md bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center">
@@ -75,7 +94,31 @@ export default async function HomePage({
         </div>
       )}
 
-      <RouteImporter />
+      <div className="flex flex-col items-center gap-3 w-full max-w-md">
+        <RouteImporter />
+
+        <div className="flex flex-col items-center gap-2 w-full">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
+          <div className="grid grid-cols-4 gap-2 w-full">
+            <KartverketTrailSearch />
+            {IMPORT_SOURCES.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target={s.href.startsWith("http") ? "_blank" : undefined}
+                rel={s.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                className={clsx(
+                  "flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center",
+                  s.className
+                )}
+              >
+                {s.icon}
+                {s.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <FeaturedRoutes routes={featuredRoutes} />
 

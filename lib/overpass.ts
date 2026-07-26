@@ -43,7 +43,7 @@ export async function searchSkiTrails(query: string): Promise<OsmTrail[]> {
   return fetchTrailsInBbox(bbox.south, bbox.west, bbox.north, bbox.east);
 }
 
-async function geocodeToBbox(
+export async function geocodeToBbox(
   query: string
 ): Promise<{ south: number; west: number; north: number; east: number } | null> {
   const params = new URLSearchParams({

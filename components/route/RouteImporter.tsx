@@ -2,10 +2,17 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { UploadResponse } from "@/types";
+import type { SportType, UploadResponse } from "@/types";
+import { MobileUploadGuide } from "@/components/route/MobileUploadGuide";
 import clsx from "clsx";
 
-type Tab = "upload" | "strava";
+const UPLOAD_SPORTS: { id: SportType; label: string; emoji: string }[] = [
+  { id: "cycling", label: "Cycling", emoji: "🚴" },
+  { id: "running", label: "Hiking · Running", emoji: "🥾" },
+  { id: "skiing", label: "Cross Country", emoji: "⛷️" },
+];
+
+const BOX_SPORT_SYMBOLS = ["🏃", "🚴", "🥾", "⛷️"];
 
 interface Props {
   onSuccess?: (routeId: string) => void;
@@ -13,7 +20,7 @@ interface Props {
 
 export function RouteImporter({ onSuccess }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("upload");
+  const [sport, setSport] = useState<SportType>("cycling");
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "uploading" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -24,6 +31,7 @@ export function RouteImporter({ onSuccess }: Props) {
       setErrorMsg(null);
       const form = new FormData();
       form.append("file", file);
+      form.append("sport", sport);
       try {
         const res = await fetch("/api/routes/upload", { method: "POST", body: form });
         if (!res.ok) {
@@ -42,7 +50,7 @@ export function RouteImporter({ onSuccess }: Props) {
         setErrorMsg(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [router, onSuccess]
+    [router, onSuccess, sport]
   );
 
   const handleFile = useCallback(
@@ -60,71 +68,61 @@ export function RouteImporter({ onSuccess }: Props) {
   );
 
   return (
-    <div className="w-full max-w-md space-y-5">
-      {/* Tab selector */}
+    <div className="w-full max-w-md space-y-3">
+      <label
+        className={clsx(
+          "flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed",
+          "cursor-pointer transition-colors",
+          isDragging
+            ? "border-blue-400 bg-blue-50"
+            : "border-gray-300 hover:border-blue-300 bg-gray-50"
+        )}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
+      >
+        <p className="text-gray-800 font-medium text-sm text-center max-w-xs">
+          Drop your GPX/TCX file here to check weather conditions along the way
+        </p>
+        <div className="flex items-center gap-3 text-xl">
+          {BOX_SPORT_SYMBOLS.map((emoji) => (
+            <span key={emoji}>{emoji}</span>
+          ))}
+        </div>
+        <input
+          type="file"
+          accept=".gpx,.tcx"
+          className="sr-only"
+          onChange={(e) => handleFile(e.target.files?.[0])}
+        />
+      </label>
+
+      <p className="text-sm text-gray-500 text-center">
+        Pick your activity below. It adjusts the pace slider and other map features, like weather timing and ski wax tips.
+      </p>
+
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 text-sm border border-gray-200">
-        {([
-          { id: "upload", label: "📁 Upload GPX/TCX" },
-          { id: "strava", label: "🟠 Strava" },
-        ] as { id: Tab; label: string }[]).map((t) => (
+        {UPLOAD_SPORTS.map((s) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={s.id}
+            type="button"
+            onClick={() => setSport(s.id)}
             className={clsx(
-              "flex-1 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
-              tab === t.id
+              "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
+              sport === s.id
                 ? "bg-white text-blue-900 shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
             )}
           >
-            {t.label}
+            <span>{s.emoji}</span>
+            <span>{s.label}</span>
           </button>
         ))}
       </div>
 
-      {/* ── Upload tab ──────────────────────────────────────────────── */}
-      {tab === "upload" && (
-        <div className="space-y-3">
-          <label
-            className={clsx(
-              "flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed",
-              "cursor-pointer transition-colors",
-              isDragging
-                ? "border-blue-400 bg-blue-50"
-                : "border-gray-300 hover:border-blue-300 bg-gray-50"
-            )}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
-          >
-            <span className="text-2xl">📁</span>
-            <div className="text-center">
-              <p className="text-gray-800 font-medium text-sm">Drop GPX or TCX here</p>
-              <p className="text-gray-400 text-xs mt-0.5">or click to select a file</p>
-            </div>
-            <input
-              type="file"
-              accept=".gpx,.tcx"
-              className="sr-only"
-              onChange={(e) => handleFile(e.target.files?.[0])}
-            />
-          </label>
-
-        </div>
-      )}
-
-      {/* ── Strava tab ──────────────────────────────────────────────── */}
-      {tab === "strava" && (
-        <a
-          href="/api/strava/auth"
-          className="flex items-center justify-center gap-3 w-full py-4 px-4
-                     bg-[#FC4C02] hover:bg-[#e04300] rounded-xl font-medium
-                     text-white transition-colors shadow-sm"
-        >
-          <StravaIcon />
-          Connect to Strava and select an activity
-        </a>
-      )}
+      <div className="text-center">
+        <MobileUploadGuide />
+      </div>
 
       {status === "uploading" && (
         <p className="text-center text-blue-600 text-sm animate-pulse">
@@ -143,7 +141,7 @@ export function RouteImporter({ onSuccess }: Props) {
   );
 }
 
-function StravaIcon() {
+export function StravaIcon() {
   return (
     <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
       <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066z" />

@@ -122,7 +122,10 @@ export function gradeAdjustedSpeed(
   // Sensitivity differs per sport: cycling loses speed faster on uphills
   const factor = sport === "cycling" ? 0.055 : sport === "running" ? 0.08 : 0.10;
   const adjusted = baseSpeedKmh / (1 + factor * gradePercent);
-  return Math.max(2, Math.min(adjusted, baseSpeedKmh * 2.5));
+  // Floor is a fraction of the selected base speed, not a fixed value — a fixed
+  // 2 km/h floor would clamp slow hiking paces (down to 1.5 km/h / 40 min/km)
+  // back up to a faster speed than the user actually selected.
+  return Math.max(baseSpeedKmh * 0.2, Math.min(adjusted, baseSpeedKmh * 2.5));
 }
 
 /**

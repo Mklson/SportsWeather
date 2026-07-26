@@ -9,7 +9,7 @@ import type { Coordinate } from "@/types";
 // operates natively in pace units so steps stay uniform across the walking-to-running range.
 const SPORT_CONFIG: Record<SportType, { min: number; max: number; step: number; unit: string; pace?: boolean }> = {
   cycling: { min: 15, max: 50, step: 1,   unit: "km/h" },
-  running: { min: 2,  max: 20, step: 0.1, unit: "km/h", pace: true },
+  running: { min: 2,  max: 40, step: 0.1, unit: "km/h", pace: true },
   skiing:  { min: 8,  max: 40, step: 1,   unit: "km/h" },
 };
 

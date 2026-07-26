@@ -3,30 +3,13 @@ import Link from "next/link";
 import clsx from "clsx";
 import { RouteImporter, StravaIcon } from "@/components/route/RouteImporter";
 import { KartverketTrailSearch } from "@/components/trail/KartverketTrailSearch";
+import { UTNoGuide } from "@/components/route/UTNoGuide";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const IMPORT_SOURCES = [
-  {
-    href: "/api/strava/auth",
-    label: "Strava",
-    className: "bg-[#FC4C02] hover:bg-[#e04300] text-white",
-    icon: <StravaIcon />,
-  },
-  {
-    href: "https://ut.no",
-    label: "UT.no",
-    className: "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300",
-    icon: <span className="text-lg leading-none">🥾</span>,
-  },
-  {
-    href: "https://connect.garmin.com",
-    label: "Garmin",
-    className: "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300",
-    icon: <span className="text-lg leading-none">⌚</span>,
-  },
-];
+const IMPORT_LINK_CLASS =
+  "flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center";
 
 const STRAVA_ERRORS: Record<string, string> = {
   strava_denied:         "You cancelled the Strava connection.",
@@ -101,21 +84,23 @@ export default async function HomePage({
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
           <div className="grid grid-cols-4 gap-2 w-full">
             <KartverketTrailSearch />
-            {IMPORT_SOURCES.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target={s.href.startsWith("http") ? "_blank" : undefined}
-                rel={s.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                className={clsx(
-                  "flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center",
-                  s.className
-                )}
-              >
-                {s.icon}
-                {s.label}
-              </a>
-            ))}
+            <a
+              href="/api/strava/auth"
+              className={clsx(IMPORT_LINK_CLASS, "bg-[#FC4C02] hover:bg-[#e04300] text-white")}
+            >
+              <StravaIcon />
+              Strava
+            </a>
+            <UTNoGuide />
+            <a
+              href="https://connect.garmin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={clsx(IMPORT_LINK_CLASS, "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300")}
+            >
+              <span className="text-lg leading-none">⌚</span>
+              Garmin
+            </a>
           </div>
         </div>
       </div>

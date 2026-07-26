@@ -21,6 +21,7 @@ interface Props {
 export function RouteImporter({ onSuccess }: Props) {
   const router = useRouter();
   const [sport, setSport] = useState<SportType>("cycling");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "uploading" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -53,19 +54,20 @@ export function RouteImporter({ onSuccess }: Props) {
     [router, onSuccess, sport]
   );
 
-  const handleFile = useCallback(
-    (file: File | undefined) => {
-      if (!file) return;
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      if (!ext || !["gpx", "tcx"].includes(ext)) {
-        setStatus("error");
-        setErrorMsg("Only GPX and TCX files are supported");
-        return;
-      }
-      uploadFile(file);
-    },
-    [uploadFile]
-  );
+  // Staging a file just holds it locally — the actual upload only fires once
+  // the user confirms an activity, so they never have to guess it up front.
+  const handleFile = useCallback((file: File | undefined) => {
+    if (!file) return;
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!ext || !["gpx", "tcx"].includes(ext)) {
+      setStatus("error");
+      setErrorMsg("Only GPX and TCX files are supported");
+      return;
+    }
+    setStatus("idle");
+    setErrorMsg(null);
+    setPendingFile(file);
+  }, []);
 
   return (
     <div className="w-full max-w-md space-y-3">
@@ -81,14 +83,25 @@ export function RouteImporter({ onSuccess }: Props) {
         onDragLeave={() => setIsDragging(false)}
         onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
       >
-        <p className="text-gray-800 font-medium text-sm text-center max-w-xs">
-          Drop your GPX/TCX file here to check weather conditions along the way
-        </p>
-        <div className="flex items-center gap-3 text-xl">
-          {BOX_SPORT_SYMBOLS.map((emoji) => (
-            <span key={emoji}>{emoji}</span>
-          ))}
-        </div>
+        {pendingFile ? (
+          <>
+            <p className="text-gray-800 font-medium text-sm text-center max-w-xs">
+              📄 {pendingFile.name}
+            </p>
+            <p className="text-xs text-gray-400">Click or drop to choose a different file</p>
+          </>
+        ) : (
+          <>
+            <p className="text-gray-800 font-medium text-sm text-center max-w-xs">
+              Drop your GPX/TCX file here to check weather conditions along the way
+            </p>
+            <div className="flex items-center gap-3 text-xl">
+              {BOX_SPORT_SYMBOLS.map((emoji) => (
+                <span key={emoji}>{emoji}</span>
+              ))}
+            </div>
+          </>
+        )}
         <input
           type="file"
           accept=".gpx,.tcx"
@@ -97,38 +110,46 @@ export function RouteImporter({ onSuccess }: Props) {
         />
       </label>
 
-      <p className="text-sm text-gray-500 text-center">
-        Pick your activity below. It adjusts the pace slider and other map features, like weather timing and ski wax tips.
-      </p>
+      {pendingFile && (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500 text-center">
+            Pick your activity. It adjusts the pace slider and other map features, like weather timing and ski wax tips.
+          </p>
 
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 text-sm border border-gray-200">
-        {UPLOAD_SPORTS.map((s) => (
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 text-sm border border-gray-200">
+            {UPLOAD_SPORTS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSport(s.id)}
+                className={clsx(
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
+                  sport === s.id
+                    ? "bg-white text-blue-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                )}
+              >
+                <span>{s.emoji}</span>
+                <span>{s.label}</span>
+              </button>
+            ))}
+          </div>
+
           <button
-            key={s.id}
             type="button"
-            onClick={() => setSport(s.id)}
-            className={clsx(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
-              sport === s.id
-                ? "bg-white text-blue-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            )}
+            onClick={() => uploadFile(pendingFile)}
+            disabled={status === "uploading"}
+            className="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-60"
           >
-            <span>{s.emoji}</span>
-            <span>{s.label}</span>
+            {status === "uploading" ? "Uploading…" : "Confirm activity →"}
           </button>
-        ))}
-      </div>
+        </div>
+      )}
 
       <div className="text-center">
         <MobileUploadGuide />
       </div>
 
-      {status === "uploading" && (
-        <p className="text-center text-blue-600 text-sm animate-pulse">
-          Uploading and parsing file…
-        </p>
-      )}
       {status === "saved" && (
         <p className="text-center text-green-600 text-sm font-medium">
           Route saved — find it in your saved routes above.

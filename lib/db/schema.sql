@@ -67,3 +67,21 @@ alter table featured_routes enable row level security;
 
 create policy "Anyone can view featured routes"
   on featured_routes for select using (true);
+
+-- ─── Generated routes ───────────────────────────────────────────────────────
+
+-- Allow GraphHopper-generated loops as a route source, alongside imported ones.
+alter table routes drop constraint if exists routes_source_check;
+alter table routes add constraint routes_source_check
+  check (source in ('strava','garmin','gpx','tcx','generated'));
+
+-- Stores the generation inputs (start point, requested distance, surface
+-- preference, GraphHopper profile + seed) for debugging/regeneration.
+alter table routes add column if not exists generation_params jsonb;
+
+-- ─── FIT routes ─────────────────────────────────────────────────────────────
+
+-- Allow FIT file uploads (Garmin's native activity/course format) as a route source.
+alter table routes drop constraint if exists routes_source_check;
+alter table routes add constraint routes_source_check
+  check (source in ('strava','garmin','gpx','tcx','generated','fit'));

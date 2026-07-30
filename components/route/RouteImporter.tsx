@@ -59,9 +59,9 @@ export function RouteImporter({ onSuccess }: Props) {
   const handleFile = useCallback((file: File | undefined) => {
     if (!file) return;
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!ext || !["gpx", "tcx"].includes(ext)) {
+    if (!ext || !["gpx", "tcx", "fit"].includes(ext)) {
       setStatus("error");
-      setErrorMsg("Only GPX and TCX files are supported");
+      setErrorMsg("Only GPX, TCX, and FIT files are supported");
       return;
     }
     setStatus("idle");
@@ -93,7 +93,7 @@ export function RouteImporter({ onSuccess }: Props) {
         ) : (
           <>
             <p className="text-gray-800 font-medium text-sm text-center max-w-xs">
-              Drop your GPX/TCX file here to check weather conditions along the way
+              Drop your GPX/TCX/FIT file here to check weather conditions along the way
             </p>
             <div className="flex items-center gap-3 text-xl">
               {BOX_SPORT_SYMBOLS.map((emoji) => (
@@ -104,7 +104,7 @@ export function RouteImporter({ onSuccess }: Props) {
         )}
         <input
           type="file"
-          accept=".gpx,.tcx"
+          accept=".gpx,.tcx,.fit"
           className="sr-only"
           onChange={(e) => handleFile(e.target.files?.[0])}
         />

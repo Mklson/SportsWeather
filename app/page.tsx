@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { RouteImporter, StravaIcon } from "@/components/route/RouteImporter";
 import { KartverketTrailSearch } from "@/components/trail/KartverketTrailSearch";
 import { UTNoGuide } from "@/components/route/UTNoGuide";
+import { GarminGuide } from "@/components/route/GarminGuide";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -92,15 +93,7 @@ export default async function HomePage({
               Strava
             </a>
             <UTNoGuide />
-            <a
-              href="https://connect.garmin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={clsx(IMPORT_LINK_CLASS, "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300")}
-            >
-              <span className="text-lg leading-none">⌚</span>
-              Garmin
-            </a>
+            <GarminGuide />
           </div>
         </div>
       </div>

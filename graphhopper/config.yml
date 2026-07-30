@@ -1,0 +1,39 @@
+graphhopper:
+  datareader.file: /data/norway-latest.osm.pbf
+  graph.location: /data/graph-cache
+
+  graph.encoded_values: road_class, road_environment, surface, track_type, road_access
+
+  # Explicitly ignore nothing — required to be set in GH 8, and we want the
+  # full set of paths/tracks/footways/steps available to the trail profiles.
+  import.osm.ignored_highways: ""
+
+  custom_models.directory: custom_models
+
+  profiles:
+    - name: trail_foot
+      custom_model_files: [trail_foot.json]
+    - name: road_foot
+      custom_model_files: [road_foot.json]
+    - name: trail_bike
+      custom_model_files: [trail_bike.json]
+    - name: road_bike
+      custom_model_files: [road_bike.json]
+
+  # round_trip requires flexible (non-CH) routing, so no CH data is built for
+  # these profiles — every request to them is flexible by construction.
+  profiles_ch: []
+
+  # Landmarks still work with flexible routing and meaningfully speed up
+  # round_trip on a country-sized graph on a small instance.
+  profiles_lm:
+    - profile: trail_foot
+    - profile: road_foot
+    - profile: trail_bike
+    - profile: road_bike
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: 0.0.0.0

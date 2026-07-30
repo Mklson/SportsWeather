@@ -1,0 +1,9 @@
+{
+  "priority": [
+    { "if": "road_class == PATH || road_class == TRACK || road_class == BRIDLEWAY", "multiply_by": "1.5" },
+    { "if": "surface == UNPAVED || surface == GRAVEL || surface == GROUND || surface == DIRT", "multiply_by": "1.25" },
+    { "if": "road_class == PRIMARY || road_class == SECONDARY", "multiply_by": "0.4" },
+    { "if": "road_class == TERTIARY || road_class == RESIDENTIAL", "multiply_by": "0.75" },
+    { "if": "road_environment == FERRY", "multiply_by": "0" }
+  ]
+}

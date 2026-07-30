@@ -56,7 +56,7 @@ export interface Coordinate {
 
 // ─── Route ─────────────────────────────────────────────────────────────────
 
-export type RouteSource = "strava" | "garmin" | "gpx" | "tcx";
+export type RouteSource = "strava" | "garmin" | "gpx" | "tcx" | "generated" | "fit";
 
 export interface Route {
   id: string;
@@ -139,6 +139,18 @@ export interface UploadResponse {
   route: Route;
 }
 
+// ─── Route generation ──────────────────────────────────────────────────────
+
+export type SurfacePreference = "trail" | "road";
+
+export interface GenerateRouteRequest {
+  start: Coordinate;
+  distanceKm: number;
+  sport: SportType;
+  surfacePreference: SurfacePreference;
+  name?: string;
+}
+
 // ─── Database schema types (mirrors Supabase tables) ──────────────────────
 
 export type DbRouteSummary = Omit<DbRoute, "coordinates">;
@@ -155,6 +167,7 @@ export interface DbRoute {
   sport: SportType | null;
   default_speed_kmh: number | null;
   created_at: string;
+  generation_params?: Record<string, unknown> | null;
 }
 
 // ─── Strava segments ──────────────────────────────────────────────────────────

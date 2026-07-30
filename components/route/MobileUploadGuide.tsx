@@ -8,14 +8,14 @@ type Platform = "iphone" | "android";
 
 const STEPS: Record<Platform, string[]> = {
   iphone: [
-    "Open a trail site (like UT.no) or your Strava/Garmin app, and download or export the route as a GPX file.",
+    "Open a trail site (like UT.no) or your Strava/Garmin app, and download or export the route as a GPX, TCX, or FIT file.",
     "Safari saves it to your Files app — usually under “On My iPhone → Downloads” or “iCloud Drive → Downloads”.",
-    "Come back to this page and tap the box above. In the panel that opens, browse to Files → Downloads and select your GPX file.",
+    "Come back to this page and tap the box above. In the panel that opens, browse to Files → Downloads and select your route file.",
   ],
   android: [
-    "Open a trail site (like UT.no) or your Strava/Garmin app, and download or export the route as a GPX file.",
+    "Open a trail site (like UT.no) or your Strava/Garmin app, and download or export the route as a GPX, TCX, or FIT file.",
     "Chrome saves it to your phone's Downloads folder, visible in the Files (or “My Files”) app.",
-    "Come back to this page and tap the box above. In the picker that opens, choose Downloads and select your GPX file.",
+    "Come back to this page and tap the box above. In the picker that opens, choose Downloads and select your route file.",
   ],
 };
 
@@ -30,10 +30,10 @@ export function MobileUploadGuide() {
         onClick={() => setOpen(true)}
         className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
       >
-        GPX file: how to
+        GPX/TCX/FIT: how to
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Uploading a GPX file from your phone">
+      <Modal open={open} onClose={() => setOpen(false)} title="Uploading a route file from your phone">
         <div className="space-y-3">
           <div className="flex gap-1 bg-gray-100 rounded-xl p-1 text-sm border border-gray-200">
             {([

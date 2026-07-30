@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseGpx } from "@/lib/gpx-parser";
 import { parseTcx } from "@/lib/tcx-parser";
+import { parseFit } from "@/lib/fit-parser";
 import { totalDistanceKm, totalElevationGain, simplifyRoute } from "@/lib/route-sampler";
 import { saveRoute } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { RouteSource, SportType, UploadResponse } from "@/types";
 
-export const runtime = "nodejs"; // xml2js needs Node runtime
+export const runtime = "nodejs"; // xml2js and fit-file-parser need Node runtime
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -26,9 +27,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!ext || !["gpx", "tcx"].includes(ext)) {
+    if (!ext || !["gpx", "tcx", "fit"].includes(ext)) {
       return NextResponse.json(
-        { error: "Only GPX and TCX files are supported" },
+        { error: "Only GPX, TCX, and FIT files are supported" },
         { status: 400 }
       );
     }
@@ -37,10 +38,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "File too large (max 10 MB)" }, { status: 413 });
     }
 
-    const xml = await file.text();
     const source = ext as RouteSource;
 
-    const raw = source === "gpx" ? await parseGpx(xml) : await parseTcx(xml);
+    const raw =
+      source === "gpx" ? await parseGpx(await file.text())
+      : source === "tcx" ? await parseTcx(await file.text())
+      : await parseFit(await file.arrayBuffer());
 
     // Simplify GPS noise (Garmin activities record ~1 pt/sec → thousands of noisy points).
     // 10 m tolerance removes jitter while preserving every meaningful direction change.
@@ -55,7 +58,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const distanceKm = totalDistanceKm(coordinates);
     const elevationGainM = totalElevationGain(coordinates);
-    const name = file.name.replace(/\.(gpx|tcx)$/i, "");
+    const name = file.name.replace(/\.(gpx|tcx|fit)$/i, "");
 
     const saved = await saveRoute({
       user_id: user?.id ?? null,

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["xml2js"],
+    serverComponentsExternalPackages: ["xml2js", "fit-file-parser"],
   },
   images: {
     remotePatterns: [

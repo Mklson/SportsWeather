@@ -1,0 +1,44 @@
+# Deploy from inside this directory: `fly launch` then `fly deploy`.
+# Requires a Fly.io volume mounted at /data (holds the OSM extract + graph
+# cache so they survive redeploys and don't get rebuilt from scratch).
+#   fly volumes create graphhopper_data --size 10 --region arn
+
+app = "sportsweather-graphhopper"
+primary_region = "arn"
+
+[build]
+
+[mounts]
+  source = "graphhopper_data"
+  destination = "/data"
+
+[[services]]
+  internal_port = 8989
+  protocol = "tcp"
+  # Autostop was disabled during the one-time OSM import/landmark-prep
+  # (a long background computation with no HTTP traffic to keep it "busy",
+  # so idle-autostop was killing it mid-import). That's done now — the
+  # built graph + landmarks are cached on the volume, so a fresh boot just
+  # loads them (seconds) instead of re-importing, making scale-to-zero
+  # safe again. auto_start_machines wakes it on the next request; the app's
+  # /api/routes/generate already surfaces a "waking up" message for that.
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+# Was bumped to 4gb to survive the one-time OSM import (which OOM'd around
+# 40M processed nodes at 2gb). Tried dropping all the way back to 2gb once
+# import+prep finished, but that also OOM'd — loading the persisted landmark
+# data for all 4 profiles concurrently at boot needs more than 2gb allows.
+# 3gb is the settled steady-state size.
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "3gb"

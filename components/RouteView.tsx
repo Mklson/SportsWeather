@@ -778,13 +778,15 @@ function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: ()
 
 function SourceBadge({ source }: { source: Route["source"] }) {
   const labels: Record<Route["source"], string> = {
-    strava: "Strava", garmin: "Garmin", gpx: "GPX", tcx: "TCX",
+    strava: "Strava", garmin: "Garmin", gpx: "GPX", tcx: "TCX", generated: "Generated", fit: "FIT",
   };
   const colors: Record<Route["source"], string> = {
     strava: "bg-orange-100 text-orange-700 border-orange-200",
     garmin: "bg-blue-100 text-blue-700 border-blue-200",
     gpx:    "bg-green-100 text-green-700 border-green-200",
     tcx:    "bg-purple-100 text-purple-700 border-purple-200",
+    generated: "bg-indigo-100 text-indigo-700 border-indigo-200",
+    fit: "bg-cyan-100 text-cyan-700 border-cyan-200",
   };
   return (
     <span className={clsx("inline-block mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium border", colors[source])}>

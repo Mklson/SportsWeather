@@ -37,19 +37,25 @@ export interface Bbox {
   east: number;
 }
 
-export async function searchKartverketTrails(query: string): Promise<KartverketTrail[]> {
+export async function searchKartverketTrails(query: string, sports?: SportType[]): Promise<KartverketTrail[]> {
   if (!query || query.trim().length < 2) return [];
 
   const bbox = await geocodeToBbox(query.trim());
   if (!bbox) return [];
 
-  return searchKartverketTrailsInBbox(bbox);
+  return searchKartverketTrailsInBbox(bbox, sports);
 }
 
-/** Same search, but for an explicit area (e.g. the visible bounds of a map the user panned/zoomed) instead of a geocoded place name. */
-export async function searchKartverketTrailsInBbox(bbox: Bbox): Promise<KartverketTrail[]> {
+/**
+ * Same search, but for an explicit area (e.g. the visible bounds of a map the user panned/zoomed)
+ * instead of a geocoded place name. `sports` narrows which WFS feature types get queried — an empty
+ * or omitted list means "all three" rather than "search nothing".
+ */
+export async function searchKartverketTrailsInBbox(bbox: Bbox, sports?: SportType[]): Promise<KartverketTrail[]> {
+  const wanted = sports?.length ? FEATURE_TYPES.filter((ft) => sports.includes(ft.sport)) : FEATURE_TYPES;
+
   const results = await Promise.allSettled(
-    FEATURE_TYPES.map((ft) => fetchFeatureType(ft.typeName, ft.sport, bbox))
+    wanted.map((ft) => fetchFeatureType(ft.typeName, ft.sport, bbox))
   );
 
   const trails = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));

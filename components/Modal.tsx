@@ -7,9 +7,10 @@ interface Props {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  widthClassName?: string;
 }
 
-export function Modal({ open, onClose, title, children }: Props) {
+export function Modal({ open, onClose, title, children, widthClassName = "max-w-md" }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -27,7 +28,7 @@ export function Modal({ open, onClose, title, children }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-5"
+        className={`w-full ${widthClassName} max-h-[85vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-5 transition-[max-width] duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">

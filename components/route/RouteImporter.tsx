@@ -104,7 +104,7 @@ export function RouteImporter({ onSuccess }: Props) {
         )}
         <input
           type="file"
-          accept=".gpx,.tcx,.fit"
+          accept=".gpx,.tcx,.fit,application/gpx+xml,application/vnd.garmin.tcx+xml,application/octet-stream"
           className="sr-only"
           onChange={(e) => handleFile(e.target.files?.[0])}
         />

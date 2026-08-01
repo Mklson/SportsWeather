@@ -130,11 +130,13 @@ export function MobileControlBar({
         />
       )}
 
-      {/* Right-edge docked vertical slider — time/pace */}
+      {/* Left-edge docked vertical slider — time/pace. Left (not right) and offset
+          below the top-2/left-2 basemap/3D toggle so the two never overlap; fully
+          opaque so nothing (e.g. a map control) can bleed through it. */}
       {isDock && (
         <div
-          className="absolute right-0 top-0 z-20 w-20 bg-white/95 backdrop-blur-sm border-l border-gray-200 shadow-xl"
-          style={{ bottom: barHeight }}
+          className="absolute left-0 z-20 w-14 bg-white border-r border-gray-200 shadow-xl"
+          style={{ top: 48, bottom: barHeight }}
         >
           {openPanel === "time" ? (
             <VerticalDragSlider
@@ -143,8 +145,8 @@ export function MobileControlBar({
               max={DEFAULT_RANGE_HOURS}
               step={1}
               onChange={(offset) => onTimeChange(hourOffsetToDate(offset, base))}
-              formatValue={(offset) => format(hourOffsetToDate(offset, base), "EEE HH:mm", { locale: enUS })}
-              label="Starting time"
+              formatValue={(offset) => format(hourOffsetToDate(offset, base), "HH:mm", { locale: enUS })}
+              label="Start"
               footer={
                 <input
                   type="datetime-local"
@@ -153,7 +155,7 @@ export function MobileControlBar({
                     const d = new Date(e.target.value);
                     if (!isNaN(d.getTime())) onTimeChange(d);
                   }}
-                  className="w-[72px] bg-white border border-gray-200 rounded-lg px-1 py-1 text-[10px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-green"
+                  className="w-11 bg-white border border-gray-200 rounded-lg px-0.5 py-1 text-[9px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-green"
                 />
               }
             />
@@ -164,8 +166,8 @@ export function MobileControlBar({
               max={cfg.max}
               step={cfg.step}
               onChange={(v) => onSpeedChange(sliderValueToSpeed(v, cfg))}
-              formatValue={(v) => (cfg.pace ? `${formatPace(v)} /km` : `${Math.round(v)} ${cfg.unit}`)}
-              label="Duration"
+              formatValue={(v) => (cfg.pace ? formatPace(v) : `${Math.round(v)}`)}
+              label="Pace"
             />
           )}
         </div>

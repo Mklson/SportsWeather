@@ -139,7 +139,10 @@ export function RouteMap({
     });
 
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
+    // top-right, not bottom-right: the mobile control bar/slider dock now
+    // permanently occupies the bottom of the map, and a semi-transparent
+    // dock previously let this control's "−" button visibly bleed through it.
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
     mapRef.current = map;
 
     // Set touch-action:none as inline style on canvas elements immediately after

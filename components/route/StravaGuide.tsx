@@ -20,11 +20,15 @@ export function StravaGuide() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center
-                   bg-[#FC4C02] hover:bg-[#e04300] text-white"
+        className="flex items-center justify-center w-full h-full rounded-xl"
+        aria-label="Strava"
       >
-        <StravaIcon />
-        Strava
+        {/* Orange fill lives on this fixed-size badge, not the button itself —
+            matching how the other guides' color comes from a small logo graphic
+            with transparent space around it, not a full-width colored button. */}
+        <span className="flex items-center justify-center w-10 h-10 rounded-[7px] transition-colors bg-[#FC4C02] hover:bg-[#e04300] text-white">
+          <StravaIcon />
+        </span>
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title="🟠 Import from Strava">

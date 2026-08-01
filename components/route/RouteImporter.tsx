@@ -73,7 +73,7 @@ export function RouteImporter({ onSuccess }: Props) {
     <div className="w-full max-w-md space-y-3">
       <label
         className={clsx(
-          "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed",
+          "flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border-2 border-dashed",
           "cursor-pointer transition-colors",
           isDragging
             ? "border-brand-green bg-brand-green-soft"
@@ -95,7 +95,7 @@ export function RouteImporter({ onSuccess }: Props) {
             <p className="text-gray-800 font-medium text-xs text-center max-w-xs">
               Drop your GPX/TCX/FIT file here to check weather conditions along the way
             </p>
-            <div className="flex items-center gap-2.5 text-lg">
+            <div className="flex items-center gap-2 text-base">
               {BOX_SPORT_SYMBOLS.map((emoji) => (
                 <span key={emoji}>{emoji}</span>
               ))}
@@ -164,9 +164,8 @@ export function RouteImporter({ onSuccess }: Props) {
 
 export function StravaIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-      <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066z" />
-      <path d="M9.693 7.817L6.628 1.688 3.563 7.817H0l6.628-6.628 6.628 6.628z" />
+    <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current">
+      <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
     </svg>
   );
 }

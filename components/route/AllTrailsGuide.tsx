@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Modal } from "@/components/Modal";
 
 const ALLTRAILS_URL = "https://www.alltrails.com";
+// AllTrails' own self-hosted app icon — same pattern as UT.no's inline logo,
+// a stable asset served straight from their own domain root.
+const ALLTRAILS_ICON_URL = "https://www.alltrails.com/app-icon-96.png";
 
 const STEPS = [
   "Open the trail on alltrails.com or in the AllTrails app.",
@@ -20,11 +24,12 @@ export function AllTrailsGuide() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center
-                   bg-white hover:bg-gray-50 text-gray-700 border border-gray-300"
+        className="flex items-center justify-center w-full h-full rounded-xl transition-transform hover:scale-[1.03]"
+        aria-label="AllTrails"
       >
-        <span className="text-lg leading-none">🏔️</span>
-        AllTrails
+        {/* Fixed square size, not stretched/cropped to the button's shape — the button is
+            wider than it is tall (grid column), and covering that cropped the icon's top/bottom off. */}
+        <Image src={ALLTRAILS_ICON_URL} alt="" width={40} height={40} className="rounded-[7px]" unoptimized />
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title="🏔️ Import from AllTrails">

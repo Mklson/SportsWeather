@@ -81,7 +81,7 @@ export default async function HomePage({
 
         <div className="flex flex-col items-center gap-2 w-full">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
-          <div className="grid grid-cols-5 gap-2 w-full">
+          <div className="grid grid-cols-5 gap-1 w-full">
             <KartverketTrailSearch />
             <StravaGuide />
             <UTNoGuide />

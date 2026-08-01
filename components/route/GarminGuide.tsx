@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Modal } from "@/components/Modal";
 
 const GARMIN_CONNECT_URL = "https://connect.garmin.com/modern/courses";
+
+// Garmin's own dynamically-updated "gc-app-tile" asset (developer.garmin.com/brand-guidelines/connect/) —
+// their guidelines ask third parties to hotlink this URL rather than download/self-host a copy.
+const GARMIN_TILE_URL = "https://static.garmincdn.com/com.garmin.connect/content/images/developer/gc-app-tile/xhdpi/gc-app-tile_@240.png";
 
 const STEPS = [
   "Open Garmin Connect and find the activity or course you want to import.",
@@ -20,11 +25,12 @@ export function GarminGuide() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center
-                   bg-white hover:bg-gray-50 text-gray-700 border border-gray-300"
+        className="flex items-center justify-center w-full h-full rounded-xl transition-transform hover:scale-[1.03]"
+        aria-label="Garmin"
       >
-        <span className="text-lg leading-none">⌚</span>
-        Garmin
+        {/* Fixed square size, not stretched/cropped to the button's shape — the button is
+            wider than it is tall (grid column), and covering that cropped the icon's top/bottom off. */}
+        <Image src={GARMIN_TILE_URL} alt="" width={40} height={40} className="rounded-[7px]" unoptimized />
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title="⌚ Import from Garmin Connect">

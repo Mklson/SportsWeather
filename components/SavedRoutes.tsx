@@ -1,20 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { DbRouteSummary } from "@/types";
+import type { DbRouteSummary, SportType } from "@/types";
 import { format } from "date-fns";
 
-const SPORT_EMOJI: Record<string, string> = {
-  ride: "🚴",
-  run: "🏃",
-  ski: "⛷️",
-  hike: "🥾",
-};
-
-function sportEmoji(sport: string | null) {
-  return sport ? (SPORT_EMOJI[sport.toLowerCase()] ?? "📍") : "📍";
-}
+// Groups mirror RouteImporter's UPLOAD_SPORTS — keep labels/emoji in sync with that.
+const SPORT_GROUPS: { id: SportType; label: string; emoji: string }[] = [
+  { id: "cycling", label: "Cycling", emoji: "🚴" },
+  { id: "running", label: "Hiking · Running", emoji: "🥾" },
+  { id: "skiing", label: "Cross Country", emoji: "⛷️" },
+];
 
 function formatDist(km: number | null) {
   if (!km) return null;
@@ -33,6 +29,10 @@ interface Props {
 export function SavedRoutes({ routes }: Props) {
   const router = useRouter();
   const [localRoutes, setLocalRoutes] = useState(routes);
+  // `routes` is a fresh array from the server every time the dashboard refreshes
+  // (e.g. after adding one) — without this, useState's initial value would go stale
+  // and newly added routes would never appear despite the save succeeding.
+  useEffect(() => setLocalRoutes(routes), [routes]);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -61,72 +61,120 @@ export function SavedRoutes({ routes }: Props) {
     );
   }
 
+  const groups: { id: string; label: string; emoji: string; routes: DbRouteSummary[] }[] =
+    SPORT_GROUPS.map((g) => ({ ...g, routes: localRoutes.filter((r) => r.sport === g.id) })).filter(
+      (g) => g.routes.length > 0
+    );
+
+  const other = localRoutes.filter((r) => !SPORT_GROUPS.some((g) => g.id === r.sport));
+  if (other.length > 0) groups.push({ id: "other", label: "Other", emoji: "📍", routes: other });
+
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
-      {localRoutes.map((route) => (
-        <div key={route.id} className="relative flex items-center gap-3 px-3 py-2.5 group">
-          {confirmId === route.id ? (
-            /* Inline confirm row */
-            <>
-              <span className="flex-1 text-sm text-gray-500">Delete «{route.name}»?</span>
-              <button
-                onClick={() => handleDelete(route.id)}
-                disabled={deletingId === route.id}
-                className="relative z-10 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => setConfirmId(null)}
-                className="relative z-10 text-xs font-medium text-gray-500 hover:text-gray-800 px-2 py-1 transition-colors"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            /* Normal row — Link covers the whole row so anywhere is tappable on mobile */
-            <>
-              <a
-                href={`/route/${route.id}`}
-                className="absolute inset-0"
-                style={{ touchAction: "manipulation" }}
-                aria-label={route.name}
+    <div className="space-y-5">
+      {groups.map((group) => (
+        <div key={group.id}>
+          <h3 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5 px-1">
+            <span className="text-sm normal-case">{group.emoji}</span>
+            {group.label}
+            <span className="font-normal normal-case text-gray-300">{group.routes.length}</span>
+          </h3>
+          <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
+            {group.routes.map((route) => (
+              <RouteRow
+                key={route.id}
+                route={route}
+                emoji={group.emoji}
+                confirming={confirmId === route.id}
+                deleting={deletingId === route.id}
+                onConfirm={() => setConfirmId(route.id)}
+                onCancel={() => setConfirmId(null)}
+                onDelete={() => handleDelete(route.id)}
               />
-              <span className="relative text-base shrink-0 w-6 text-center pointer-events-none">
-                {sportEmoji(route.sport)}
-              </span>
-
-              <span className="relative flex-1 text-sm font-medium text-gray-900 truncate min-w-0 pointer-events-none">
-                {route.name}
-              </span>
-
-              <div className="relative flex items-center gap-2.5 text-xs text-gray-400 shrink-0 pointer-events-none">
-                {formatDist(route.distance_km) && (
-                  <span>{formatDist(route.distance_km)}</span>
-                )}
-                {formatElev(route.elevation_gain_m) && (
-                  <span className="hidden sm:block">{formatElev(route.elevation_gain_m)}</span>
-                )}
-                <span className="hidden sm:block w-16 text-right">
-                  {format(new Date(route.created_at), "d MMM yyyy")}
-                </span>
-                <span className="sm:hidden">
-                  {format(new Date(route.created_at), "d MMM")}
-                </span>
-              </div>
-
-              <button
-                onClick={() => setConfirmId(route.id)}
-                title="Delete route"
-                className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto ml-1"
-                aria-label="Delete route"
-              >
-                <TrashIcon />
-              </button>
-            </>
-          )}
+            ))}
+          </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function RouteRow({
+  route,
+  emoji,
+  confirming,
+  deleting,
+  onConfirm,
+  onCancel,
+  onDelete,
+}: {
+  route: DbRouteSummary;
+  emoji: string;
+  confirming: boolean;
+  deleting: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="relative flex items-center gap-2.5 px-3 py-2 group">
+      {confirming ? (
+        /* Inline confirm row */
+        <>
+          <span className="flex-1 text-sm text-gray-500">Delete «{route.name}»?</span>
+          <button
+            onClick={onDelete}
+            disabled={deleting}
+            className="relative z-10 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+          >
+            Delete
+          </button>
+          <button
+            onClick={onCancel}
+            className="relative z-10 text-xs font-medium text-gray-500 hover:text-gray-800 px-2 py-1 transition-colors"
+          >
+            Cancel
+          </button>
+        </>
+      ) : (
+        /* Normal row — Link covers the whole row so anywhere is tappable on mobile */
+        <>
+          <a
+            href={`/route/${route.id}`}
+            className="absolute inset-0"
+            style={{ touchAction: "manipulation" }}
+            aria-label={route.name}
+          />
+          <span className="relative text-base shrink-0 w-6 text-center pointer-events-none">
+            {emoji}
+          </span>
+
+          <span className="relative flex-1 text-sm font-medium text-gray-900 truncate min-w-0 pointer-events-none">
+            {route.name}
+          </span>
+
+          <div className="relative flex items-center gap-2.5 text-xs text-gray-400 shrink-0 pointer-events-none">
+            {formatDist(route.distance_km) && <span>{formatDist(route.distance_km)}</span>}
+            {formatElev(route.elevation_gain_m) && (
+              <span className="hidden sm:block">{formatElev(route.elevation_gain_m)}</span>
+            )}
+            <span className="hidden sm:block w-16 text-right">
+              {format(new Date(route.created_at), "d MMM yyyy")}
+            </span>
+            <span className="sm:hidden">
+              {format(new Date(route.created_at), "d MMM")}
+            </span>
+          </div>
+
+          <button
+            onClick={onConfirm}
+            title="Delete route"
+            className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto ml-1"
+            aria-label="Delete route"
+          >
+            <TrashIcon />
+          </button>
+        </>
+      )}
     </div>
   );
 }

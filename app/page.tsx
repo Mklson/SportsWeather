@@ -1,16 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import clsx from "clsx";
-import { RouteImporter, StravaIcon } from "@/components/route/RouteImporter";
+import { RouteImporter } from "@/components/route/RouteImporter";
 import { KartverketTrailSearch } from "@/components/trail/KartverketTrailSearch";
 import { UTNoGuide } from "@/components/route/UTNoGuide";
 import { GarminGuide } from "@/components/route/GarminGuide";
+import { StravaGuide } from "@/components/route/StravaGuide";
+import { AllTrailsGuide } from "@/components/route/AllTrailsGuide";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-const IMPORT_LINK_CLASS =
-  "flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center";
 
 const STRAVA_ERRORS: Record<string, string> = {
   strava_denied:         "You cancelled the Strava connection.",
@@ -83,27 +81,31 @@ export default async function HomePage({
 
         <div className="flex flex-col items-center gap-2 w-full">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
-          <div className="grid grid-cols-4 gap-2 w-full">
+          <div className="grid grid-cols-5 gap-2 w-full">
             <KartverketTrailSearch />
-            <a
-              href="/api/strava/auth"
-              className={clsx(IMPORT_LINK_CLASS, "bg-[#FC4C02] hover:bg-[#e04300] text-white")}
-            >
-              <StravaIcon />
-              Strava
-            </a>
+            <StravaGuide />
             <UTNoGuide />
             <GarminGuide />
+            <AllTrailsGuide />
           </div>
         </div>
       </div>
 
       <FeaturedRoutes routes={featuredRoutes} />
 
-      <footer className="w-full flex justify-center pb-4">
-        <Link href="/login?next=/admin" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
-          Admin
-        </Link>
+      <footer className="w-full flex flex-col items-center gap-1.5 pb-4">
+        <p className="text-xs text-gray-300 text-center max-w-xs">
+          We only use essential cookies to keep you logged in — no tracking or analytics.
+        </p>
+        <div className="flex items-center gap-3">
+          <Link href="/personvern" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
+            Personvern
+          </Link>
+          <span className="text-gray-200">·</span>
+          <Link href="/login?next=/admin" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
+            Admin
+          </Link>
+        </div>
       </footer>
     </main>
   );

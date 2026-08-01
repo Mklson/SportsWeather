@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listStravaRoutes, getStravaRoute, decodePolyline, stravaRouteTypeToSport } from "@/lib/strava";
 import { saveRoute } from "@/lib/db/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { totalDistanceKm, totalElevationGain } from "@/lib/route-sampler";
 import type { UploadResponse } from "@/types";
 
@@ -36,6 +37,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
+    const supabase = createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     // Use the polyline already fetched during listing if available — avoids a
     // separate /routes/{id} call which can fail with 404 for private routes.
     let encoded = summaryPolyline;
@@ -58,7 +64,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const elevationGainM = totalElevationGain(coordinates);
 
     const saved = await saveRoute({
-      user_id: null,
+      user_id: user?.id ?? null,
       name,
       source: "strava",
       coordinates,

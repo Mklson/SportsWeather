@@ -6,6 +6,7 @@ import {
   stravaActivityTypeToSport,
 } from "@/lib/strava";
 import { saveRoute } from "@/lib/db/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { totalDistanceKm, totalElevationGain } from "@/lib/route-sampler";
 import type { UploadResponse } from "@/types";
 
@@ -49,6 +50,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
+    const supabase = createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const activity = await getStravaActivity(token, activityId);
     const encoded = activity.map?.summary_polyline ?? activity.map?.polyline;
 
@@ -68,7 +74,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       : null;
 
     const saved = await saveRoute({
-      user_id: null,
+      user_id: user?.id ?? null,
       name: activity.name,
       source: "strava",
       coordinates,

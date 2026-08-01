@@ -2,6 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { RouteImporter } from "@/components/route/RouteImporter";
+import { KartverketTrailSearch } from "@/components/trail/KartverketTrailSearch";
+import { StravaGuide } from "@/components/route/StravaGuide";
+import { UTNoGuide } from "@/components/route/UTNoGuide";
+import { GarminGuide } from "@/components/route/GarminGuide";
+import { AllTrailsGuide } from "@/components/route/AllTrailsGuide";
 
 export function DashboardRouteImporter() {
   const router = useRouter();
@@ -10,5 +15,20 @@ export function DashboardRouteImporter() {
     router.refresh();
   }
 
-  return <RouteImporter onSuccess={handleSuccess} />;
+  return (
+    <div className="flex flex-col items-center gap-3 w-full max-w-md">
+      <RouteImporter onSuccess={handleSuccess} />
+
+      <div className="flex flex-col items-center gap-2 w-full">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
+        <div className="grid grid-cols-5 gap-2 w-full">
+          <KartverketTrailSearch onSuccess={handleSuccess} />
+          <StravaGuide />
+          <UTNoGuide />
+          <GarminGuide />
+          <AllTrailsGuide />
+        </div>
+      </div>
+    </div>
+  );
 }

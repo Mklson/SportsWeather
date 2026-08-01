@@ -24,7 +24,7 @@ export default async function DashboardPage() {
         <Link href="/" className="flex items-center px-4 py-2 bg-white">
           <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={480} height={120} style={{ height: '72px', width: 'auto' }} className="drop-shadow" />
         </Link>
-        <div className="flex items-center gap-3 px-4 py-2 flex-1 justify-end" style={{ backgroundColor: '#003087' }}>
+        <div className="flex items-center gap-3 px-4 py-2 flex-1 justify-end bg-brand-navy">
           <span className="text-white text-sm font-semibold hidden sm:block truncate max-w-[200px]">
             {user.email}
           </span>

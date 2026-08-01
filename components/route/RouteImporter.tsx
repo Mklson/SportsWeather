@@ -73,11 +73,11 @@ export function RouteImporter({ onSuccess }: Props) {
     <div className="w-full max-w-md space-y-3">
       <label
         className={clsx(
-          "flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed",
+          "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed",
           "cursor-pointer transition-colors",
           isDragging
-            ? "border-blue-400 bg-blue-50"
-            : "border-gray-300 hover:border-blue-300 bg-gray-50"
+            ? "border-brand-green bg-brand-green-soft"
+            : "border-brand-green-border bg-brand-green-soft/60 hover:border-brand-green"
         )}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
@@ -85,17 +85,17 @@ export function RouteImporter({ onSuccess }: Props) {
       >
         {pendingFile ? (
           <>
-            <p className="text-gray-800 font-medium text-sm text-center max-w-xs">
+            <p className="text-gray-800 font-medium text-xs text-center max-w-xs">
               📄 {pendingFile.name}
             </p>
             <p className="text-xs text-gray-400">Click or drop to choose a different file</p>
           </>
         ) : (
           <>
-            <p className="text-gray-800 font-medium text-sm text-center max-w-xs">
+            <p className="text-gray-800 font-medium text-xs text-center max-w-xs">
               Drop your GPX/TCX/FIT file here to check weather conditions along the way
             </p>
-            <div className="flex items-center gap-3 text-xl">
+            <div className="flex items-center gap-2.5 text-lg">
               {BOX_SPORT_SYMBOLS.map((emoji) => (
                 <span key={emoji}>{emoji}</span>
               ))}
@@ -125,7 +125,7 @@ export function RouteImporter({ onSuccess }: Props) {
                 className={clsx(
                   "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
                   sport === s.id
-                    ? "bg-white text-blue-900 shadow-sm"
+                    ? "bg-white text-brand-navy shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 )}
               >
@@ -139,7 +139,7 @@ export function RouteImporter({ onSuccess }: Props) {
             type="button"
             onClick={() => uploadFile(pendingFile)}
             disabled={status === "uploading"}
-            className="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-60"
+            className="w-full bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-60"
           >
             {status === "uploading" ? "Uploading…" : "Confirm activity →"}
           </button>

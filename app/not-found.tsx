@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-gray-400">The route you are looking for does not exist.</p>
       <Link
         href="/"
-        className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-medium transition-colors"
+        className="px-6 py-2 bg-brand-navy hover:bg-brand-navy-dark rounded-xl text-white font-medium transition-colors"
       >
         Back to start
       </Link>

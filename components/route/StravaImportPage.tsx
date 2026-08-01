@@ -193,7 +193,7 @@ export function StravaImportPage({ activities: initial, routes: initialRoutes }:
                     "w-full text-left p-3 rounded-xl bg-white",
                     "border border-gray-200 transition-all flex items-center justify-between gap-3",
                     r.hasSummaryPolyline
-                      ? "hover:bg-blue-50 hover:border-blue-300"
+                      ? "hover:bg-brand-green-soft hover:border-brand-green-border"
                       : "opacity-50 cursor-not-allowed",
                     importing === `rt-${r.id}` && "opacity-60 animate-pulse"
                   )}

@@ -62,7 +62,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Start time</span>
-        <span className="text-xs text-blue-600 font-semibold capitalize">{formattedDate}</span>
+        <span className="text-xs text-brand-green-dark font-semibold capitalize">{formattedDate}</span>
       </div>
 
       <input
@@ -73,7 +73,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
         step={1}
         value={clampedOffset}
         onChange={handleChange}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600 touch-none"
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-brand-green touch-none"
         aria-label="Select start time"
       />
 
@@ -83,7 +83,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
         max={maxValue}
         onChange={handleDateInput}
         className={`w-full bg-white border rounded-lg px-2.5 py-1 text-gray-600 text-xs
-                    focus:outline-none focus:ring-2 focus:ring-blue-400
+                    focus:outline-none focus:ring-2 focus:ring-brand-green
                     ${beyondForecast ? "border-amber-400" : "border-gray-200"}`}
       />
 

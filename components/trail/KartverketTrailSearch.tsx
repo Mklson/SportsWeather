@@ -110,7 +110,7 @@ export function KartverketTrailSearch({ onSuccess }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-colors shadow-sm text-center
-                   bg-blue-900 hover:bg-blue-800 text-white"
+                   bg-brand-green hover:bg-brand-green-dark text-white"
       >
         <span className="text-lg leading-none">🗺️</span>
         Norway trails
@@ -134,7 +134,7 @@ export function KartverketTrailSearch({ onSuccess }: Props) {
                 className={clsx(
                   "flex-1 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
                   mode === m.id
-                    ? "bg-white text-blue-900 shadow-sm"
+                    ? "bg-white text-brand-navy shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 )}
               >
@@ -151,7 +151,7 @@ export function KartverketTrailSearch({ onSuccess }: Props) {
               autoFocus
               placeholder="Search by place, e.g. «Nordmarka»…"
               className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-sm
-                         text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                         text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           ) : (
             <KartverketAreaMap onSearch={searchByBbox} searching={searching} />

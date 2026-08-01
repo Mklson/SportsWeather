@@ -206,7 +206,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 onClick={handleSave}
                 disabled={saveState === "saving"}
                 style={{ touchAction: "manipulation" }}
-                className="text-xs font-medium text-blue-600 active:text-blue-800 disabled:opacity-50"
+                className="text-xs font-medium text-brand-navy active:text-brand-navy-dark disabled:opacity-50"
               >
                 {saveState === "saving" ? "Saving…" : "Save"}
               </button>
@@ -304,7 +304,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 <button
                   onClick={handleSave}
                   disabled={saveState === "saving"}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
+                  className="text-xs font-medium text-brand-navy hover:text-brand-navy-dark transition-colors disabled:opacity-50"
                 >
                   {saveState === "saving" ? "Saving…" : "Save to my account"}
                 </button>
@@ -419,8 +419,8 @@ function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: ()
       className={clsx(
         "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border transition-colors",
         reversed
-          ? "bg-blue-600 text-white border-blue-600"
-          : "bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+          ? "bg-brand-green text-white border-brand-green"
+          : "bg-white text-gray-500 border-gray-200 hover:border-brand-green hover:text-brand-green-dark"
       )}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

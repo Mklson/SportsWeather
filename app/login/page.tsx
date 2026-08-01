@@ -49,14 +49,14 @@ function LoginForm() {
           required
           autoComplete="email"
           placeholder="you@example.com"
-          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-gray-700">Password</label>
-          <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">
+          <Link href="/forgot-password" className="text-xs text-brand-navy hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -67,14 +67,14 @@ function LoginForm() {
           required
           autoComplete="current-password"
           placeholder="••••••••"
-          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
+        className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>
@@ -99,7 +99,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-gray-500">
           No account?{" "}
-          <Link href="/register" className="text-blue-600 font-medium hover:underline">
+          <Link href="/register" className="text-brand-navy font-medium hover:underline">
             Create one
           </Link>
         </p>

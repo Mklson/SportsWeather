@@ -54,7 +54,7 @@ export function KartverketAreaMap({ onSearch, searching }: Props) {
           onSearch({ south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast() });
         }}
         className="w-full py-2 rounded-xl text-sm font-medium transition-colors
-                   bg-blue-900 hover:bg-blue-800 text-white disabled:bg-gray-200 disabled:text-gray-400"
+                   bg-brand-navy hover:bg-brand-navy-dark text-white disabled:bg-gray-200 disabled:text-gray-400"
       >
         {searching
           ? "Searching…"

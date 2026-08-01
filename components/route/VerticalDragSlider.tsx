@@ -106,13 +106,13 @@ export function VerticalDragSlider({
           onDrag={() => onChange(yToValue(y.get()))}
           onDragEnd={() => setDragging(false)}
           style={{ y, touchAction: "none", width: THUMB_SIZE, height: THUMB_SIZE }}
-          className="absolute left-1/2 -translate-x-1/2 rounded-full bg-blue-600 border-2 border-white shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center"
+          className="absolute left-1/2 -translate-x-1/2 rounded-full bg-brand-green border-2 border-white shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center"
         >
           <div className="w-3.5 h-0.5 rounded-full bg-white/80" />
         </motion.div>
       </div>
 
-      <span className="text-sm font-bold text-blue-700 tabular-nums text-center px-1 leading-tight">
+      <span className="text-sm font-bold text-brand-green-dark tabular-nums text-center px-1 leading-tight">
         {formatValue(value)}
       </span>
 

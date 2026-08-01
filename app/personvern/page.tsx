@@ -18,7 +18,7 @@ export default function PersonvernPage() {
           <p>
             Sprocket AS (org.nr. 937 706 723) er behandlingsansvarlig for personopplysningene som
             samles inn gjennom AEROUTE. Spørsmål om personvern kan rettes til{" "}
-            <a href="mailto:mikkelolsson@hotmail.com" className="text-blue-600 hover:underline">
+            <a href="mailto:mikkelolsson@hotmail.com" className="text-brand-navy hover:underline">
               mikkelolsson@hotmail.com
             </a>
             .
@@ -95,7 +95,7 @@ export default function PersonvernPage() {
           <h2 className="font-semibold text-gray-900">7. Dine rettigheter</h2>
           <p>
             Du har rett til innsyn i, retting av og sletting av dine personopplysninger. Kontakt{" "}
-            <a href="mailto:mikkelolsson@hotmail.com" className="text-blue-600 hover:underline">
+            <a href="mailto:mikkelolsson@hotmail.com" className="text-brand-navy hover:underline">
               mikkelolsson@hotmail.com
             </a>{" "}
             for å benytte deg av disse rettighetene. Du kan også klage til Datatilsynet
@@ -103,7 +103,7 @@ export default function PersonvernPage() {
           </p>
         </section>
 
-        <Link href="/" className="inline-block text-blue-600 hover:underline text-sm">
+        <Link href="/" className="inline-block text-brand-navy hover:underline text-sm">
           ← Tilbake til forsiden
         </Link>
       </div>

@@ -61,7 +61,7 @@ export function StravaGuide() {
             href={STRAVA_DASHBOARD_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="block text-center bg-blue-900 hover:bg-blue-800 text-white font-medium text-sm px-4 py-2.5 rounded-xl transition-colors"
+            className="block text-center bg-brand-navy hover:bg-brand-navy-dark text-white font-medium text-sm px-4 py-2.5 rounded-xl transition-colors"
           >
             Open Strava dashboard ↗
           </a>

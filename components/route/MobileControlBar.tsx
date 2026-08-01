@@ -153,7 +153,7 @@ export function MobileControlBar({
                     const d = new Date(e.target.value);
                     if (!isNaN(d.getTime())) onTimeChange(d);
                   }}
-                  className="w-[72px] bg-white border border-gray-200 rounded-lg px-1 py-1 text-[10px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  className="w-[72px] bg-white border border-gray-200 rounded-lg px-1 py-1 text-[10px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-green"
                 />
               }
             />
@@ -270,7 +270,7 @@ function BarButton({
       style={{ touchAction: "manipulation" }}
       className={clsx(
         "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-center transition-colors min-w-0",
-        active ? "bg-blue-50 text-blue-700" : "active:bg-gray-100 text-gray-600"
+        active ? "bg-brand-green-soft text-brand-green-dark" : "active:bg-gray-100 text-gray-600"
       )}
     >
       <span className="text-base leading-none">{icon}</span>

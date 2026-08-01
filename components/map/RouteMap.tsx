@@ -379,7 +379,7 @@ export function RouteMap({
               key={key}
               onClick={() => setBasemap(key)}
               className={`px-2.5 py-1.5 transition-colors ${
-                basemap === key ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                basemap === key ? "bg-brand-green text-white" : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
               title={key === "outdoors" ? "Mapbox Outdoors" : "Satellittbilde"}
             >
@@ -391,7 +391,7 @@ export function RouteMap({
           onClick={() => setTerrain3d((v) => !v)}
           className={`rounded-lg shadow border text-xs font-semibold px-2.5 py-1.5 transition-colors ${
             terrain3d
-              ? "bg-blue-600 text-white border-blue-600"
+              ? "bg-brand-green text-white border-brand-green"
               : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
           }`}
           title="3D terreng"

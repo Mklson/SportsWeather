@@ -44,7 +44,7 @@ export default async function HomePage({
       {user ? (
         <Link
           href="/dashboard"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
+          className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
         >
           Go to my dashboard →
         </Link>
@@ -62,7 +62,7 @@ export default async function HomePage({
             </Link>
             <Link
               href="/register"
-              className="text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm" style={{ backgroundColor: '#003087' }}
+              className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm"
             >
               Create account
             </Link>

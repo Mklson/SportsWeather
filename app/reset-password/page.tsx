@@ -57,7 +57,7 @@ function ResetPasswordForm() {
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
         </div>
-        <Link href="/forgot-password" className="text-sm text-blue-600 font-medium hover:underline">
+        <Link href="/forgot-password" className="text-sm text-brand-navy font-medium hover:underline">
           Request a new reset link
         </Link>
       </div>
@@ -86,7 +86,7 @@ function ResetPasswordForm() {
           required
           autoComplete="new-password"
           placeholder="Min. 6 characters"
-          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
 
@@ -100,15 +100,14 @@ function ResetPasswordForm() {
           required
           autoComplete="new-password"
           placeholder="Repeat your password"
-          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
-        style={{ backgroundColor: '#003087' }}
+        className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
       >
         {loading ? "Saving…" : "Set new password"}
       </button>

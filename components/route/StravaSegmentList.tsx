@@ -51,7 +51,7 @@ export function StravaSegmentList({
                 {seg.name}
               </span>
               {seg.climbCategory > 0 && (
-                <span className="shrink-0 text-xs font-bold text-white bg-blue-900 px-1.5 py-0.5 rounded">
+                <span className="shrink-0 text-xs font-bold text-white bg-brand-navy px-1.5 py-0.5 rounded">
                   {seg.climbCategory === 5 ? "HC" : `Cat ${seg.climbCategory}`}
                 </span>
               )}

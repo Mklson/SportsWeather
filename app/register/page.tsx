@@ -66,7 +66,7 @@ export default function RegisterPage() {
               required
               autoComplete="email"
               placeholder="you@example.com"
-              className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function RegisterPage() {
               required
               autoComplete="new-password"
               placeholder="Min. 6 characters"
-              className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           </div>
 
@@ -96,14 +96,14 @@ export default function RegisterPage() {
               required
               autoComplete="off"
               placeholder="Repeat your password"
-              className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
+            className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
           >
             {loading ? "Creating account…" : "Create account"}
           </button>
@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 font-medium hover:underline">
+          <Link href="/login" className="text-brand-navy font-medium hover:underline">
             Sign in
           </Link>
         </p>

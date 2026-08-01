@@ -47,7 +47,7 @@ export function MobileUploadGuide() {
                 className={clsx(
                   "flex-1 py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
                   platform === p.id
-                    ? "bg-white text-blue-900 shadow-sm"
+                    ? "bg-white text-brand-navy shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 )}
               >

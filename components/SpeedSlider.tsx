@@ -110,7 +110,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Duration</span>
-        <span className="text-xs text-blue-600 font-semibold tabular-nums">
+        <span className="text-xs text-brand-green-dark font-semibold tabular-nums">
           {speedLabel} · {durationLabel}
         </span>
       </div>
@@ -122,7 +122,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
         step={cfg.step}
         value={sliderValue}
         onChange={(e) => handleSliderChange(Number(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-blue-600 touch-none"
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-brand-green touch-none"
         aria-label="Select pace"
       />
       <div className="flex justify-between text-xs text-gray-400">

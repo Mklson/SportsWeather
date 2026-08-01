@@ -13,10 +13,10 @@ function RouteCard({ route }: { route: DbRoute }) {
   return (
     <Link
       href={`/route/${route.id}`}
-      className="flex flex-col gap-2 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md"
+      className="flex flex-col gap-2 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition hover:border-brand-green-border hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-semibold text-blue-900 leading-snug line-clamp-2">
+        <span className="font-semibold text-brand-navy leading-snug line-clamp-2">
           {route.name}
         </span>
         {sport && (
@@ -31,7 +31,7 @@ function RouteCard({ route }: { route: DbRoute }) {
           <span>↑ {Math.round(route.elevation_gain_m)} m</span>
         )}
       </div>
-      <span className="mt-auto pt-1 text-sm font-medium text-blue-600">
+      <span className="mt-auto pt-1 text-sm font-medium text-brand-navy">
         View route →
       </span>
     </Link>

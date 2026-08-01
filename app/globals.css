@@ -12,11 +12,15 @@
 
   html {
     scroll-behavior: smooth;
+    /* Stops iOS from rubber-banding the whole viewport when a vertical drag
+       gesture (mobile control bar swipe, edge slider) starts near a screen edge. */
+    overscroll-behavior: none;
   }
 
   body {
     @apply bg-gray-950 text-gray-100 antialiased;
     font-family: "Inter", system-ui, sans-serif;
+    overscroll-behavior: none;
   }
 }
 

@@ -1,0 +1,281 @@
+"use client";
+
+import { useState, useRef, useLayoutEffect, useMemo } from "react";
+import { motion, type PanInfo } from "framer-motion";
+import { format } from "date-fns";
+import { enUS } from "date-fns/locale";
+import clsx from "clsx";
+import type { Route, SportType, StravaSegment, WeatherSegment } from "@/types";
+import {
+  getBaseHour, dateToHourOffset, hourOffsetToDate, DEFAULT_RANGE_HOURS,
+} from "../TimeSlider";
+import {
+  SPORT_CONFIG, kmhToPace, formatPace, speedToSliderValue, sliderValueToSpeed,
+} from "../SpeedSlider";
+import { VerticalDragSlider } from "./VerticalDragSlider";
+import { ConditionsPanel } from "./ConditionsPanel";
+import { SegmentsPanel } from "./SegmentsPanel";
+import { SkiWaxBar } from "./SkiWaxBar";
+import { summarizeConditions, weatherEmoji } from "@/lib/weather-display";
+
+type OpenPanel = "time" | "pace" | "conditions" | "segments" | null;
+
+const HANDLE_HEIGHT = 30;
+const SWIPE_DISTANCE = 32;
+const SWIPE_VELOCITY = 300;
+
+interface Props {
+  route: Route;
+  sport: SportType;
+  startTime: Date;
+  onTimeChange: (d: Date) => void;
+  speedKmh: number;
+  onSpeedChange: (s: number) => void;
+  stravaConnected: boolean;
+  stravaSegments: StravaSegment[];
+  weatherSegments: WeatherSegment[];
+  stravaLoading: boolean;
+  stravaError: string | null;
+  activeStravaId: number | null;
+  onStravaSegmentClick: (id: number) => void;
+  starredOnly: boolean;
+  onToggleStarredOnly: () => void;
+  starredCount: number;
+  totalCount: number;
+}
+
+export function MobileControlBar({
+  route,
+  sport,
+  startTime,
+  onTimeChange,
+  speedKmh,
+  onSpeedChange,
+  stravaConnected,
+  stravaSegments,
+  weatherSegments,
+  stravaLoading,
+  stravaError,
+  activeStravaId,
+  onStravaSegmentClick,
+  starredOnly,
+  onToggleStarredOnly,
+  starredCount,
+  totalCount,
+}: Props) {
+  const [barVisible, setBarVisible] = useState(true);
+  const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const [barHeight, setBarHeight] = useState(barVisible ? 84 : HANDLE_HEIGHT);
+
+  useLayoutEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const measure = () => setBarHeight(el.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [barVisible]);
+
+  function togglePanel(name: OpenPanel) {
+    setOpenPanel((p) => (p === name ? null : name));
+  }
+
+  function handleSwipeEnd(_: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) {
+    if (info.offset.y > SWIPE_DISTANCE || info.velocity.y > SWIPE_VELOCITY) {
+      setBarVisible(false);
+      setOpenPanel(null);
+    } else if (info.offset.y < -SWIPE_DISTANCE || info.velocity.y < -SWIPE_VELOCITY) {
+      setBarVisible(true);
+    }
+  }
+
+  const cfg = SPORT_CONFIG[sport];
+  const paceGlance = cfg.pace ? `${kmhToPace(speedKmh)}/km` : `${speedKmh} ${cfg.unit}`;
+  const timeGlance = format(startTime, "EEE HH:mm", { locale: enUS });
+  const conditionsSummary = useMemo(() => summarizeConditions(weatherSegments), [weatherSegments]);
+  const conditionsGlance = conditionsSummary
+    ? `${weatherEmoji(conditionsSummary.dominantSymbolCode)} ${Math.round(conditionsSummary.avgTempC)}°`
+    : "—";
+  const segmentsGlance = stravaConnected ? String(totalCount) : "—";
+
+  const base = useMemo(() => getBaseHour(), []);
+  const timeOffset = Math.max(0, Math.min(DEFAULT_RANGE_HOURS, dateToHourOffset(startTime, base)));
+  const paceSliderValue = speedToSliderValue(speedKmh, cfg);
+
+  const isDock = openPanel === "time" || openPanel === "pace";
+  const isSheet = openPanel === "conditions" || openPanel === "segments";
+
+  return (
+    <>
+      {/* Ski wax recommendation — pinned above the bar, cross-country only */}
+      {sport === "skiing" && (
+        <div
+          className="absolute left-0 right-0 z-20 rounded-t-2xl overflow-hidden"
+          style={{ bottom: barHeight, transition: "bottom 0.2s ease-out" }}
+        >
+          <SkiWaxBar segments={weatherSegments} />
+        </div>
+      )}
+
+      {/* Shared backdrop — dismisses whatever panel/dock is open. Stops at the
+          bar's top edge (not `fixed`, not covering the top nav) so Back/Save/Clear
+          and the bar's own buttons stay usable as an escape hatch. */}
+      {openPanel !== null && (
+        <div
+          className="absolute left-0 right-0 top-0 z-10"
+          style={{ bottom: barHeight }}
+          onClick={() => setOpenPanel(null)}
+        />
+      )}
+
+      {/* Right-edge docked vertical slider — time/pace */}
+      {isDock && (
+        <div
+          className="absolute right-0 top-0 z-20 w-20 bg-white/95 backdrop-blur-sm border-l border-gray-200 shadow-xl"
+          style={{ bottom: barHeight }}
+        >
+          {openPanel === "time" ? (
+            <VerticalDragSlider
+              value={timeOffset}
+              min={0}
+              max={DEFAULT_RANGE_HOURS}
+              step={1}
+              onChange={(offset) => onTimeChange(hourOffsetToDate(offset, base))}
+              formatValue={(offset) => format(hourOffsetToDate(offset, base), "EEE HH:mm", { locale: enUS })}
+              label="Starting time"
+              footer={
+                <input
+                  type="datetime-local"
+                  value={format(startTime, "yyyy-MM-dd'T'HH:mm")}
+                  onChange={(e) => {
+                    const d = new Date(e.target.value);
+                    if (!isNaN(d.getTime())) onTimeChange(d);
+                  }}
+                  className="w-[72px] bg-white border border-gray-200 rounded-lg px-1 py-1 text-[10px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                />
+              }
+            />
+          ) : (
+            <VerticalDragSlider
+              value={paceSliderValue}
+              min={cfg.min}
+              max={cfg.max}
+              step={cfg.step}
+              onChange={(v) => onSpeedChange(sliderValueToSpeed(v, cfg))}
+              formatValue={(v) => (cfg.pace ? `${formatPace(v)} /km` : `${Math.round(v)} ${cfg.unit}`)}
+              label="Duration"
+            />
+          )}
+        </div>
+      )}
+
+      {/* Bottom slide-up shell — Conditions/Segments */}
+      {isSheet && (
+        <div
+          className="absolute left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
+          style={{ bottom: barHeight, maxHeight: "45dvh" }}
+        >
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
+            <span className="font-semibold text-gray-900 text-sm">
+              {openPanel === "conditions" ? "Conditions" : "Segments"}
+            </span>
+            <button
+              onClick={() => setOpenPanel(null)}
+              className="p-1 rounded-lg bg-gray-100 active:bg-gray-200 text-gray-500 text-xs font-semibold px-2"
+            >
+              Close
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {openPanel === "conditions" ? (
+              <ConditionsPanel segments={weatherSegments} />
+            ) : (
+              <SegmentsPanel
+                stravaConnected={stravaConnected}
+                segments={stravaSegments}
+                weatherSegments={weatherSegments}
+                loading={stravaLoading}
+                error={stravaError}
+                activeId={activeStravaId}
+                onSelect={onStravaSegmentClick}
+                starredOnly={starredOnly}
+                onToggleStarredOnly={onToggleStarredOnly}
+                starredCount={starredCount}
+                totalCount={totalCount}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sticky bar / collapsed handle */}
+      <div
+        ref={barRef}
+        className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {barVisible ? (
+          <>
+            <motion.div
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.3}
+              onDragEnd={handleSwipeEnd}
+              onClick={() => setBarVisible(false)}
+              style={{ touchAction: "none" }}
+              className="flex justify-center py-1.5 cursor-grab active:cursor-grabbing"
+            >
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
+            </motion.div>
+            <div className="grid grid-cols-4 gap-1 px-2 pb-2">
+              <BarButton icon="🕐" label="Start" value={timeGlance} active={openPanel === "time"} onClick={() => togglePanel("time")} />
+              <BarButton icon="⏱️" label="Duration" value={paceGlance} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
+              <BarButton icon="🌤️" label="Conditions" value={conditionsGlance} active={openPanel === "conditions"} onClick={() => togglePanel("conditions")} />
+              <BarButton icon="🚩" label="Segments" value={segmentsGlance} active={openPanel === "segments"} onClick={() => togglePanel("segments")} />
+            </div>
+          </>
+        ) : (
+          <motion.div
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.3}
+            onDragEnd={handleSwipeEnd}
+            onClick={() => setBarVisible(true)}
+            style={{ touchAction: "none" }}
+            className="flex flex-col items-center gap-0.5 py-1.5 cursor-grab active:cursor-grabbing"
+          >
+            <div className="w-10 h-1 rounded-full bg-gray-300" />
+            <span className="text-[11px] font-medium text-gray-500 truncate max-w-[70vw]">{route.name}</span>
+          </motion.div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function BarButton({
+  icon, label, value, active, onClick,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ touchAction: "manipulation" }}
+      className={clsx(
+        "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-center transition-colors min-w-0",
+        active ? "bg-blue-50 text-blue-700" : "active:bg-gray-100 text-gray-600"
+      )}
+    >
+      <span className="text-base leading-none">{icon}</span>
+      <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400 truncate w-full">{label}</span>
+      <span className="text-xs font-bold tabular-nums truncate w-full">{value}</span>
+    </button>
+  );
+}

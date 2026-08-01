@@ -4,7 +4,22 @@ import { useCallback, useId, useMemo } from "react";
 import { format, addHours, startOfHour } from "date-fns";
 import { enUS } from "date-fns/locale";
 
-const FORECAST_HOURS = 9 * 24; // MET Norway provides ~9 days ahead
+export const FORECAST_HOURS = 9 * 24; // MET Norway provides ~9 days ahead
+export const DEFAULT_RANGE_HOURS = 48;
+
+// Shared with the mobile control bar's vertical time dock so both places
+// derive a start time from the same hour-offset math and never drift apart.
+export function getBaseHour(): Date {
+  return startOfHour(new Date());
+}
+
+export function dateToHourOffset(date: Date, base: Date): number {
+  return Math.round((date.getTime() - base.getTime()) / (1000 * 60 * 60));
+}
+
+export function hourOffsetToDate(offset: number, base: Date): Date {
+  return addHours(base, offset);
+}
 
 interface Props {
   value: Date;

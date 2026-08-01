@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
@@ -10,6 +8,8 @@ import type { Route, SportType, StravaSegment, WeatherSegment } from "@/types";
 import { TimeSlider } from "./TimeSlider";
 import { SpeedSlider } from "./SpeedSlider";
 import { SkiWaxBar } from "./route/SkiWaxBar";
+import { WindBreakdownBar } from "./route/WindBreakdownBar";
+import { StravaSegmentList } from "./route/StravaSegmentList";
 import { useWeather } from "@/hooks/useWeather";
 import { DEFAULT_SPEED_KMH } from "@/lib/route-sampler";
 import clsx from "clsx";
@@ -17,6 +17,13 @@ import clsx from "clsx";
 const RouteMap = dynamic(
   () => import("./map/RouteMap").then((m) => m.RouteMap),
   { ssr: false, loading: () => <MapSkeleton /> }
+);
+
+// framer-motion is only needed for the mobile control bar's drag gestures —
+// lazy-load it so desktop never pays for parsing/hydrating it.
+const MobileControlBar = dynamic(
+  () => import("./route/MobileControlBar").then((m) => m.MobileControlBar),
+  { ssr: false }
 );
 
 const EMPTY_STRAVA_SEGMENTS: StravaSegment[] = [];
@@ -168,8 +175,15 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             relative+z-30: ensures taps here win over the bottom sheet (z-20) and canvas if
             any sub-pixel overflow causes an invisible overlap on iOS. */}
         <div className="flex-shrink-0 flex items-center justify-between px-3 bg-white border-b border-gray-200 relative z-30" style={{ minHeight: "44px" }}>
-          <span className="text-xs font-semibold text-gray-800 truncate">{route.name}</span>
+          <div className="min-w-0">
+            <span className="text-xs font-semibold text-gray-800 truncate block">{route.name}</span>
+            <span className="text-[10px] text-gray-400">
+              {route.distanceKm.toFixed(1)} km
+              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
+            </span>
+          </div>
           <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+            <ReverseButton reversed={reversed} onToggle={handleToggleReverse} />
             <button
               onClick={() => { window.location.href = backHref; }}
               style={{ touchAction: "manipulation" }}
@@ -230,15 +244,13 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             reversed={reversed}
           />
         </div>
-        <MobileBottomSheet
+        <MobileControlBar
           route={route}
           sport={sport}
           startTime={startTime}
           onTimeChange={handleTimeChange}
           speedKmh={speedKmh}
           onSpeedChange={handleSpeedChange}
-          reversed={reversed}
-          onToggleReverse={handleToggleReverse}
           stravaConnected={stravaConnected}
           stravaSegments={listStravaSegments}
           weatherSegments={segments}
@@ -385,210 +397,6 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
   );
 }
 
-// ─── Mobile bottom sheet ──────────────────────────────────────────────────────
-
-type SheetState = "hidden" | "peek" | "expanded";
-
-const HIDDEN_HEIGHT = 52;
-const PEEK_HEIGHT   = 270;
-
-interface SheetProps {
-  route: Route;
-  sport: SportType;
-  startTime: Date;
-  onTimeChange: (d: Date) => void;
-  speedKmh: number;
-  onSpeedChange: (s: number) => void;
-  reversed: boolean;
-  onToggleReverse: () => void;
-  stravaConnected: boolean;
-  stravaSegments: StravaSegment[];
-  weatherSegments: WeatherSegment[];
-  stravaLoading: boolean;
-  stravaError: string | null;
-  activeStravaId: number | null;
-  onStravaSegmentClick: (id: number) => void;
-  starredOnly: boolean;
-  onToggleStarredOnly: () => void;
-  starredCount: number;
-  totalCount: number;
-}
-
-function MobileBottomSheet({
-  route,
-  sport,
-  startTime,
-  onTimeChange,
-  speedKmh,
-  onSpeedChange,
-  reversed,
-  onToggleReverse,
-  stravaConnected,
-  stravaSegments,
-  weatherSegments,
-  stravaLoading,
-  stravaError,
-  activeStravaId,
-  onStravaSegmentClick,
-  starredOnly,
-  onToggleStarredOnly,
-  starredCount,
-  totalCount,
-}: SheetProps) {
-  const [state, setState] = useState<SheetState>("peek");
-  const [controlsOpen, setControlsOpen] = useState(true);
-
-  const sheetHeight =
-    state === "hidden" ? HIDDEN_HEIGHT :
-    state === "peek"   ? PEEK_HEIGHT :
-    "72dvh";
-
-  return (
-    <>
-      {/* Ski wax recommendation — pinned directly above the sheet, tracks its height, cross-country only */}
-      {sport === "skiing" && (
-        <div
-          className="absolute left-0 right-0 z-20 rounded-t-2xl overflow-hidden"
-          style={{ bottom: sheetHeight, transition: "bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
-        >
-          <SkiWaxBar segments={weatherSegments} />
-        </div>
-      )}
-      <div
-        className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
-        style={{ height: sheetHeight, transition: "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
-      >
-      {/* Header — always visible */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-100">
-        <div className="min-w-0 flex-1">
-          <span className="font-semibold text-gray-900 text-sm truncate block">{route.name}</span>
-          {state !== "hidden" && (
-            <span className="text-gray-400 text-xs">
-              {route.distanceKm.toFixed(1)} km
-              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {state !== "hidden" && <ReverseButton reversed={reversed} onToggle={onToggleReverse} />}
-          {/* Collapse: expanded→peek or peek→hidden */}
-          {state !== "hidden" && (
-            <button
-              onClick={() => setState((s) => s === "expanded" ? "peek" : "hidden")}
-              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
-              aria-label="Collapse"
-            >
-              <ChevronDownIcon />
-            </button>
-          )}
-          {/* Expand: hidden→peek or peek→expanded */}
-          {state !== "expanded" && (
-            <button
-              onClick={() => setState((s) => s === "hidden" ? "peek" : "expanded")}
-              className="p-1.5 rounded-lg bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
-              aria-label="Show more"
-            >
-              <ChevronUpIcon />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Time + speed (collapsible) */}
-      {state !== "hidden" && (
-        <div className="flex-shrink-0 border-b border-gray-100">
-          <button
-            onClick={() => setControlsOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2 text-xs text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          >
-            <span>
-              {format(startTime, "EEE d MMM · HH:mm", { locale: enUS })}
-              {" · "}{sport === "running" ? `${Math.floor(60 / speedKmh)}:${String(Math.round((60 / speedKmh % 1) * 60)).padStart(2, "0")} /km` : `${speedKmh} km/h`}
-            </span>
-            {controlsOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-          </button>
-          {controlsOpen && (
-            <div className="px-4 pb-3 space-y-3">
-              <TimeSlider value={startTime} onChange={onTimeChange} />
-              <SpeedSlider
-                sport={sport}
-                speedKmh={speedKmh}
-                onChange={onSpeedChange}
-                coords={route.coordinates}
-              />
-              <WindBreakdownBar segments={weatherSegments} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Legend */}
-      {state !== "hidden" && (
-        <div className="flex-shrink-0 px-4 py-2 flex items-center gap-3 text-xs border-b border-gray-100">
-          <LegendItem color="#10b981" label="Tailwind" />
-          <LegendItem color="#f59e0b" label="Crosswind" />
-          <LegendItem color="#ef4444" label="Headwind" />
-        </div>
-      )}
-
-      {/* Strava segments — only when expanded */}
-      {state === "expanded" && stravaConnected && (
-        <>
-          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-100">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</span>
-            {!stravaLoading && totalCount > 0 && (
-              <button
-                onClick={onToggleStarredOnly}
-                className="text-xs font-medium text-amber-500 active:text-amber-700"
-              >
-                {starredOnly ? `★ ${starredCount} · Show all` : `All ${totalCount} · ★ only`}
-              </button>
-            )}
-          </div>
-          {stravaLoading && (
-            <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-orange-500 animate-pulse">
-              Loading Strava segments…
-            </div>
-          )}
-          {stravaError && (
-            <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex-shrink-0">
-              {stravaError}
-            </div>
-          )}
-          {!stravaLoading && (
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <StravaSegmentList segments={stravaSegments} weatherSegments={weatherSegments} activeId={activeStravaId} onSelect={onStravaSegmentClick} starredOnly={starredOnly} />
-            </div>
-          )}
-        </>
-      )}
-
-      {state === "expanded" && !stravaConnected && (
-        <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-6 text-center">
-          Connect to Strava from your dashboard to see segments along the route
-        </div>
-      )}
-      </div>
-    </>
-  );
-}
-
-function ChevronUpIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="18 15 12 9 6 15" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
-
 function ResetIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -599,159 +407,9 @@ function ResetIcon() {
 }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
-
-function nearestWeatherSegment(
-  latLng: [number, number],
-  weatherSegments: WeatherSegment[]
-): WeatherSegment | null {
-  if (!weatherSegments.length) return null;
-  let nearest = weatherSegments[0];
-  let minDist = Infinity;
-  for (const ws of weatherSegments) {
-    const dlat = latLng[0] - ws.coordinate.lat;
-    const dlon = latLng[1] - ws.coordinate.lon;
-    const d = dlat * dlat + dlon * dlon;
-    if (d < minDist) { minDist = d; nearest = ws; }
-  }
-  return nearest;
-}
-
-function nearestWindClass(
-  startLatLng: [number, number],
-  weatherSegments: WeatherSegment[]
-): WeatherSegment["windClass"] | null {
-  return nearestWeatherSegment(startLatLng, weatherSegments)?.windClass ?? null;
-}
-
-
-function weatherEmoji(code: string): string {
-  const c = code.toLowerCase();
-  const isNight    = c.includes("_night");
-  const isTwilight = c.includes("_polartwilight");
-  if (c.includes("thunder"))      return "⛈️";
-  if (c.includes("heavyrain"))    return "⛈️";
-  if (c.includes("rain"))         return "🌧️";
-  if (c.includes("snow"))         return "❄️";
-  if (c.includes("sleet"))        return "🌨️";
-  if (c.includes("fog"))          return "🌫️";
-  if (c.includes("clearsky"))     return isNight ? "🌙" : isTwilight ? "🌅" : "☀️";
-  if (c.includes("fair"))         return isNight ? "🌙" : isTwilight ? "🌅" : "🌤️";
-  if (c.includes("partlycloudy")) return isNight ? "☁️" : "⛅";
-  return "☁️";
-}
-
-function windClassBorderColor(wc: WeatherSegment["windClass"] | null): string {
-  if (wc === "tailwind")  return "#10b981";
-  if (wc === "crosswind") return "#f59e0b";
-  if (wc === "headwind")  return "#ef4444";
-  return "#e5e7eb";
-}
-
-function WindBreakdownBar({ segments }: { segments: WeatherSegment[] }) {
-  const totalKm = segments.reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
-  if (totalKm === 0) return null;
-
-  const tail  = segments.filter(s => s.windClass === "tailwind").reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
-  const head  = segments.filter(s => s.windClass === "headwind").reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
-  const cross = totalKm - tail - head;
-
-  const tailPct  = Math.round((tail  / totalKm) * 100);
-  const headPct  = Math.round((head  / totalKm) * 100);
-  const crossPct = 100 - tailPct - headPct;
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex overflow-hidden rounded-full h-2.5">
-        {tailPct  > 0 && <div style={{ width: `${tailPct}%`,  backgroundColor: "#22c55e" }} />}
-        {crossPct > 0 && <div style={{ width: `${crossPct}%`, backgroundColor: "#f59e0b" }} />}
-        {headPct  > 0 && <div style={{ width: `${headPct}%`,  backgroundColor: "#ef4444" }} />}
-      </div>
-      <div className="flex justify-between text-xs font-medium">
-        <span style={{ color: "#22c55e" }}>{tailPct}% tail</span>
-        <span style={{ color: "#f59e0b" }}>{crossPct}% cross</span>
-        <span style={{ color: "#ef4444" }}>{headPct}% head</span>
-      </div>
-    </div>
-  );
-}
-
-function StravaSegmentList({
-  segments,
-  weatherSegments,
-  activeId,
-  onSelect,
-  starredOnly = false,
-}: {
-  segments: StravaSegment[];
-  weatherSegments: WeatherSegment[];
-  activeId: number | null;
-  onSelect: (id: number) => void;
-  starredOnly?: boolean;
-}) {
-  if (!segments.length) {
-    return (
-      <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-4 text-center">
-        {starredOnly
-          ? "No starred segments along this route — tap ★ to show all"
-          : "No Strava segments found along this route"}
-      </div>
-    );
-  }
-  return (
-    <div className="space-y-2 px-3 py-3">
-      {segments.map((seg) => {
-        const midCoord = seg.coordinates[Math.floor(seg.coordinates.length / 2)];
-        const midLatLng: [number, number] = midCoord
-          ? [midCoord.lat, midCoord.lon]
-          : seg.startLatLng;
-        const wx = nearestWeatherSegment(midLatLng, weatherSegments);
-        const wc = wx?.windClass ?? null;
-        const borderColor = activeId === seg.id ? "#f97316" : windClassBorderColor(wc);
-
-        return (
-          <button
-            key={seg.id}
-            onClick={() => onSelect(seg.id)}
-            className="w-full text-left p-3 rounded-xl bg-white transition-all"
-            style={{
-              border: `2px solid ${borderColor}`,
-              borderLeft: `4px solid ${borderColor}`,
-              boxShadow: activeId === seg.id ? `0 0 0 1px ${borderColor}` : undefined,
-            }}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span className="font-medium text-gray-900 text-sm leading-tight flex items-center gap-1">
-                {seg.starred && <span className="text-amber-400" title="Starred segment">★</span>}
-                {seg.name}
-              </span>
-              {seg.climbCategory > 0 && (
-                <span className="shrink-0 text-xs font-bold text-white bg-blue-900 px-1.5 py-0.5 rounded">
-                  {seg.climbCategory === 5 ? "HC" : `Cat ${seg.climbCategory}`}
-                </span>
-              )}
-            </div>
-            <div className="mt-1.5 flex items-center justify-between gap-2">
-              <div className="flex gap-3 text-xs text-gray-500">
-                <span>{(seg.distanceM / 1000).toFixed(1)} km</span>
-                {seg.avgGrade !== 0 && <span>{seg.avgGrade.toFixed(1)}% snitt</span>}
-                {seg.elevDifference > 0 && <span>+{Math.round(seg.elevDifference)} m</span>}
-              </div>
-              {wx && (
-                <span className="shrink-0 flex items-center gap-1 text-sm font-semibold text-gray-700">
-                  <span className="text-base">{weatherEmoji(wx.weather.symbolCode)}</span>
-                  <span>{Math.round(wx.weather.temperature)}°</span>
-                  {wx.weather.precipitation > 0.1 && (
-                    <span className="text-blue-500 font-medium">{wx.weather.precipitation.toFixed(1)}mm</span>
-                  )}
-                </span>
-              )}
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+// WindBreakdownBar and StravaSegmentList moved to components/route/ so the new
+// mobile control bar (ConditionsPanel/SegmentsPanel) can reuse them without
+// duplicating this file's logic — see lib/weather-display.ts for the pure helpers.
 
 function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: () => void }) {
   return (

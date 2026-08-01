@@ -7,13 +7,14 @@ import type { Coordinate } from "@/types";
 
 // For pace sports, min/max/step are in min/km (pace), not km/h — the slider
 // operates natively in pace units so steps stay uniform across the walking-to-running range.
-const SPORT_CONFIG: Record<SportType, { min: number; max: number; step: number; unit: string; pace?: boolean }> = {
+// Exported so the mobile control bar's vertical pace dock reuses the exact same ranges/units.
+export const SPORT_CONFIG: Record<SportType, { min: number; max: number; step: number; unit: string; pace?: boolean }> = {
   cycling: { min: 15, max: 50, step: 1,   unit: "km/h" },
   running: { min: 2,  max: 40, step: 0.1, unit: "km/h", pace: true },
   skiing:  { min: 8,  max: 40, step: 1,   unit: "km/h" },
 };
 
-function formatDuration(hours: number): string {
+export function formatDuration(hours: number): string {
   const h = Math.floor(hours);
   const m = Math.round((hours - h) * 60);
   if (h === 0) return `${m} min`;
@@ -21,14 +22,42 @@ function formatDuration(hours: number): string {
   return `${h} t ${m} min`;
 }
 
-function kmhToPace(kmh: number): string {
+export function kmhToPace(kmh: number): string {
   return formatPace(60 / kmh);
 }
 
-function formatPace(paceMinPerKm: number): string {
+export function formatPace(paceMinPerKm: number): string {
   const minutes = Math.floor(paceMinPerKm);
   const seconds = Math.round((paceMinPerKm - minutes) * 60);
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+// Pace sports store speed as km/h but drive their slider in min/km (pace) —
+// this is that same transform, exported so the mobile pace dock stays in sync.
+export function speedToSliderValue(speedKmh: number, cfg: { pace?: boolean }): number {
+  return cfg.pace ? 60 / speedKmh : speedKmh;
+}
+
+export function sliderValueToSpeed(sliderValue: number, cfg: { pace?: boolean }): number {
+  return cfg.pace ? 60 / sliderValue : sliderValue;
+}
+
+// Haversine is expensive — this precompute is shared with the mobile control bar's
+// duration readout so it isn't re-derived (and can't drift) from SpeedSlider's own copy.
+export function estimateDurationHours(
+  coords: Coordinate[],
+  speedKmh: number,
+  sport: SportType
+): number {
+  let total = 0;
+  for (let i = 1; i < coords.length; i++) {
+    const distM = haversineMetres(coords[i - 1], coords[i]);
+    const prevEle = coords[i - 1].ele ?? 0;
+    const currEle = coords[i].ele ?? 0;
+    const grade = distM > 0 ? ((currEle - prevEle) / distM) * 100 : 0;
+    total += (distM / 1000) / gradeAdjustedSpeed(speedKmh, grade, sport);
+  }
+  return total;
 }
 
 interface Props {

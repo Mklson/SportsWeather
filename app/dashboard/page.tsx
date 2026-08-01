@@ -21,10 +21,10 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="flex items-stretch shadow-md">
-        <Link href="/" className="flex items-center px-4 py-2 bg-white">
-          <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={480} height={120} style={{ height: '72px', width: 'auto' }} className="drop-shadow" />
+        <Link href="/" className="w-1/2 flex items-center justify-center bg-white px-2">
+          <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={480} height={120} className="h-9 sm:h-12 w-auto drop-shadow" />
         </Link>
-        <div className="flex items-center gap-3 px-4 py-2 flex-1 justify-end bg-brand-navy">
+        <div className="w-1/2 flex items-center gap-3 px-4 py-2 justify-end bg-brand-navy">
           <span className="text-white text-sm font-semibold hidden sm:block truncate max-w-[200px]">
             {user.email}
           </span>

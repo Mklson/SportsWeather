@@ -36,7 +36,10 @@ async function resolveWeather(
   }
 
   const validSport = (["cycling", "running", "skiing"] as const).find((s) => s === sport);
-  const segments = await fetchRouteWeather(coords, start, 1000, 20, speedKmh, validSport);
+  // Running/hiking and cross-country routes are typically shorter than cycling
+  // routes, so weather sample points sit 50% closer together (1000m → ~667m).
+  const intervalM = validSport === "cycling" || !validSport ? 1000 : 1000 / 1.5;
+  const segments = await fetchRouteWeather(coords, start, intervalM, 20, speedKmh, validSport);
 
   const res = NextResponse.json({ segments, fetchedAt: new Date().toISOString() } satisfies WeatherResponse);
   // Cache by full URL (includes speedKmh) at the CDN level

@@ -226,7 +226,7 @@ export function RouteMap({
     if (!map) return;
 
     const apply = () => {
-      updateWindMarkers(map, segments);
+      updateWindMarkers(map, segments, sport);
       updateWeatherMarkers(map, segments, wxMarkersRef, sport, onSegmentClick);
     };
 
@@ -298,7 +298,7 @@ export function RouteMap({
         }
         addStravaSegmentLayers(map);
         addWindLayer(map);
-        updateWindMarkers(map, latestSegmentsRef.current);
+        updateWindMarkers(map, latestSegmentsRef.current, latestSportRef.current);
         updateWeatherMarkers(map, latestSegmentsRef.current, wxMarkersRef, latestSportRef.current, latestOnSegmentClickRef.current);
         updateStravaSegments(map, latestStravaRef.current ?? [], latestActiveStravaIdRef.current ?? null, stravaMarkersRef, latestOnStravaClickRef.current);
       });
@@ -682,12 +682,12 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
 
 // ─── Wind arrow layer (GPU symbol layer — updates GeoJSON, zero DOM cost) ────
 
-function updateWindMarkers(map: mapboxgl.Map, segments: WeatherSegment[]) {
+function updateWindMarkers(map: mapboxgl.Map, segments: WeatherSegment[], sport: SportType) {
   const src = map.getSource("wind-field") as mapboxgl.GeoJSONSource | undefined;
   if (!src) return;
   if (!segments.length) { src.setData(empty()); return; }
 
-  const field = buildWindField(segments);
+  const field = buildWindField(segments, sport);
   src.setData({
     type: "FeatureCollection",
     features: field.map(({ lat, lon, seg }) => ({
@@ -705,10 +705,14 @@ function updateWindMarkers(map: mapboxgl.Map, segments: WeatherSegment[]) {
 
 /** Build a regular grid of wind arrow positions within BUFFER_KM of the route. */
 function buildWindField(
-  segments: WeatherSegment[]
+  segments: WeatherSegment[],
+  sport: SportType
 ): Array<{ lat: number; lon: number; seg: WeatherSegment }> {
+  // Running/hiking and cross-country routes are typically shorter than cycling
+  // routes, so the arrow grid sits 50% denser (1.0km → ~0.67km step).
+  const density = sport === "cycling" ? 1 : 1.5;
   const BUFFER_KM = 0.8;
-  const STEP_KM   = 1.0;
+  const STEP_KM   = 1.0 / density;
 
   const lats  = segments.map((s) => s.coordinate.lat);
   const lons  = segments.map((s) => s.coordinate.lon);

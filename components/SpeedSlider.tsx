@@ -9,9 +9,9 @@ import type { Coordinate } from "@/types";
 // operates natively in pace units so steps stay uniform across the walking-to-running range.
 // Exported so the mobile control bar's vertical pace dock reuses the exact same ranges/units.
 export const SPORT_CONFIG: Record<SportType, { min: number; max: number; step: number; unit: string; pace?: boolean }> = {
-  cycling: { min: 15, max: 50, step: 1,   unit: "km/h" },
-  running: { min: 2,  max: 40, step: 0.1, unit: "km/h", pace: true },
-  skiing:  { min: 8,  max: 40, step: 1,   unit: "km/h" },
+  cycling: { min: 15, max: 50, step: 0.5,  unit: "km/h" },
+  running: { min: 2,  max: 40, step: 0.05, unit: "km/h", pace: true },
+  skiing:  { min: 8,  max: 40, step: 0.5,  unit: "km/h" },
 };
 
 export function formatDuration(hours: number): string {

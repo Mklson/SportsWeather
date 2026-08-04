@@ -11,6 +11,7 @@ import {
 } from "../TimeSlider";
 import {
   SPORT_CONFIG, kmhToPace, formatPace, speedToSliderValue, sliderValueToSpeed,
+  estimateDurationHours, formatDuration,
 } from "../SpeedSlider";
 import { VerticalDragSlider } from "./VerticalDragSlider";
 import { ConditionsPanel } from "./ConditionsPanel";
@@ -103,6 +104,11 @@ export function MobileControlBar({
   const base = useMemo(() => getBaseHour(), []);
   const timeOffset = Math.max(0, Math.min(DEFAULT_RANGE_HOURS, dateToHourOffset(startTime, base)));
   const paceSliderValue = speedToSliderValue(speedKmh, cfg);
+  const estimatedHours = useMemo(
+    () => estimateDurationHours(route.coordinates, speedKmh, sport),
+    [route.coordinates, speedKmh, sport]
+  );
+  const totalDurationLabel = formatDuration(estimatedHours);
 
   const isDock = openPanel === "time" || openPanel === "pace";
   const isSheet = openPanel === "conditions" || openPanel === "segments";
@@ -143,7 +149,8 @@ export function MobileControlBar({
               value={timeOffset}
               min={0}
               max={DEFAULT_RANGE_HOURS}
-              step={1}
+              step={0.5}
+              tickStep={1}
               onChange={(offset) => onTimeChange(hourOffsetToDate(offset, base))}
               formatValue={(offset) => format(hourOffsetToDate(offset, base), "HH:mm", { locale: enUS })}
               label="Start"
@@ -165,9 +172,15 @@ export function MobileControlBar({
               min={cfg.min}
               max={cfg.max}
               step={cfg.step}
+              tickStep={1}
               onChange={(v) => onSpeedChange(sliderValueToSpeed(v, cfg))}
               formatValue={(v) => (cfg.pace ? formatPace(v) : `${Math.round(v)}`)}
               label="Pace"
+              footer={
+                <div className="w-11 text-center bg-gray-50 border border-gray-200 rounded-lg px-0.5 py-1 text-[9px] text-gray-600 leading-tight">
+                  {totalDurationLabel}
+                </div>
+              }
             />
           )}
         </div>
@@ -233,7 +246,7 @@ export function MobileControlBar({
             </motion.div>
             <div className="grid grid-cols-4 gap-1 px-2 pb-2">
               <BarButton icon="🕐" label="Start" value={timeGlance} active={openPanel === "time"} onClick={() => togglePanel("time")} />
-              <BarButton icon="⏱️" label="Duration" value={paceGlance} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
+              <BarButton icon="⏱️" label="Duration" value={paceGlance} subValue={totalDurationLabel} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
               <BarButton icon="🌤️" label="Conditions" value={conditionsGlance} active={openPanel === "conditions"} onClick={() => togglePanel("conditions")} />
               <BarButton icon="🚩" label="Segments" value={segmentsGlance} active={openPanel === "segments"} onClick={() => togglePanel("segments")} />
             </div>
@@ -258,11 +271,12 @@ export function MobileControlBar({
 }
 
 function BarButton({
-  icon, label, value, active, onClick,
+  icon, label, value, subValue, active, onClick,
 }: {
   icon: string;
   label: string;
   value: string;
+  subValue?: string;
   active: boolean;
   onClick: () => void;
 }) {
@@ -278,6 +292,9 @@ function BarButton({
       <span className="text-base leading-none">{icon}</span>
       <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400 truncate w-full">{label}</span>
       <span className="text-xs font-bold tabular-nums truncate w-full">{value}</span>
+      {subValue && (
+        <span className="text-[8px] font-semibold tabular-nums truncate w-full leading-tight opacity-70">{subValue}</span>
+      )}
     </button>
   );
 }

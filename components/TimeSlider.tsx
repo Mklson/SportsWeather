@@ -14,7 +14,8 @@ export function getBaseHour(): Date {
 }
 
 export function dateToHourOffset(date: Date, base: Date): number {
-  return Math.round((date.getTime() - base.getTime()) / (1000 * 60 * 60));
+  const hours = (date.getTime() - base.getTime()) / (1000 * 60 * 60);
+  return Math.round(hours * 2) / 2; // snap to nearest half-hour
 }
 
 export function hourOffsetToDate(offset: number, base: Date): Date {

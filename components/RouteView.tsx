@@ -173,21 +173,17 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
       <div className="md:hidden flex flex-col bg-white" style={{ height: "100dvh" }}>
         {/* Top nav bar — above the map, never overlaps the Mapbox canvas.
             relative+z-30: ensures taps here win over the bottom sheet (z-20) and canvas if
-            any sub-pixel overflow causes an invisible overlap on iOS. */}
-        <div className="flex-shrink-0 flex items-center justify-between px-3 bg-white border-b border-gray-200 relative z-30" style={{ minHeight: "44px" }}>
-          <div className="min-w-0">
-            <span className="text-xs font-semibold text-gray-800 truncate block">{route.name}</span>
-            <span className="text-[10px] text-gray-400">
-              {route.distanceKm.toFixed(1)} km
-              {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+            any sub-pixel overflow causes an invisible overlap on iOS.
+            Buttons and the route name/stats sit on their own stacked rows — the
+            name used to be squeezed two-line into a corner next to Reverse, so it
+            now gets the full width as a single truncating line underneath. */}
+        <div className="flex-shrink-0 flex flex-col bg-white border-b border-gray-200 relative z-30">
+          <div className="flex items-center justify-end gap-1.5 px-3 pt-1.5 pb-1">
             <ReverseButton reversed={reversed} onToggle={handleToggleReverse} />
             <button
               onClick={() => { window.location.href = backHref; }}
               style={{ touchAction: "manipulation" }}
-              className="flex items-center gap-1 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 active:bg-gray-200"
+              className="flex items-center gap-1 text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 active:bg-gray-200"
             >
               ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
             </button>
@@ -196,7 +192,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 href="/strava/activities"
                 prefetch={false}
                 style={{ touchAction: "manipulation" }}
-                className="flex items-center gap-1 text-orange-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-orange-50 active:bg-orange-100"
+                className="flex items-center gap-1 text-orange-600 text-xs font-semibold px-2.5 py-1 rounded-lg bg-orange-50 active:bg-orange-100"
               >
                 ← Strava
               </Link>
@@ -218,10 +214,19 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
               onClick={resetMap}
               title="Clear map"
               style={{ touchAction: "manipulation" }}
-              className="flex items-center gap-1 text-gray-500 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 active:bg-gray-200"
+              className="flex items-center gap-1 text-gray-500 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 active:bg-gray-200"
             >
               <ResetIcon /> Clear
             </button>
+          </div>
+          <div className="px-3 pb-1.5 min-w-0">
+            <span className="text-[11px] truncate block leading-tight">
+              <span className="font-semibold text-gray-800">{route.name}</span>
+              <span className="text-gray-400">
+                {" "}· {route.distanceKm.toFixed(1)} km
+                {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m` : ""}
+              </span>
+            </span>
           </div>
         </div>
         {/* Map fills remaining height.

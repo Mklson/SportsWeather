@@ -7,32 +7,27 @@ const SPORT_LABELS: Record<string, { label: string; icon: string }> = {
   skiing:  { label: "Skiing",  icon: "⛷️" },
 };
 
-function RouteCard({ route }: { route: DbRoute }) {
+function RouteRow({ route }: { route: DbRoute }) {
   const sport = route.sport ? SPORT_LABELS[route.sport] : null;
 
   return (
     <Link
       href={`/route/${route.id}`}
-      className="flex flex-col gap-2 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition hover:border-brand-green-border hover:shadow-md"
+      className="flex items-center gap-2 rounded-xl border border-gray-100 bg-white px-3 py-2 shadow-sm transition hover:border-brand-green-border hover:shadow-md"
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="font-semibold text-brand-navy leading-snug line-clamp-2">
-          {route.name}
+      {sport && (
+        <span className="shrink-0 text-base" title={sport.label}>
+          {sport.icon}
         </span>
-        {sport && (
-          <span className="shrink-0 text-xl" title={sport.label}>
-            {sport.icon}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-        <span>{route.distance_km.toFixed(1)} km</span>
+      )}
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-brand-navy">
+        {route.name}
+      </span>
+      <span className="shrink-0 text-xs text-gray-500">
+        {route.distance_km.toFixed(1)} km
         {route.elevation_gain_m != null && route.elevation_gain_m > 0 && (
-          <span>↑ {Math.round(route.elevation_gain_m)} m</span>
+          <> · ↑ {Math.round(route.elevation_gain_m)} m</>
         )}
-      </div>
-      <span className="mt-auto pt-1 text-sm font-medium text-brand-navy">
-        View route →
       </span>
     </Link>
   );
@@ -46,9 +41,9 @@ export function FeaturedRoutes({ routes }: { routes: DbRoute[] }) {
       <p className="mb-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide">
         Try a sample route
       </p>
-      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(routes.length, 2)}, 1fr)` }}>
+      <div className="flex flex-col gap-2">
         {routes.map((route) => (
-          <RouteCard key={route.id} route={route} />
+          <RouteRow key={route.id} route={route} />
         ))}
       </div>
     </div>

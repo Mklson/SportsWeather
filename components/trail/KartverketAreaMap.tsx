@@ -51,6 +51,7 @@ export function KartverketAreaMap({ onSearch, searching, expanded = false, trail
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [zoom, setZoom] = useState(4.5);
   const [styleReady, setStyleReady] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -62,14 +63,22 @@ export function KartverketAreaMap({ onSearch, searching, expanded = false, trail
       zoom: 4.5,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
-    map.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: false,
-        showUserHeading: false,
-      }),
-      "top-right"
-    );
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: false,
+      showUserHeading: false,
+    });
+    map.addControl(geolocate, "top-right");
+    // GeolocateControl fails silently by default (denied permission, no HTTPS,
+    // no GPS fix, etc.) — surface it instead of leaving the button looking dead.
+    geolocate.on("error", (e: GeolocationPositionError) => {
+      setGeoError(
+        e.code === e.PERMISSION_DENIED
+          ? "Location access denied — check this site's location permission in your browser settings."
+          : "Couldn't get your location. Try again, or pan/zoom the map manually."
+      );
+    });
+    geolocate.on("geolocate", () => setGeoError(null));
     map.on("zoom", () => setZoom(map.getZoom()));
     map.on("moveend", () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -140,6 +149,7 @@ export function KartverketAreaMap({ onSearch, searching, expanded = false, trail
             ? "Zoom in further to search this area"
             : "Pan or zoom to search automatically"}
       </p>
+      {geoError && <p className="text-xs text-red-400 text-center">{geoError}</p>}
     </div>
   );
 }

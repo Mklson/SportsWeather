@@ -203,16 +203,6 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             >
               ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
             </button>
-            {stravaConnected && (
-              <Link
-                href="/strava/activities"
-                prefetch={false}
-                style={{ touchAction: "manipulation" }}
-                className="flex items-center gap-1 text-orange-600 text-xs font-semibold px-2.5 py-1 rounded-lg bg-orange-50 active:bg-orange-100"
-              >
-                ← Strava
-              </Link>
-            )}
             {canSave && saveState !== "saved" && (
               <button
                 onClick={handleSave}

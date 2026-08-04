@@ -293,7 +293,7 @@ function BarButton({
       <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400 truncate w-full">{label}</span>
       <span className="text-xs font-bold tabular-nums truncate w-full">{value}</span>
       {subValue && (
-        <span className="text-[8px] font-semibold tabular-nums truncate w-full leading-tight opacity-70">{subValue}</span>
+        <span className="text-[10px] font-semibold tabular-nums truncate w-full leading-tight opacity-80">{subValue}</span>
       )}
     </button>
   );

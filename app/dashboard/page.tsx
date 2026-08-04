@@ -50,11 +50,7 @@ export default async function DashboardPage() {
 
         {/* Upload / import */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Add a route</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Upload a GPX or TCX file, connect Strava, or search cross-country trails.
-            Every route you add is saved to your account and appears above — one click to open and see the weather along the way.
-          </p>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Add a route</h2>
           <div className="bg-white rounded-2xl border border-gray-200 p-6 flex justify-center">
             <DashboardRouteImporter />
           </div>

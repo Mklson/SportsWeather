@@ -25,6 +25,17 @@ export function RouteImporter({ onSuccess }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "uploading" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Bumped on every clear/successful upload to remount the native file input —
+  // an uncontrolled <input type="file"> keeps its old value otherwise, so
+  // re-picking the same filename wouldn't fire onChange a second time.
+  const [inputKey, setInputKey] = useState(0);
+
+  const resetFile = useCallback(() => {
+    setPendingFile(null);
+    setStatus("idle");
+    setErrorMsg(null);
+    setInputKey((k) => k + 1);
+  }, []);
 
   const uploadFile = useCallback(
     async (file: File) => {
@@ -42,6 +53,8 @@ export function RouteImporter({ onSuccess }: Props) {
         const { route } = (await res.json()) as UploadResponse;
         if (onSuccess) {
           setStatus("saved");
+          setPendingFile(null);
+          setInputKey((k) => k + 1);
           onSuccess(route.id);
         } else {
           router.push(`/route/${route.id}`);
@@ -88,7 +101,16 @@ export function RouteImporter({ onSuccess }: Props) {
             <p className="text-gray-800 font-medium text-xs text-center max-w-xs">
               📄 {pendingFile.name}
             </p>
-            <p className="text-xs text-gray-400">Click or drop to choose a different file</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-400">Click or drop to choose a different file</p>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetFile(); }}
+                className="text-xs text-gray-400 underline hover:text-gray-600"
+              >
+                Clear
+              </button>
+            </div>
           </>
         ) : (
           <>
@@ -103,6 +125,7 @@ export function RouteImporter({ onSuccess }: Props) {
           </>
         )}
         <input
+          key={inputKey}
           type="file"
           accept=".gpx,.tcx,.fit,application/gpx+xml,application/vnd.garmin.tcx+xml,application/octet-stream"
           className="sr-only"

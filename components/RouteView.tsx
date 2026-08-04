@@ -60,6 +60,22 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
     const res = await fetch(`/api/routes/${route.id}`, { method: "PATCH" });
     setSaveState(res.ok ? "saved" : "idle");
   }
+
+  const [shareState, setShareState] = useState<"idle" | "copied">("idle");
+  async function handleShare() {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: route.name, url });
+      } catch {
+        // User cancelled the native share sheet — nothing to do.
+      }
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    setShareState("copied");
+    setTimeout(() => setShareState("idle"), 1500);
+  }
   const [starredOnly, setStarredOnly] = useState(true);
   const handleToggleStarredOnly = useCallback(() => setStarredOnly((v) => !v), []);
   // Debounced values for weather — sliders update display instantly but the
@@ -178,7 +194,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             name used to be squeezed two-line into a corner next to Reverse, so it
             now gets the full width as a single truncating line underneath. */}
         <div className="flex-shrink-0 flex flex-col bg-white border-b border-gray-200 relative z-30">
-          <div className="flex items-center justify-end gap-1.5 px-3 pt-1.5 pb-1">
+          <div className="flex items-center justify-start gap-1.5 px-3 pt-1.5 pb-1">
             <ReverseButton reversed={reversed} onToggle={handleToggleReverse} />
             <button
               onClick={() => { window.location.href = backHref; }}
@@ -217,6 +233,14 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
               className="flex items-center gap-1 text-gray-500 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 active:bg-gray-200"
             >
               <ResetIcon /> Clear
+            </button>
+            <button
+              onClick={handleShare}
+              title="Share route"
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-1 text-gray-500 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 active:bg-gray-200"
+            >
+              {shareState === "copied" ? <>✓ Copied</> : <><ShareIcon /> Share</>}
             </button>
           </div>
           <div className="px-3 pb-1.5 min-w-0">
@@ -399,6 +423,18 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
         </aside>
       </div>
     </>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
   );
 }
 

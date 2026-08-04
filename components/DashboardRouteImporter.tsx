@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { RouteImporter } from "@/components/route/RouteImporter";
-import { KartverketTrailSearch } from "@/components/trail/KartverketTrailSearch";
 import { StravaGuide } from "@/components/route/StravaGuide";
 import { UTNoGuide } from "@/components/route/UTNoGuide";
 import { GarminGuide } from "@/components/route/GarminGuide";
@@ -21,8 +20,7 @@ export function DashboardRouteImporter() {
 
       <div className="flex flex-col items-center gap-2 w-full">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
-        <div className="grid grid-cols-5 gap-1 w-full">
-          <KartverketTrailSearch onSuccess={handleSuccess} />
+        <div className="grid grid-cols-4 gap-1 w-full">
           <StravaGuide />
           <UTNoGuide />
           <GarminGuide />

@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { RouteImporter } from "@/components/route/RouteImporter";
-import { KartverketTrailSearch } from "@/components/trail/KartverketTrailSearch";
 import { UTNoGuide } from "@/components/route/UTNoGuide";
 import { GarminGuide } from "@/components/route/GarminGuide";
 import { StravaGuide } from "@/components/route/StravaGuide";
@@ -81,8 +80,7 @@ export default async function HomePage({
 
         <div className="flex flex-col items-center gap-2 w-full">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
-          <div className="grid grid-cols-5 gap-1 w-full">
-            <KartverketTrailSearch />
+          <div className="grid grid-cols-4 gap-1 w-full">
             <StravaGuide />
             <UTNoGuide />
             <GarminGuide />

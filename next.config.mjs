@@ -13,8 +13,6 @@ const nextConfig = {
       { protocol: "https", hostname: "static.garmincdn.com" },
       // AllTrails' own self-hosted app icon (their site's apple-touch-icon path).
       { protocol: "https", hostname: "www.alltrails.com" },
-      // Kartverket's own self-hosted apple-touch-icon.
-      { protocol: "https", hostname: "www.kartverket.no" },
     ],
   },
 };

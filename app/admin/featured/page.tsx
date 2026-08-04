@@ -61,43 +61,49 @@ export default async function AdminFeaturedPage() {
             <p className="text-gray-400 text-sm">No featured routes yet.</p>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    <th className="px-5 py-3">Name</th>
-                    <th className="px-5 py-3">Sport</th>
-                    <th className="px-5 py-3 text-right">Distance</th>
-                    <th className="px-5 py-3 text-right">Elevation</th>
-                    <th className="px-5 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {featuredRoutes.map((r) => (
-                    <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3">
-                        <Link href={`/route/${r.id}`} target="_blank" className="text-blue-700 hover:underline font-medium">
-                          {r.name}
-                        </Link>
-                      </td>
-                      <td className="px-5 py-3 text-gray-600">
-                        {r.sport ? SPORT_LABELS[r.sport] ?? r.sport : <span className="text-gray-300">—</span>}
-                      </td>
-                      <td className="px-5 py-3 text-right text-gray-700">{r.distance_km.toFixed(1)} km</td>
-                      <td className="px-5 py-3 text-right text-gray-700">
-                        {r.elevation_gain_m ? `${Math.round(r.elevation_gain_m)} m` : "—"}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <form action={removeFeaturedRouteAction}>
-                          <input type="hidden" name="routeId" value={r.id} />
-                          <button type="submit" className="text-xs text-red-600 hover:text-red-800 font-medium">
-                            Remove
-                          </button>
-                        </form>
-                      </td>
+              {/* overflow-x-auto (not just overflow-hidden on the parent) — the
+                  table is wider than a phone screen, and overflow-hidden alone
+                  clips the trailing Remove column instead of letting you scroll
+                  to it, making it look like removal isn't possible on mobile. */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      <th className="px-5 py-3">Name</th>
+                      <th className="px-5 py-3">Sport</th>
+                      <th className="px-5 py-3 text-right">Distance</th>
+                      <th className="px-5 py-3 text-right">Elevation</th>
+                      <th className="px-5 py-3"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {featuredRoutes.map((r) => (
+                      <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3">
+                          <Link href={`/route/${r.id}`} target="_blank" className="text-blue-700 hover:underline font-medium">
+                            {r.name}
+                          </Link>
+                        </td>
+                        <td className="px-5 py-3 text-gray-600">
+                          {r.sport ? SPORT_LABELS[r.sport] ?? r.sport : <span className="text-gray-300">—</span>}
+                        </td>
+                        <td className="px-5 py-3 text-right text-gray-700">{r.distance_km.toFixed(1)} km</td>
+                        <td className="px-5 py-3 text-right text-gray-700">
+                          {r.elevation_gain_m ? `${Math.round(r.elevation_gain_m)} m` : "—"}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <form action={removeFeaturedRouteAction}>
+                            <input type="hidden" name="routeId" value={r.id} />
+                            <button type="submit" className="text-xs text-red-600 hover:text-red-800 font-medium whitespace-nowrap">
+                              Remove
+                            </button>
+                          </form>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
@@ -113,45 +119,47 @@ export default async function AdminFeaturedPage() {
             <p className="text-gray-400 text-sm">All your routes are already featured.</p>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    <th className="px-5 py-3">Name</th>
-                    <th className="px-5 py-3">Sport</th>
-                    <th className="px-5 py-3 text-right">Distance</th>
-                    <th className="px-5 py-3 text-right">Elevation</th>
-                    <th className="px-5 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {notFeatured.map((r) => (
-                    <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3">
-                        <Link href={`/route/${r.id}`} target="_blank" className="text-blue-700 hover:underline font-medium">
-                          {r.name}
-                        </Link>
-                      </td>
-                      <td className="px-5 py-3 text-gray-600">
-                        {r.sport ? SPORT_LABELS[r.sport] ?? r.sport : <span className="text-gray-300">—</span>}
-                      </td>
-                      <td className="px-5 py-3 text-right text-gray-700">
-                        {r.distance_km?.toFixed(1)} km
-                      </td>
-                      <td className="px-5 py-3 text-right text-gray-700">
-                        {r.elevation_gain_m ? `${Math.round(r.elevation_gain_m)} m` : "—"}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <form action={addFeaturedRouteAction}>
-                          <input type="hidden" name="routeId" value={r.id} />
-                          <button type="submit" className="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                            Add to featured
-                          </button>
-                        </form>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      <th className="px-5 py-3">Name</th>
+                      <th className="px-5 py-3">Sport</th>
+                      <th className="px-5 py-3 text-right">Distance</th>
+                      <th className="px-5 py-3 text-right">Elevation</th>
+                      <th className="px-5 py-3"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {notFeatured.map((r) => (
+                      <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3">
+                          <Link href={`/route/${r.id}`} target="_blank" className="text-blue-700 hover:underline font-medium">
+                            {r.name}
+                          </Link>
+                        </td>
+                        <td className="px-5 py-3 text-gray-600">
+                          {r.sport ? SPORT_LABELS[r.sport] ?? r.sport : <span className="text-gray-300">—</span>}
+                        </td>
+                        <td className="px-5 py-3 text-right text-gray-700">
+                          {r.distance_km?.toFixed(1)} km
+                        </td>
+                        <td className="px-5 py-3 text-right text-gray-700">
+                          {r.elevation_gain_m ? `${Math.round(r.elevation_gain_m)} m` : "—"}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <form action={addFeaturedRouteAction}>
+                            <input type="hidden" name="routeId" value={r.id} />
+                            <button type="submit" className="text-xs text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap">
+                              Add to featured
+                            </button>
+                          </form>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

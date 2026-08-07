@@ -18,11 +18,22 @@ export const SPORT_CONFIGS: SportConfig[] = [
 
 export type SkiQuality = "perfect" | "good" | "wet" | "icy" | "variable";
 
+export type SkiLabelKey = "cold" | "perfect" | "excellent" | "transition" | "wet" | "poor";
+
+export type SkiWaxKey =
+  | "coldGreenBlue"
+  | "coldBluePurple"
+  | "universalViolet"
+  | "violetOrKlister"
+  | "klisterRed"
+  | "iceSlush";
+
 export interface SkiConditions {
   quality: SkiQuality;
-  label: string;
+  labelKey: SkiLabelKey;
+  freshSnow: boolean;
   color: string;
-  waxHint: string;
+  waxHintKey: SkiWaxKey;
 }
 
 // ─── OSM trail ─────────────────────────────────────────────────────────────

@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,23 +43,23 @@ function LoginForm() {
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-gray-700">Email</label>
+        <label className="text-sm font-medium text-gray-700">{t.auth.login.email}</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder={t.auth.login.emailPlaceholder}
           className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700">Password</label>
+          <label className="text-sm font-medium text-gray-700">{t.auth.login.password}</label>
           <Link href="/forgot-password" className="text-xs text-brand-navy hover:underline">
-            Forgot password?
+            {t.auth.login.forgotPassword}
           </Link>
         </div>
         <input
@@ -66,7 +68,7 @@ function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
-          placeholder="••••••••"
+          placeholder={t.auth.login.passwordPlaceholder}
           className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
@@ -76,13 +78,14 @@ function LoginForm() {
         disabled={loading}
         className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
       >
-        {loading ? "Signing in…" : "Sign in"}
+        {loading ? t.auth.login.signingIn : t.auth.login.signIn}
       </button>
     </form>
   );
 }
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
       <div className="w-full max-w-sm flex flex-col gap-6">
@@ -90,7 +93,7 @@ export default function LoginPage() {
           <Link href="/">
             <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-32 w-auto drop-shadow-xl" />
           </Link>
-          <p className="text-sm text-gray-500">Welcome back to AEROUTE</p>
+          <p className="text-sm text-gray-500">{t.auth.login.title}</p>
         </div>
 
         <Suspense>
@@ -98,9 +101,9 @@ export default function LoginPage() {
         </Suspense>
 
         <p className="text-center text-sm text-gray-500">
-          No account?{" "}
+          {t.auth.login.noAccount}{" "}
           <Link href="/register" className="text-brand-navy font-medium hover:underline">
-            Create one
+            {t.auth.login.createOne}
           </Link>
         </p>
       </div>

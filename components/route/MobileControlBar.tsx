@@ -3,8 +3,9 @@
 import { useState, useRef, useLayoutEffect, useMemo } from "react";
 import { motion, type PanInfo } from "framer-motion";
 import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS, nb } from "date-fns/locale";
 import clsx from "clsx";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { Route, SportType, StravaSegment, WeatherSegment } from "@/types";
 import {
   getBaseHour, dateToHourOffset, hourOffsetToDate, DEFAULT_RANGE_HOURS,
@@ -64,6 +65,8 @@ export function MobileControlBar({
   starredCount,
   totalCount,
 }: Props) {
+  const { t, lang } = useLanguage();
+  const dateLocale = lang === "no" ? nb : enUS;
   const [barVisible, setBarVisible] = useState(true);
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -94,7 +97,7 @@ export function MobileControlBar({
 
   const cfg = SPORT_CONFIG[sport];
   const paceGlance = cfg.pace ? `${kmhToPace(speedKmh)}/km` : `${speedKmh} ${cfg.unit}`;
-  const timeGlance = format(startTime, "EEE HH:mm", { locale: enUS });
+  const timeGlance = format(startTime, "EEE HH:mm", { locale: dateLocale });
   const conditionsSummary = useMemo(() => summarizeConditions(weatherSegments), [weatherSegments]);
   const conditionsGlance = conditionsSummary
     ? `${weatherEmoji(conditionsSummary.dominantSymbolCode)} ${Math.round(conditionsSummary.avgTempC)}°`
@@ -108,7 +111,7 @@ export function MobileControlBar({
     () => estimateDurationHours(route.coordinates, speedKmh, sport),
     [route.coordinates, speedKmh, sport]
   );
-  const totalDurationLabel = formatDuration(estimatedHours);
+  const totalDurationLabel = formatDuration(estimatedHours, lang);
 
   const isDock = openPanel === "time" || openPanel === "pace";
   const isSheet = openPanel === "conditions" || openPanel === "segments";
@@ -152,8 +155,8 @@ export function MobileControlBar({
               step={0.5}
               tickStep={1}
               onChange={(offset) => onTimeChange(hourOffsetToDate(offset, base))}
-              formatValue={(offset) => format(hourOffsetToDate(offset, base), "HH:mm", { locale: enUS })}
-              label="Start"
+              formatValue={(offset) => format(hourOffsetToDate(offset, base), "HH:mm", { locale: dateLocale })}
+              label={t.mobileBar.start}
               footer={
                 <input
                   type="datetime-local"
@@ -174,8 +177,8 @@ export function MobileControlBar({
               step={cfg.step}
               tickStep={1}
               onChange={(v) => onSpeedChange(sliderValueToSpeed(v, cfg))}
-              formatValue={(v) => (cfg.pace ? formatPace(v) : `${Math.round(v)}`)}
-              label="Pace"
+              formatValue={(v) => (cfg.pace ? formatPace(v) : v.toFixed(1))}
+              label={t.mobileBar.pace}
               footer={
                 <div className="w-11 text-center bg-gray-50 border border-gray-200 rounded-lg px-0.5 py-1 text-[9px] text-gray-600 leading-tight">
                   {totalDurationLabel}
@@ -194,13 +197,13 @@ export function MobileControlBar({
         >
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
             <span className="font-semibold text-gray-900 text-sm">
-              {openPanel === "conditions" ? "Conditions" : "Segments"}
+              {openPanel === "conditions" ? t.mobileBar.conditions : t.mobileBar.segments}
             </span>
             <button
               onClick={() => setOpenPanel(null)}
               className="p-1 rounded-lg bg-gray-100 active:bg-gray-200 text-gray-500 text-xs font-semibold px-2"
             >
-              Close
+              {t.mobileBar.close}
             </button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -245,10 +248,10 @@ export function MobileControlBar({
               <div className="w-10 h-1 rounded-full bg-gray-300" />
             </motion.div>
             <div className="grid grid-cols-4 gap-1 px-2 pb-2">
-              <BarButton icon="🕐" label="Start" value={timeGlance} active={openPanel === "time"} onClick={() => togglePanel("time")} />
-              <BarButton icon="⏱️" label="Duration" value={paceGlance} subValue={totalDurationLabel} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
-              <BarButton icon="🌤️" label="Conditions" value={conditionsGlance} active={openPanel === "conditions"} onClick={() => togglePanel("conditions")} />
-              <BarButton icon="🚩" label="Segments" value={segmentsGlance} active={openPanel === "segments"} onClick={() => togglePanel("segments")} />
+              <BarButton icon="🕐" label={t.mobileBar.start} value={timeGlance} active={openPanel === "time"} onClick={() => togglePanel("time")} />
+              <BarButton icon="⏱️" label={t.mobileBar.duration} value={paceGlance} subValue={totalDurationLabel} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
+              <BarButton icon="🌤️" label={t.mobileBar.conditions} value={conditionsGlance} active={openPanel === "conditions"} onClick={() => togglePanel("conditions")} />
+              <BarButton icon="🚩" label={t.mobileBar.segments} value={segmentsGlance} active={openPanel === "segments"} onClick={() => togglePanel("segments")} />
             </div>
           </>
         ) : (

@@ -3,6 +3,7 @@
 import { useRef, useCallback, useEffect } from "react";
 import type { WeatherSegment, SportType } from "@/types";
 import { SegmentCard } from "./SegmentCard";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 interface Props {
   segments: WeatherSegment[];
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function SegmentList({ segments, activeIndex, sport, onActiveChange }: Props) {
+  const { t } = useLanguage();
   const listRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   // Track whether a user scroll is in progress (vs. programmatic flyTo)
@@ -69,7 +71,7 @@ export function SegmentList({ segments, activeIndex, sport, onActiveChange }: Pr
   if (!segments.length) {
     return (
       <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
-        Loading weather data…
+        {t.segments.loadingWeather}
       </div>
     );
   }

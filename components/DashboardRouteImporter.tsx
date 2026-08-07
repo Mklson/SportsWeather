@@ -6,9 +6,11 @@ import { StravaGuide } from "@/components/route/StravaGuide";
 import { UTNoGuide } from "@/components/route/UTNoGuide";
 import { GarminGuide } from "@/components/route/GarminGuide";
 import { AllTrailsGuide } from "@/components/route/AllTrailsGuide";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export function DashboardRouteImporter() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   function handleSuccess() {
     router.refresh();
@@ -19,7 +21,7 @@ export function DashboardRouteImporter() {
       <RouteImporter onSuccess={handleSuccess} />
 
       <div className="flex flex-col items-center gap-2 w-full">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.front.importFrom}</p>
         <div className="grid grid-cols-4 gap-1 w-full">
           <StravaGuide />
           <UTNoGuide />

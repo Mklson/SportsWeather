@@ -39,32 +39,6 @@ export function windClassColor(wc: WindClass): string {
   }
 }
 
-export function windClassLabel(wc: WindClass): string {
-  switch (wc) {
-    case "tailwind":
-      return "Tailwind";
-    case "crosswind":
-      return "Crosswind";
-    case "headwind":
-      return "Headwind";
-  }
-}
-
-export function windStrengthLabel(ws: WindStrength): string {
-  switch (ws) {
-    case "calm":
-      return "Calm";
-    case "light":
-      return "Light";
-    case "moderate":
-      return "Moderate";
-    case "strong":
-      return "Strong";
-    case "storm":
-      return "Storm";
-  }
-}
-
 /** Beaufort-style wind strength icon character. */
 export function windStrengthEmoji(ws: WindStrength): string {
   switch (ws) {

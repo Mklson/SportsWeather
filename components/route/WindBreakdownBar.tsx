@@ -1,6 +1,9 @@
 import type { WeatherSegment } from "@/types";
 import { windBreakdown } from "@/lib/weather-display";
 
+// "tail"/"cross"/"head" are short, compact-UI-only abbreviations with no
+// corresponding short-form dictionary key (t.wind.* is the full "Tailwind"/
+// "Medvind" etc., too long for this bar) — left untranslated, see i18n task report.
 export function WindBreakdownBar({ segments }: { segments: WeatherSegment[] }) {
   const breakdown = windBreakdown(segments);
   if (!breakdown) return null;

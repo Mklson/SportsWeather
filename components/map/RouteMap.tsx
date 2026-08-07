@@ -4,6 +4,10 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import type { Route, WeatherSegment, SportType, StravaSegment } from "@/types";
 import { classifySkiConditions } from "@/lib/ski-conditions";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { getDictionary } from "@/lib/i18n/dictionary";
+
+type Dict = ReturnType<typeof getDictionary>;
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
 
@@ -73,6 +77,7 @@ export function RouteMap({
   reversed = false,
   showRoute = true,
 }: Props) {
+  const { t } = useLanguage();
   const [basemap, setBasemap] = useState<Basemap>("outdoors");
   const [terrain3d, setTerrain3d] = useState(false);
   // Incremented once by the iOS/touch-action fix timer so that a real React DOM
@@ -98,6 +103,7 @@ export function RouteMap({
   const latestOnBoundsChangeRef   = useRef(onBoundsChange);
   const latestTerrain3dRef          = useRef(false);
   const latestShowRouteRef          = useRef(showRoute);
+  const latestTRef                  = useRef(t);
   latestSegmentsRef.current         = segments;
   latestSportRef.current            = sport;
   latestReversedRef.current         = reversed;
@@ -108,6 +114,7 @@ export function RouteMap({
   latestOnBoundsChangeRef.current   = onBoundsChange;
   latestTerrain3dRef.current        = terrain3d;
   latestShowRouteRef.current        = showRoute;
+  latestTRef.current                = t;
   const mapReadyRef    = useRef(false);
 
   // ── Initialise (or re-initialise) map when route.id changes ──────────
@@ -227,7 +234,7 @@ export function RouteMap({
 
     const apply = () => {
       updateWindMarkers(map, segments, sport);
-      updateWeatherMarkers(map, segments, wxMarkersRef, sport, onSegmentClick);
+      updateWeatherMarkers(map, segments, wxMarkersRef, sport, t, onSegmentClick);
     };
 
     if (!mapReadyRef.current) {
@@ -236,7 +243,7 @@ export function RouteMap({
     }
 
     apply();
-  }, [segments, sport, onSegmentClick]);
+  }, [segments, sport, onSegmentClick, t]);
 
   // ── Show/hide route and apply direction ────────────────────────────────
   // Uses removeLayer/removeSource so the route truly ceases to exist on the map,
@@ -299,7 +306,7 @@ export function RouteMap({
         addStravaSegmentLayers(map);
         addWindLayer(map);
         updateWindMarkers(map, latestSegmentsRef.current, latestSportRef.current);
-        updateWeatherMarkers(map, latestSegmentsRef.current, wxMarkersRef, latestSportRef.current, latestOnSegmentClickRef.current);
+        updateWeatherMarkers(map, latestSegmentsRef.current, wxMarkersRef, latestSportRef.current, latestTRef.current, latestOnSegmentClickRef.current);
         updateStravaSegments(map, latestStravaRef.current ?? [], latestActiveStravaIdRef.current ?? null, stravaMarkersRef, latestOnStravaClickRef.current);
       });
     });
@@ -364,12 +371,12 @@ export function RouteMap({
     popupRef.current?.remove();
     popupRef.current = new mapboxgl.Popup({ closeButton: false, offset: 14 })
       .setLngLat([seg.coordinate.lon, seg.coordinate.lat])
-      .setHTML(buildPopupHtml(seg, sport))
+      .setHTML(buildPopupHtml(seg, sport, t))
       .addTo(map);
-  }, [activeSegmentIndex, segments, sport]);
+  }, [activeSegmentIndex, segments, sport, t]);
 
   const basemapOptions: { key: Basemap; label: string }[] = [
-    { key: "outdoors",  label: "Kart"  },
+    { key: "outdoors",  label: t.map.mapLabel },
     { key: "satellite", label: "🛰"    },
   ];
 
@@ -384,7 +391,7 @@ export function RouteMap({
               className={`px-2.5 py-1.5 transition-colors ${
                 basemap === key ? "bg-brand-green text-white" : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
-              title={key === "outdoors" ? "Mapbox Outdoors" : "Satellittbilde"}
+              title={key === "outdoors" ? "Mapbox Outdoors" : t.map.satellite}
             >
               {label}
             </button>
@@ -397,7 +404,7 @@ export function RouteMap({
               ? "bg-brand-green text-white border-brand-green"
               : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
           }`}
-          title="3D terreng"
+          title={t.map.terrain3d}
         >
           3D
         </button>
@@ -591,6 +598,7 @@ function updateWeatherMarkers(
   segments: WeatherSegment[],
   ref: React.MutableRefObject<mapboxgl.Marker[]>,
   sport: SportType,
+  t: Dict,
   onSegmentClick?: (i: number) => void
 ) {
   ref.current.forEach((m) => m.remove());
@@ -605,7 +613,7 @@ function updateWeatherMarkers(
     if (seg.endKm - lastKm < spacingKm) return;
     lastKm = seg.endKm;
 
-    const el = makeWeatherEl(seg, sport);
+    const el = makeWeatherEl(seg, sport, t);
     if (onSegmentClick) el.addEventListener("click", () => onSegmentClick(seg.index));
 
     ref.current.push(
@@ -634,7 +642,7 @@ function pillColors(symbolCode: string, precipitation: number, cloudCover: numbe
   return                                  { bg: "#ffffff", text: "#0f172a", border: "rgba(0,0,0,0.15)" };
 }
 
-function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
+function makeWeatherEl(seg: WeatherSegment, sport: SportType, t: Dict): HTMLElement {
   const wrap = document.createElement("div");
   wrap.style.cssText = "cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;pointer-events:auto";
 
@@ -667,7 +675,8 @@ function makeWeatherEl(seg: WeatherSegment, sport: SportType): HTMLElement {
 
   if (sport === "skiing") {
     const ski = classifySkiConditions(seg.weather);
-    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span><span style="color:${ski.color};font-size:10px;font-weight:600">${ski.label.split(" ")[0]}</span>${rain}`;
+    const skiLabel = t.ski.label[ski.labelKey];
+    pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span><span style="color:${ski.color};font-size:10px;font-weight:600">${skiLabel.split(" ")[0]}</span>${rain}`;
   } else {
     pill.innerHTML = `<span style="font-size:16px">${icon}</span><span style="color:${text}">${temp}</span>${wind}${rain}`;
   }
@@ -754,19 +763,21 @@ function buildWindField(
 
 // ─── Popup ────────────────────────────────────────────────────────────────────
 
-function buildPopupHtml(seg: WeatherSegment, sport: SportType): string {
+function buildPopupHtml(seg: WeatherSegment, sport: SportType, t: Dict): string {
   const icon = weatherEmoji(seg.weather.symbolCode);
   const ski  = sport === "skiing" ? classifySkiConditions(seg.weather) : null;
-  const windLabel = seg.windClass === "tailwind" ? "Tailwind" : seg.windClass === "crosswind" ? "Crosswind" : "Headwind";
+  const skiLabel = ski ? t.ski.label[ski.labelKey] + (ski.freshSnow ? ` – ${t.ski.freshSnow}` : "") : "";
+  const skiWaxHint = ski ? t.ski.wax[ski.waxHintKey] : "";
+  const windLabel = t.wind[seg.windClass];
 
   return `<div style="font-family:system-ui,sans-serif;font-size:13px;line-height:1.7;color:#1e293b;min-width:155px">
     <div style="font-weight:700;margin-bottom:4px">${seg.startKm.toFixed(1)}–${seg.endKm.toFixed(1)} km</div>
-    <div>${icon} <strong>${seg.weather.temperature.toFixed(1)}°C</strong>${seg.weather.feelsLike !== undefined && seg.weather.feelsLike !== seg.weather.temperature ? ` <span style="color:#64748b;font-size:11px">(feels like ${seg.weather.feelsLike}°)</span>` : ""}</div>
+    <div>${icon} <strong>${seg.weather.temperature.toFixed(1)}°C</strong>${seg.weather.feelsLike !== undefined && seg.weather.feelsLike !== seg.weather.temperature ? ` <span style="color:#64748b;font-size:11px">(${t.map.feelsLike} ${seg.weather.feelsLike}°)</span>` : ""}</div>
     ${ski
-      ? `<div style="color:${ski.color};font-weight:600">${ski.label}</div><div style="color:#64748b;font-size:11px">${ski.waxHint}</div>`
+      ? `<div style="color:${ski.color};font-weight:600">${skiLabel}</div><div style="color:#64748b;font-size:11px">${skiWaxHint}</div>`
       : `<div style="color:${seg.color};font-weight:600">💨 ${windLabel} · ${seg.weather.windSpeed.toFixed(1)} m/s</div>`}
-    ${seg.weather.precipitation > 0 ? `<div style="color:#2563eb">🌧️ ${seg.weather.precipitation.toFixed(1)} mm/h</div>` : ""}
-    <div style="color:#64748b;font-size:11px">☁️ ${Math.round(seg.weather.cloudCover)}% cloud cover</div>
+    ${seg.weather.precipitation > 0 ? `<div style="color:#2563eb">🌧️ ${seg.weather.precipitation.toFixed(1)} ${t.map.mmPerHour}</div>` : ""}
+    <div style="color:#64748b;font-size:11px">☁️ ${Math.round(seg.weather.cloudCover)}${t.map.cloudCover}</div>
   </div>`;
 }
 

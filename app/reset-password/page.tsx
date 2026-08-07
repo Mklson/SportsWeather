@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 function ResetPasswordForm() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ function ResetPasswordForm() {
       if (session) {
         setReady(true);
       } else {
-        setError("Invalid or expired reset link. Please request a new one.");
+        setError(t.auth.resetPassword.invalidLink);
       }
     });
   }, []);
@@ -28,11 +30,11 @@ function ResetPasswordForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) {
-      setError("Passwords do not match");
+      setError(t.auth.resetPassword.passwordMismatch);
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t.auth.resetPassword.passwordTooShort);
       return;
     }
 
@@ -58,14 +60,14 @@ function ResetPasswordForm() {
           {error}
         </div>
         <Link href="/forgot-password" className="text-sm text-brand-navy font-medium hover:underline">
-          Request a new reset link
+          {t.auth.resetPassword.requestNewLink}
         </Link>
       </div>
     );
   }
 
   if (!ready) {
-    return <p className="text-center text-sm text-gray-400">Verifying link…</p>;
+    return <p className="text-center text-sm text-gray-400">{t.auth.resetPassword.verifyingLink}</p>;
   }
 
   return (
@@ -77,7 +79,7 @@ function ResetPasswordForm() {
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium text-gray-700">New password</label>
+        <label htmlFor="password" className="text-sm font-medium text-gray-700">{t.auth.resetPassword.newPassword}</label>
         <input
           id="password"
           type="password"
@@ -85,13 +87,13 @@ function ResetPasswordForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="new-password"
-          placeholder="Min. 6 characters"
+          placeholder={t.auth.resetPassword.passwordPlaceholder}
           className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="confirm" className="text-sm font-medium text-gray-700">Confirm password</label>
+        <label htmlFor="confirm" className="text-sm font-medium text-gray-700">{t.auth.resetPassword.confirmPassword}</label>
         <input
           id="confirm"
           type="password"
@@ -99,7 +101,7 @@ function ResetPasswordForm() {
           onChange={(e) => setConfirm(e.target.value)}
           required
           autoComplete="new-password"
-          placeholder="Repeat your password"
+          placeholder={t.auth.resetPassword.confirmPasswordPlaceholder}
           className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
         />
       </div>
@@ -109,13 +111,14 @@ function ResetPasswordForm() {
         disabled={loading}
         className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
       >
-        {loading ? "Saving…" : "Set new password"}
+        {loading ? t.auth.resetPassword.savingButton : t.auth.resetPassword.setNewPassword}
       </button>
     </form>
   );
 }
 
 export default function ResetPasswordPage() {
+  const { t } = useLanguage();
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
       <div className="w-full max-w-sm flex flex-col gap-6">
@@ -123,9 +126,9 @@ export default function ResetPasswordPage() {
           <Link href="/">
             <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-24 w-auto drop-shadow-xl" />
           </Link>
-          <p className="text-sm text-gray-500">Choose a new password</p>
+          <p className="text-sm text-gray-500">{t.auth.resetPassword.chooseNewPassword}</p>
         </div>
-        <Suspense fallback={<p className="text-center text-sm text-gray-400">Verifying link…</p>}>
+        <Suspense fallback={<p className="text-center text-sm text-gray-400">{t.auth.resetPassword.verifyingLink}</p>}>
           <ResetPasswordForm />
         </Suspense>
       </div>

@@ -1,20 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { RouteImporter } from "@/components/route/RouteImporter";
 import { UTNoGuide } from "@/components/route/UTNoGuide";
 import { GarminGuide } from "@/components/route/GarminGuide";
 import { StravaGuide } from "@/components/route/StravaGuide";
 import { AllTrailsGuide } from "@/components/route/AllTrailsGuide";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getDictionary, interpolate, type Lang } from "@/lib/i18n/dictionary";
 
-const STRAVA_ERRORS: Record<string, string> = {
-  strava_denied:         "You cancelled the Strava connection.",
-  strava_state_mismatch: "Security check failed (state mismatch). Please try again.",
-  strava_no_code:        "No authorization code received from Strava.",
-  strava_token_exchange: "Could not retrieve token from Strava. Check your app configuration.",
-  strava_fetch_failed:   "Connected to Strava, but could not load activities. Please try again.",
+const STRAVA_ERROR_KEYS: Record<string, string> = {
+  strava_denied: "denied",
+  strava_state_mismatch: "stateMismatch",
+  strava_no_code: "noCode",
+  strava_token_exchange: "tokenExchange",
+  strava_fetch_failed: "fetchFailed",
 };
 
 export default async function HomePage({
@@ -22,8 +25,15 @@ export default async function HomePage({
 }: {
   searchParams: { error?: string };
 }) {
+  const cookieLang = cookies().get("lang")?.value;
+  const lang: Lang = cookieLang === "en" ? "en" : "no";
+  const t = getDictionary(lang);
+
+  const errorKey = searchParams.error ? STRAVA_ERROR_KEYS[searchParams.error] : null;
   const errorMsg = searchParams.error
-    ? (STRAVA_ERRORS[searchParams.error] ?? `Unknown error: ${searchParams.error}`)
+    ? errorKey
+      ? (t.front.stravaErrors as Record<string, string>)[errorKey]
+      : interpolate(t.front.stravaErrors.unknown, { error: searchParams.error })
     : null;
 
   const supabase = createSupabaseServerClient();
@@ -35,39 +45,20 @@ export default async function HomePage({
   ).filter((r): r is NonNullable<typeof r> => r !== null);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
+    <main className="relative min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-white">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
+
       <div className="flex flex-col items-center gap-2">
         <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-24 w-auto drop-shadow-xl" />
       </div>
 
-      {user ? (
-        <Link
-          href="/dashboard"
-          className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
-        >
-          Go to my dashboard →
-        </Link>
-      ) : (
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-sm text-gray-500 text-center max-w-xs">
-            Create a free account to save your routes and access them anytime from your dashboard.
-          </p>
-          <div className="flex gap-3">
-            <Link
-              href="/login"
-              className="border border-gray-300 hover:border-gray-400 text-gray-700 font-medium px-5 py-2 rounded-xl text-sm transition-colors"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/register"
-              className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm"
-            >
-              Create account
-            </Link>
-          </div>
-        </div>
-      )}
+      <p className="text-sm text-gray-600 text-center max-w-lg -mt-4">
+        {t.front.intro1}
+        <br />
+        {t.front.intro2}
+      </p>
 
       {errorMsg && (
         <div className="w-full max-w-md bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center">
@@ -75,11 +66,9 @@ export default async function HomePage({
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-3 w-full max-w-md">
-        <RouteImporter />
-
+      <div className="flex flex-col items-center gap-6 w-full max-w-md">
         <div className="flex flex-col items-center gap-2 w-full">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Or import a route from</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.front.importFrom}</p>
           <div className="grid grid-cols-4 gap-1 w-full">
             <StravaGuide />
             <UTNoGuide />
@@ -87,21 +76,52 @@ export default async function HomePage({
             <AllTrailsGuide />
           </div>
         </div>
+
+        <RouteImporter />
       </div>
+
+      {user ? (
+        <Link
+          href="/dashboard"
+          className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
+        >
+          {t.nav.goToDashboard}
+        </Link>
+      ) : (
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-gray-500 text-center max-w-xs">
+            {t.front.createAccountText}
+          </p>
+          <div className="flex gap-3">
+            <Link
+              href="/login"
+              className="border border-gray-300 hover:border-gray-400 text-gray-700 font-medium px-5 py-2 rounded-xl text-sm transition-colors"
+            >
+              {t.nav.signIn}
+            </Link>
+            <Link
+              href="/register"
+              className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors shadow-sm"
+            >
+              {t.nav.createAccount}
+            </Link>
+          </div>
+        </div>
+      )}
 
       <FeaturedRoutes routes={featuredRoutes} />
 
       <footer className="w-full flex flex-col items-center gap-1.5 pb-4">
         <p className="text-xs text-gray-300 text-center max-w-xs">
-          We only use essential cookies to keep you logged in — no tracking or analytics.
+          {t.front.cookieNotice}
         </p>
         <div className="flex items-center gap-3">
           <Link href="/personvern" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
-            Personvern
+            {t.front.personvern}
           </Link>
           <span className="text-gray-200">·</span>
           <Link href="/login?next=/admin" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
-            Admin
+            {t.front.admin}
           </Link>
         </div>
       </footer>

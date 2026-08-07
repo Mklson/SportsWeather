@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -17,11 +19,11 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) {
-      setError("Passwords do not match");
+      setError(t.auth.register.passwordMismatch);
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t.auth.register.passwordTooShort);
       return;
     }
 
@@ -47,7 +49,7 @@ export default function RegisterPage() {
           <Link href="/">
             <Image src="/Logo with text on side-cropped.png" alt="AEROUTE" width={560} height={160} priority className="h-32 w-auto drop-shadow-xl" />
           </Link>
-          <p className="text-sm text-gray-500">Free — no credit card needed</p>
+          <p className="text-sm text-gray-500">{t.auth.register.freeNoCard}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -58,20 +60,20 @@ export default function RegisterPage() {
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Email</label>
+            <label className="text-sm font-medium text-gray-700">{t.auth.register.email}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t.auth.register.emailPlaceholder}
               className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="password" className="text-sm font-medium text-gray-700">{t.auth.register.password}</label>
             <input
               id="password"
               name="password"
@@ -80,13 +82,13 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
-              placeholder="Min. 6 characters"
+              placeholder={t.auth.register.passwordPlaceholder}
               className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="confirm" className="text-sm font-medium text-gray-700">Confirm password</label>
+            <label htmlFor="confirm" className="text-sm font-medium text-gray-700">{t.auth.register.confirmPassword}</label>
             <input
               id="confirm"
               name="confirm"
@@ -95,7 +97,7 @@ export default function RegisterPage() {
               onChange={(e) => setConfirm(e.target.value)}
               required
               autoComplete="off"
-              placeholder="Repeat your password"
+              placeholder={t.auth.register.confirmPasswordPlaceholder}
               className="border border-gray-300 rounded-xl px-3 py-2.5 text-base md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           </div>
@@ -105,14 +107,14 @@ export default function RegisterPage() {
             disabled={loading}
             className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50 mt-1"
           >
-            {loading ? "Creating account…" : "Create account"}
+            {loading ? t.auth.register.creating : t.auth.register.createAccount}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500">
-          Already have an account?{" "}
+          {t.auth.register.alreadyHaveAccount}{" "}
           <Link href="/login" className="text-brand-navy font-medium hover:underline">
-            Sign in
+            {t.auth.register.signIn}
           </Link>
         </p>
       </div>

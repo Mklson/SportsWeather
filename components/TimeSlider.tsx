@@ -2,7 +2,8 @@
 
 import { useCallback, useId, useMemo } from "react";
 import { format, addHours, startOfHour } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS, nb } from "date-fns/locale";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export const FORECAST_HOURS = 9 * 24; // MET Norway provides ~9 days ahead
 export const DEFAULT_RANGE_HOURS = 48;
@@ -30,6 +31,8 @@ interface Props {
 
 export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
   const sliderId = useId();
+  const { t, lang } = useLanguage();
+  const dateLocale = lang === "no" ? nb : enUS;
   // Stable reference within the same hour so handleChange doesn't recreate every render.
   const base = useMemo(() => startOfHour(new Date()), []);
   const maxDate = useMemo(() => addHours(base, FORECAST_HOURS), [base]);
@@ -55,14 +58,14 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
     [onChange]
   );
 
-  const formattedDate = format(value, "EEEE, MMMM d, HH:mm", { locale: enUS });
+  const formattedDate = format(value, "EEEE, MMMM d, HH:mm", { locale: dateLocale });
   const inputValue = format(value, "yyyy-MM-dd'T'HH:mm");
   const maxValue = format(maxDate, "yyyy-MM-dd'T'HH:mm");
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Start time</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t.slider.startTime}</span>
         <span className="text-xs text-brand-green-dark font-semibold capitalize">{formattedDate}</span>
       </div>
 
@@ -75,7 +78,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
         value={clampedOffset}
         onChange={handleChange}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-brand-green touch-none"
-        aria-label="Select start time"
+        aria-label={t.slider.selectStartTime}
       />
 
       <input
@@ -91,7 +94,7 @@ export function TimeSlider({ value, onChange, rangeHours = 48 }: Props) {
       {beyondForecast && (
         <p className="text-xs text-amber-600 flex items-center gap-1">
           <span>⚠️</span>
-          Weather forecasts are only available up to 9 days ahead. Showing the last available forecast instead.
+          {t.slider.forecastLimited}
         </p>
       )}
     </div>

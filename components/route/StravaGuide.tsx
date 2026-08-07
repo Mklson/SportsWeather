@@ -3,17 +3,13 @@
 import { useState } from "react";
 import { Modal } from "@/components/Modal";
 import { StravaIcon } from "@/components/route/RouteImporter";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 const STRAVA_DASHBOARD_URL = "https://www.strava.com/dashboard";
 
-const MANUAL_STEPS = [
-  "Open the activity on strava.com (or the app) and open its ••• (more options) menu.",
-  "Choose “Export GPX”.",
-  "Save the file, then come back here, pick the matching activity, and drop the GPX into the upload box above.",
-];
-
 export function StravaGuide() {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <>
@@ -21,7 +17,7 @@ export function StravaGuide() {
         type="button"
         onClick={() => setOpen(true)}
         className="flex items-center justify-center w-full h-full rounded-xl"
-        aria-label="Strava"
+        aria-label={t.guides.strava.ariaLabel}
       >
         {/* Orange fill lives on this fixed-size badge, not the button itself —
             matching how the other guides' color comes from a small logo graphic
@@ -31,27 +27,27 @@ export function StravaGuide() {
         </span>
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="🟠 Import from Strava">
+      <Modal open={open} onClose={() => setOpen(false)} title={t.guides.strava.title}>
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
-            Direct Strava connect is in beta and currently limited to 10 users while our app awaits full API approval.
+            {t.guides.strava.betaNotice}
           </p>
 
           <a
             href="/api/strava/auth"
             className="block text-center bg-[#FC4C02] hover:bg-[#e04300] text-white font-medium text-sm px-4 py-2.5 rounded-xl transition-colors"
           >
-            Connect with Strava ↗
+            {t.guides.strava.connect}
           </a>
 
           <div className="flex items-center gap-2 pt-1">
             <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs text-gray-400">Not one of the 10? Export manually</span>
+            <span className="text-xs text-gray-400">{t.guides.strava.notOneOfTen}</span>
             <div className="h-px flex-1 bg-gray-200" />
           </div>
 
           <ol className="space-y-2.5">
-            {MANUAL_STEPS.map((step, i) => (
+            {t.guides.strava.manualSteps.map((step, i) => (
               <li key={i} className="flex gap-2.5 text-sm text-gray-600">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold flex items-center justify-center">
                   {i + 1}
@@ -67,7 +63,7 @@ export function StravaGuide() {
             rel="noopener noreferrer"
             className="block text-center bg-brand-navy hover:bg-brand-navy-dark text-white font-medium text-sm px-4 py-2.5 rounded-xl transition-colors"
           >
-            Open Strava dashboard ↗
+            {t.guides.strava.openDashboard}
           </a>
         </div>
       </Modal>

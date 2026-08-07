@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 interface Props {
   open: boolean;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function Modal({ open, onClose, title, children, widthClassName = "max-w-md" }: Props) {
+  const { t } = useLanguage();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -35,7 +37,7 @@ export function Modal({ open, onClose, title, children, widthClassName = "max-w-
           <h2 className="font-semibold text-gray-900 text-base">{title}</h2>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t.common.close}
             className="text-gray-400 hover:text-gray-700 text-2xl leading-none px-1"
           >
             ×

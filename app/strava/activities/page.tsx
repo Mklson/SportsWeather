@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { listStravaActivities, listStravaRoutes } from "@/lib/strava";
 import { StravaImportPage } from "@/components/route/StravaImportPage";
+import { getDictionary, type Lang } from "@/lib/i18n/dictionary";
 
 export default async function StravaActivitiesPage({
   searchParams,
@@ -10,6 +11,10 @@ export default async function StravaActivitiesPage({
 }) {
   const cookieStore = cookies();
   const token = cookieStore.get("strava_access_token")?.value;
+
+  const cookieLang = cookieStore.get("lang")?.value;
+  const lang: Lang = cookieLang === "en" ? "en" : "no";
+  const t = getDictionary(lang);
 
   if (!token) redirect("/api/strava/refresh");
 
@@ -40,8 +45,8 @@ export default async function StravaActivitiesPage({
       const [fifteenLimit, dailyLimit] = (limitPart ?? "").split(",").map(Number);
       const isDailyLimit = dailyLimit > 0 && dailyUsage >= dailyLimit;
       const waitMsg = isDailyLimit
-        ? "You have hit the daily request limit. Try again tomorrow."
-        : "You have hit the 15-minute request limit. Wait a few minutes and try again.";
+        ? t.stravaActivity.dailyLimitMsg
+        : t.stravaActivity.minuteLimitMsg;
       const usageInfo = fifteenLimit > 0
         ? `${fifteenUsage}/${fifteenLimit} per 15 min · ${dailyUsage}/${dailyLimit} per day`
         : null;
@@ -49,7 +54,7 @@ export default async function StravaActivitiesPage({
       return (
         <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
           <p className="text-yellow-600 text-center font-medium">
-            Strava rate limit reached.
+            {t.stravaActivity.rateLimitReached}
           </p>
           <p className="text-gray-500 text-sm text-center">{waitMsg}</p>
           {usageInfo && (
@@ -60,7 +65,7 @@ export default async function StravaActivitiesPage({
               href="/strava/activities"
               className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors"
             >
-              Try again
+              {t.stravaActivity.tryAgain}
             </a>
           )}
         </main>
@@ -76,14 +81,14 @@ export default async function StravaActivitiesPage({
     return (
       <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
         <p className="text-red-600 text-center">
-          Could not load Strava data. Try logging in again.
+          {t.stravaActivity.couldNotLoad}
         </p>
         <p className="text-gray-400 text-xs text-center font-mono">{errorMsg}</p>
         <a
           href="/api/strava/auth?force=1"
           className="px-5 py-2.5 bg-[#FC4C02] hover:bg-[#e04300] text-white rounded-xl font-medium transition-colors"
         >
-          Log in with Strava
+          {t.stravaActivity.loginWithStrava}
         </a>
       </main>
     );
@@ -100,12 +105,12 @@ export default async function StravaActivitiesPage({
   return (
     <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Import from Strava</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t.stravaActivity.importFromStrava}</h1>
         <a
           href="/api/strava/logout"
           className="text-sm text-gray-400 hover:text-gray-700 transition-colors"
         >
-          Disconnect Strava
+          {t.stravaActivity.disconnectStrava}
         </a>
       </div>
       <StravaImportPage

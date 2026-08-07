@@ -1,14 +1,10 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import type { DbRoute } from "@/types";
+import { getDictionary, type Lang } from "@/lib/i18n/dictionary";
 
-const SPORT_LABELS: Record<string, { label: string; icon: string }> = {
-  cycling: { label: "Cycling", icon: "🚴" },
-  running: { label: "Running", icon: "🏃" },
-  skiing:  { label: "Skiing",  icon: "⛷️" },
-};
-
-function RouteRow({ route }: { route: DbRoute }) {
-  const sport = route.sport ? SPORT_LABELS[route.sport] : null;
+function RouteRow({ route, sportLabels }: { route: DbRoute; sportLabels: Record<string, { label: string; icon: string }> }) {
+  const sport = route.sport ? sportLabels[route.sport] : null;
 
   return (
     <Link
@@ -36,14 +32,24 @@ function RouteRow({ route }: { route: DbRoute }) {
 export function FeaturedRoutes({ routes }: { routes: DbRoute[] }) {
   if (routes.length === 0) return null;
 
+  const cookieLang = cookies().get("lang")?.value;
+  const lang: Lang = cookieLang === "en" ? "en" : "no";
+  const t = getDictionary(lang);
+
+  const sportLabels: Record<string, { label: string; icon: string }> = {
+    cycling: { label: t.sport.cycling, icon: "🚴" },
+    running: { label: t.sport.running, icon: "🏃" },
+    skiing: { label: t.sport.skiing, icon: "⛷️" },
+  };
+
   return (
     <div className="w-full max-w-md">
       <p className="mb-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide">
-        Try a sample route
+        {t.front.sampleRoute}
       </p>
       <div className="flex flex-col gap-2">
         {routes.map((route) => (
-          <RouteRow key={route.id} route={route} />
+          <RouteRow key={route.id} route={route} sportLabels={sportLabels} />
         ))}
       </div>
     </div>

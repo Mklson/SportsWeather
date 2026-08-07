@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { Coordinate } from "@/types";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function RoutePreviewMap({ start, onStartChange, previewCoordinates }: Props) {
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -121,7 +123,7 @@ export function RoutePreviewMap({ start, onStartChange, previewCoordinates }: Pr
         className="w-full h-64 rounded-xl overflow-hidden border border-gray-200"
       />
       <p className="text-xs text-gray-400">
-        {start ? "Drag the pin or click to move the start point." : "Click the map to set a start point."}
+        {start ? t.routePreview.dragOrClick : t.routePreview.clickToSet}
       </p>
     </div>
   );

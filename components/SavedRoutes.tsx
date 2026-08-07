@@ -4,13 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { DbRouteSummary, SportType } from "@/types";
 import { format } from "date-fns";
-
-// Groups mirror RouteImporter's UPLOAD_SPORTS — keep labels/emoji in sync with that.
-const SPORT_GROUPS: { id: SportType; label: string; emoji: string }[] = [
-  { id: "cycling", label: "Cycling", emoji: "🚴" },
-  { id: "running", label: "Hiking · Running", emoji: "🥾" },
-  { id: "skiing", label: "Cross Country", emoji: "⛷️" },
-];
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { interpolate, getDictionary } from "@/lib/i18n/dictionary";
 
 function formatDist(km: number | null) {
   if (!km) return null;
@@ -28,6 +23,13 @@ interface Props {
 
 export function SavedRoutes({ routes }: Props) {
   const router = useRouter();
+  const { t } = useLanguage();
+  // Groups mirror RouteImporter's UPLOAD_SPORTS — keep labels/emoji in sync with that.
+  const SPORT_GROUPS: { id: SportType; label: string; emoji: string }[] = [
+    { id: "cycling", label: t.sport.cycling, emoji: "🚴" },
+    { id: "running", label: t.sport.hikingRunning, emoji: "🥾" },
+    { id: "skiing", label: t.sport.crossCountry, emoji: "⛷️" },
+  ];
   const [localRoutes, setLocalRoutes] = useState(routes);
   // `routes` is a fresh array from the server every time the dashboard refreshes
   // (e.g. after adding one) — without this, useState's initial value would go stale
@@ -55,7 +57,7 @@ export function SavedRoutes({ routes }: Props) {
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
         <span className="text-4xl">📂</span>
         <p className="text-gray-500 text-sm max-w-xs">
-          No saved routes yet. Upload a GPX or TCX file to get started.
+          {t.saved.empty}
         </p>
       </div>
     );
@@ -67,7 +69,7 @@ export function SavedRoutes({ routes }: Props) {
     );
 
   const other = localRoutes.filter((r) => !SPORT_GROUPS.some((g) => g.id === r.sport));
-  if (other.length > 0) groups.push({ id: "other", label: "Other", emoji: "📍", routes: other });
+  if (other.length > 0) groups.push({ id: "other", label: t.saved.other, emoji: "📍", routes: other });
 
   return (
     <div className="space-y-5">
@@ -84,6 +86,7 @@ export function SavedRoutes({ routes }: Props) {
                 key={route.id}
                 route={route}
                 emoji={group.emoji}
+                t={t}
                 confirming={confirmId === route.id}
                 deleting={deletingId === route.id}
                 onConfirm={() => setConfirmId(route.id)}
@@ -101,6 +104,7 @@ export function SavedRoutes({ routes }: Props) {
 function RouteRow({
   route,
   emoji,
+  t,
   confirming,
   deleting,
   onConfirm,
@@ -109,6 +113,7 @@ function RouteRow({
 }: {
   route: DbRouteSummary;
   emoji: string;
+  t: ReturnType<typeof getDictionary>;
   confirming: boolean;
   deleting: boolean;
   onConfirm: () => void;
@@ -120,19 +125,19 @@ function RouteRow({
       {confirming ? (
         /* Inline confirm row */
         <>
-          <span className="flex-1 text-sm text-gray-500">Delete «{route.name}»?</span>
+          <span className="flex-1 text-sm text-gray-500">{interpolate(t.saved.deleteConfirm, { name: route.name })}</span>
           <button
             onClick={onDelete}
             disabled={deleting}
             className="relative z-10 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
           >
-            Delete
+            {t.saved.delete}
           </button>
           <button
             onClick={onCancel}
             className="relative z-10 text-xs font-medium text-gray-500 hover:text-gray-800 px-2 py-1 transition-colors"
           >
-            Cancel
+            {t.saved.cancel}
           </button>
         </>
       ) : (
@@ -167,9 +172,9 @@ function RouteRow({
 
           <button
             onClick={onConfirm}
-            title="Delete route"
+            title={t.saved.deleteRouteTitle}
             className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto ml-1"
-            aria-label="Delete route"
+            aria-label={t.saved.deleteRouteTitle}
           >
             <TrashIcon />
           </button>

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS, nb } from "date-fns/locale";
 import type { UploadResponse } from "@/types";
 import clsx from "clsx";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 interface ActivityItem {
   id: number;
@@ -17,6 +18,7 @@ interface ActivityItem {
 
 export function StravaActivityList({ activities: initial }: { activities: ActivityItem[] }) {
   const router = useRouter();
+  const { t, lang } = useLanguage();
   const [activities, setActivities] = useState(initial);
   const [importing, setImporting] = useState<number | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -40,7 +42,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
       const { route } = (await res.json()) as UploadResponse;
       router.push(`/route/${route.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed");
+      setError(err instanceof Error ? err.message : t.stravaActivity.importFailed);
       setImporting(null);
     }
   };
@@ -57,7 +59,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
       setPage(nextPage);
       setHasMore(more.length === 30);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load more");
+      setError(err instanceof Error ? err.message : t.stravaActivity.couldNotLoadMore);
     } finally {
       setLoadingMore(false);
     }
@@ -83,7 +85,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
           <div>
             <p className="font-medium text-white">{a.name}</p>
             <p className="text-sm text-gray-400">
-              {format(new Date(a.startDate), "MMM d, yyyy", { locale: enUS })}
+              {format(new Date(a.startDate), "MMM d, yyyy", { locale: lang === "no" ? nb : enUS })}
               {" · "}
               {a.distanceKm.toFixed(1)} km
               {" · "}
@@ -91,7 +93,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
             </p>
           </div>
           <span className="text-gray-500 text-sm shrink-0">
-            {importing === a.id ? "Importing…" : "Select →"}
+            {importing === a.id ? t.stravaActivity.importing : t.stravaActivity.select}
           </span>
         </button>
       ))}
@@ -106,7 +108,7 @@ export function StravaActivityList({ activities: initial }: { activities: Activi
             loadingMore && "opacity-60 animate-pulse"
           )}
         >
-          {loadingMore ? "Loading…" : "Load more activities"}
+          {loadingMore ? t.stravaActivity.loading : t.stravaActivity.loadMoreActivities}
         </button>
       )}
     </div>

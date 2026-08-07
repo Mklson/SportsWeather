@@ -1,13 +1,19 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getRoutesByUser } from "@/lib/db/client";
 import { SavedRoutes } from "@/components/SavedRoutes";
 import { DashboardRouteImporter } from "@/components/DashboardRouteImporter";
 import Image from "next/image";
 import { LogoutButton } from "@/components/LogoutButton";
+import { getDictionary, type Lang } from "@/lib/i18n/dictionary";
 
 export default async function DashboardPage() {
+  const cookieLang = cookies().get("lang")?.value;
+  const lang: Lang = cookieLang === "en" ? "en" : "no";
+  const t = getDictionary(lang);
+
   const supabase = createSupabaseServerClient();
   const {
     data: { user },
@@ -37,7 +43,7 @@ export default async function DashboardPage() {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-gray-900">
-              Saved routes
+              {t.dashboard.savedRoutes}
               {savedRoutes.length > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-400">
                   {savedRoutes.length}
@@ -50,7 +56,7 @@ export default async function DashboardPage() {
 
         {/* Upload / import */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Add a route</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">{t.dashboard.addRoute}</h2>
           <div className="bg-white rounded-2xl border border-gray-200 p-6 flex justify-center">
             <DashboardRouteImporter />
           </div>

@@ -4,6 +4,8 @@ import { useMemo, useId } from "react";
 import type { SportType } from "@/types";
 import { haversineMetres, gradeAdjustedSpeed } from "@/lib/route-sampler";
 import type { Coordinate } from "@/types";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import type { Lang } from "@/lib/i18n/dictionary";
 
 // For pace sports, min/max/step are in min/km (pace), not km/h — the slider
 // operates natively in pace units so steps stay uniform across the walking-to-running range.
@@ -14,12 +16,13 @@ export const SPORT_CONFIG: Record<SportType, { min: number; max: number; step: n
   skiing:  { min: 8,  max: 40, step: 0.5,  unit: "km/h" },
 };
 
-export function formatDuration(hours: number): string {
+export function formatDuration(hours: number, lang: Lang = "no"): string {
   const h = Math.floor(hours);
   const m = Math.round((hours - h) * 60);
+  const hUnit = lang === "no" ? "t" : "h";
   if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} t`;
-  return `${h} t ${m} min`;
+  if (m === 0) return `${h} ${hUnit}`;
+  return `${h} ${hUnit} ${m} min`;
 }
 
 export function kmhToPace(kmh: number): string {
@@ -69,6 +72,7 @@ interface Props {
 
 export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
   const id = useId();
+  const { t, lang } = useLanguage();
   const cfg = SPORT_CONFIG[sport];
 
   // Haversine is expensive — pre-compute per-segment (distM, grade) once per route,
@@ -92,7 +96,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
     return total;
   }, [routeSegments, speedKmh, sport]);
 
-  const durationLabel  = formatDuration(estimatedHours);
+  const durationLabel  = formatDuration(estimatedHours, lang);
 
   const speedLabel = cfg.pace
     ? `${kmhToPace(speedKmh)} /km`
@@ -109,7 +113,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Duration</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t.slider.duration}</span>
         <span className="text-xs text-brand-green-dark font-semibold tabular-nums">
           {speedLabel} · {durationLabel}
         </span>
@@ -123,7 +127,7 @@ export function SpeedSlider({ sport, speedKmh, onChange, coords }: Props) {
         value={sliderValue}
         onChange={(e) => handleSliderChange(Number(e.target.value))}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-gray-200 accent-brand-green touch-none"
-        aria-label="Select pace"
+        aria-label={t.slider.selectPace}
       />
       <div className="flex justify-between text-xs text-gray-400">
         {cfg.pace ? (

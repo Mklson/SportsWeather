@@ -1,4 +1,4 @@
-import type { SkiConditions, SkiQuality, PointWeather } from "@/types";
+import type { SkiConditions, SkiQuality, SkiLabelKey, SkiWaxKey, PointWeather } from "@/types";
 
 /**
  * Classify cross-country ski conditions based on temperature and weather.
@@ -18,48 +18,46 @@ export function classifySkiConditions(weather: PointWeather): SkiConditions {
     (weather.symbolCode.includes("snow") || weather.symbolCode.includes("sleet") || t < 0);
 
   let quality: SkiQuality;
-  let label: string;
+  let labelKey: SkiLabelKey;
   let color: string;
-  let waxHint: string;
+  let waxHintKey: SkiWaxKey;
 
   if (t <= -15) {
     quality = "good";
-    label = "Cold";
+    labelKey = "cold";
     color = "#93c5fd"; // blue-300
-    waxHint = "Cold wax (green/blue)";
+    waxHintKey = "coldGreenBlue";
   } else if (t <= -5) {
     quality = "perfect";
-    label = "Perfect conditions";
+    labelKey = "perfect";
     color = "#10b981"; // green
-    waxHint = "Cold wax (blue/purple)";
+    waxHintKey = "coldBluePurple";
   } else if (t <= -1) {
     quality = "perfect";
-    label = "Excellent conditions";
+    labelKey = "excellent";
     color = "#34d399"; // green-400
-    waxHint = "Universal/violet wax";
+    waxHintKey = "universalViolet";
   } else if (t <= 0) {
     quality = "variable";
-    label = "Transition snow";
+    labelKey = "transition";
     color = "#f59e0b"; // amber
-    waxHint = "Violet wax or klister";
+    waxHintKey = "violetOrKlister";
   } else if (t <= 3) {
     quality = "wet";
-    label = "Wet snow";
+    labelKey = "wet";
     color = "#f97316"; // orange
-    waxHint = "Klister (red)";
+    waxHintKey = "klisterRed";
   } else {
     quality = "icy";
-    label = "Poor conditions";
+    labelKey = "poor";
     color = "#ef4444"; // red
-    waxHint = "Ice/slush – klister or skating";
+    waxHintKey = "iceSlush";
   }
 
   // Bonus: fresh snow improves conditions
-  if (isSnowing && quality !== "icy") {
-    label = `${label} – fresh snow`;
-  }
+  const freshSnow = isSnowing && quality !== "icy";
 
-  return { quality, label, color, waxHint };
+  return { quality, labelKey, freshSnow, color, waxHintKey };
 }
 
 /** Feels-like temperature on skis (wind chill). */

@@ -1,5 +1,9 @@
+"use client";
+
 import type { StravaSegment, WeatherSegment } from "@/types";
 import { StravaSegmentList } from "./StravaSegmentList";
+import { interpolate } from "@/lib/i18n/dictionary";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 interface Props {
   stravaConnected: boolean;
@@ -30,10 +34,12 @@ export function SegmentsPanel({
   starredCount,
   totalCount,
 }: Props) {
+  const { t } = useLanguage();
+
   if (!stravaConnected) {
     return (
       <div className="flex items-center justify-center h-24 text-gray-400 text-sm px-6 text-center">
-        Connect to Strava from your dashboard to see segments along the route
+        {t.segments.connectStrava}
       </div>
     );
   }
@@ -41,19 +47,21 @@ export function SegmentsPanel({
   return (
     <div className="flex flex-col">
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-100">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</span>
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.segments.stravaSegments}</span>
         {!loading && totalCount > 0 && (
           <button
             onClick={onToggleStarredOnly}
             className="text-xs font-medium text-amber-500 active:text-amber-700"
           >
-            {starredOnly ? `★ ${starredCount} · Show all` : `All ${totalCount} · ★ only`}
+            {starredOnly
+              ? interpolate(t.segments.showAll, { count: starredCount })
+              : interpolate(t.segments.starredOnly, { count: totalCount })}
           </button>
         )}
       </div>
       {loading && (
         <div className="flex-shrink-0 flex items-center justify-center gap-2 p-3 text-sm text-orange-500 animate-pulse">
-          Loading Strava segments…
+          {t.segments.loadingStrava}
         </div>
       )}
       {error && (

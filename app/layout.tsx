@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
+import type { Lang } from "@/lib/i18n/dictionary";
 import "./globals.css";
 
 // Self-hosted via next/font (no external request, no FOUT) — globals.css
@@ -22,9 +25,14 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieLang = cookies().get("lang")?.value;
+  const lang: Lang = cookieLang === "en" ? "en" : "no";
+
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang={lang}>
+      <body className={inter.className}>
+        <LanguageProvider initialLang={lang}>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

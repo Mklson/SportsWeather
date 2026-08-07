@@ -2,14 +2,9 @@
 
 import { useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 const UT_NO_MAP_URL = "https://ut.no/kart#5.06/61.67/10.63";
-
-const STEPS = [
-  "Open UT.no's map below and search for a trip near you — try “fottur” for hiking or “skitur” for a ski trip.",
-  "Open a trip you like and look for the GPX download button in its info panel.",
-  "Save the file, then come back here, pick the matching activity, and drop the GPX into the upload box above.",
-];
 
 function UTNoLogo() {
   // UT.no's own mark, taken verbatim from ut.no's page source (inline SVG, not a hosted asset).
@@ -26,6 +21,7 @@ function UTNoLogo() {
 
 export function UTNoGuide() {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <>
@@ -33,19 +29,19 @@ export function UTNoGuide() {
         type="button"
         onClick={() => setOpen(true)}
         className="flex items-center justify-center w-full h-full rounded-xl transition-transform hover:scale-[1.03]"
-        aria-label="UT.no"
+        aria-label={t.guides.utNo.ariaLabel}
       >
         <UTNoLogo />
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="🥾 Find a route on UT.no">
+      <Modal open={open} onClose={() => setOpen(false)} title={t.guides.utNo.title}>
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
-            UT.no has route search built into its own map. Find a trip there, download it as a GPX, then bring it back here.
+            {t.guides.utNo.intro}
           </p>
 
           <ol className="space-y-2.5">
-            {STEPS.map((step, i) => (
+            {t.guides.utNo.steps.map((step, i) => (
               <li key={i} className="flex gap-2.5 text-sm text-gray-600">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold flex items-center justify-center">
                   {i + 1}
@@ -61,7 +57,7 @@ export function UTNoGuide() {
             rel="noopener noreferrer"
             className="block text-center bg-brand-navy hover:bg-brand-navy-dark text-white font-medium text-sm px-4 py-2.5 rounded-xl transition-colors"
           >
-            Open UT.no map ↗
+            {t.guides.utNo.openMap}
           </a>
         </div>
       </Modal>

@@ -13,6 +13,8 @@ import { StravaSegmentList } from "./route/StravaSegmentList";
 import { useWeather } from "@/hooks/useWeather";
 import { DEFAULT_SPEED_KMH } from "@/lib/route-sampler";
 import clsx from "clsx";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { interpolate } from "@/lib/i18n/dictionary";
 
 const RouteMap = dynamic(
   () => import("./map/RouteMap").then((m) => m.RouteMap),
@@ -39,6 +41,7 @@ interface Props {
 }
 
 export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, stravaConnected = false, backHref = "/", initialSegments, canSave = false }: Props) {
+  const { t } = useLanguage();
   const [startTime, setStartTime] = useState<Date>(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -195,13 +198,13 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             now gets the full width as a single truncating line underneath. */}
         <div className="flex-shrink-0 flex flex-col bg-white border-b border-gray-200 relative z-30">
           <div className="flex items-center justify-start gap-1.5 px-3 pt-1.5 pb-1">
-            <ReverseButton reversed={reversed} onToggle={handleToggleReverse} />
+            <ReverseButton reversed={reversed} onToggle={handleToggleReverse} t={t} />
             <button
               onClick={() => { window.location.href = backHref; }}
               style={{ touchAction: "manipulation" }}
               className="flex items-center gap-1 text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 active:bg-gray-200"
             >
-              ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
+              ← {backHref === "/dashboard" ? t.route.dashboard : t.route.home}
             </button>
             {canSave && saveState !== "saved" && (
               <button
@@ -210,27 +213,27 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 style={{ touchAction: "manipulation" }}
                 className="text-xs font-medium text-brand-navy active:text-brand-navy-dark disabled:opacity-50"
               >
-                {saveState === "saving" ? "Saving…" : "Save"}
+                {saveState === "saving" ? t.route.saving : t.route.save}
               </button>
             )}
             {saveState === "saved" && (
-              <span className="text-xs font-medium text-green-600">Saved ✓</span>
+              <span className="text-xs font-medium text-green-600">{t.route.saved}</span>
             )}
             <button
               onClick={resetMap}
-              title="Clear map"
+              title={t.route.clearMapTitle}
               style={{ touchAction: "manipulation" }}
               className="flex items-center gap-1 text-gray-500 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 active:bg-gray-200"
             >
-              <ResetIcon /> Clear
+              <ResetIcon /> {t.route.clear}
             </button>
             <button
               onClick={handleShare}
-              title="Share route"
+              title={t.route.shareTitle}
               style={{ touchAction: "manipulation" }}
               className="flex items-center gap-1 text-gray-500 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 active:bg-gray-200"
             >
-              {shareState === "copied" ? <>✓ Copied</> : <><ShareIcon /> Share</>}
+              {shareState === "copied" ? <>✓ {t.route.copied}</> : <><ShareIcon /> {t.route.share}</>}
             </button>
           </div>
           <div className="px-3 pb-1.5 min-w-0">
@@ -308,13 +311,13 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
               <div className="flex items-center gap-2">
                 <button onClick={() => { window.location.href = backHref; }} className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
-                  ← {backHref === "/dashboard" ? "Dashboard" : "Home"}
+                  ← {backHref === "/dashboard" ? t.route.dashboard : t.route.home}
                 </button>
                 {stravaConnected && (
                   <>
                     <span className="text-gray-300">|</span>
                     <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
-                      ← Strava
+                      ← {t.route.strava}
                     </Link>
                   </>
                 )}
@@ -325,18 +328,18 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                   disabled={saveState === "saving"}
                   className="text-xs font-medium text-brand-navy hover:text-brand-navy-dark transition-colors disabled:opacity-50"
                 >
-                  {saveState === "saving" ? "Saving…" : "Save to my account"}
+                  {saveState === "saving" ? t.route.saving : t.route.saveToAccount}
                 </button>
               )}
               {saveState === "saved" && (
-                <span className="text-xs font-medium text-green-600">Saved ✓</span>
+                <span className="text-xs font-medium text-green-600">{t.route.saved}</span>
               )}
               <button
                 onClick={resetMap}
-                title="Clear map"
+                title={t.route.clearMapTitle}
                 className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
               >
-                <ResetIcon /> Reset map
+                <ResetIcon /> {t.route.resetMap}
               </button>
             </div>
             {/* Header */}
@@ -346,11 +349,11 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                   <h1 className="font-bold text-gray-900 truncate text-base">{route.name}</h1>
                   <p className="text-gray-500 text-sm mt-0.5">
                     {route.distanceKm.toFixed(1)} km
-                    {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m elevation` : ""}
+                    {route.elevationGainM ? ` · ${Math.round(route.elevationGainM)} m ${t.route.elevation}` : ""}
                   </p>
-                  <SourceBadge source={route.source} />
+                  <SourceBadge source={route.source} t={t} />
                 </div>
-                <ReverseButton reversed={reversed} onToggle={handleToggleReverse} />
+                <ReverseButton reversed={reversed} onToggle={handleToggleReverse} t={t} />
               </div>
             </div>
 
@@ -368,28 +371,30 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
 
             {/* Legend */}
             <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center gap-3 text-xs flex-wrap">
-              <LegendItem color="#10b981" label="Tailwind" />
-              <LegendItem color="#f59e0b" label="Crosswind" />
-              <LegendItem color="#ef4444" label="Headwind" />
+              <LegendItem color="#10b981" label={t.wind.tailwind} />
+              <LegendItem color="#f59e0b" label={t.wind.crosswind} />
+              <LegendItem color="#ef4444" label={t.wind.headwind} />
             </div>
 
             {/* Strava segments */}
             {stravaConnected && (
               <>
                 <div className="px-4 py-2 border-b border-gray-200 bg-white flex items-center justify-between">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Strava segments</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.route.stravaSegments}</p>
                   {!stravaLoading && stravaSegments.length > 0 && (
                     <button
                       onClick={handleToggleStarredOnly}
                       className="text-xs font-medium text-amber-500 hover:text-amber-700 transition-colors"
                     >
-                      {starredOnly ? `★ ${starredCount} · Show all` : `All ${stravaSegments.length} · ★ only`}
+                      {starredOnly
+                        ? interpolate(t.route.showAll, { count: starredCount })
+                        : interpolate(t.route.starredOnly, { count: stravaSegments.length })}
                     </button>
                   )}
                 </div>
                 {stravaLoading && (
                   <div className="flex items-center justify-center gap-2 p-4 text-sm text-orange-500 animate-pulse">
-                    Loading segments…
+                    {t.route.loadingSegments}
                   </div>
                 )}
                 {stravaError && (
@@ -442,11 +447,11 @@ function ResetIcon() {
 // mobile control bar (ConditionsPanel/SegmentsPanel) can reuse them without
 // duplicating this file's logic — see lib/weather-display.ts for the pure helpers.
 
-function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: () => void }) {
+function ReverseButton({ reversed, onToggle, t }: { reversed: boolean; onToggle: () => void; t: ReturnType<typeof useLanguage>["t"] }) {
   return (
     <button
       onClick={onToggle}
-      title={reversed ? "Show original direction" : "Reverse route"}
+      title={reversed ? t.route.showOriginalDirection : t.route.reverseRoute}
       className={clsx(
         "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border transition-colors",
         reversed
@@ -460,15 +465,13 @@ function ReverseButton({ reversed, onToggle }: { reversed: boolean; onToggle: ()
         <path d="M7 23l-4-4 4-4" />
         <path d="M21 13v2a4 4 0 01-4 4H3" />
       </svg>
-      {reversed ? "Reversed" : "Reverse"}
+      {reversed ? t.route.reversed : t.route.reverse}
     </button>
   );
 }
 
-function SourceBadge({ source }: { source: Route["source"] }) {
-  const labels: Record<Route["source"], string> = {
-    strava: "Strava", garmin: "Garmin", gpx: "GPX", tcx: "TCX", generated: "Generated", fit: "FIT",
-  };
+function SourceBadge({ source, t }: { source: Route["source"]; t: ReturnType<typeof useLanguage>["t"] }) {
+  const labels: Record<Route["source"], string> = t.route.source;
   const colors: Record<Route["source"], string> = {
     strava: "bg-orange-100 text-orange-700 border-orange-200",
     garmin: "bg-blue-100 text-blue-700 border-blue-200",

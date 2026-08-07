@@ -3,9 +3,10 @@
 import { useRef, useEffect } from "react";
 import type { WeatherSegment, SportType } from "@/types";
 import { WeatherIcon } from "@/components/weather/WeatherIcon";
-import { windClassLabel, windStrengthLabel, precipitationColor } from "@/lib/wind-classifier";
+import { precipitationColor } from "@/lib/wind-classifier";
 import { classifySkiConditions, skiFeelsLike, snowCoverageIcon } from "@/lib/ski-conditions";
 import clsx from "clsx";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 interface Props {
   segment: WeatherSegment;
@@ -16,6 +17,7 @@ interface Props {
 
 export function SegmentCard({ segment: seg, isActive, sport, onClick }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (isActive) ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -44,14 +46,14 @@ export function SegmentCard({ segment: seg, isActive, sport, onClick }: Props) {
         borderLeft: `4px solid ${accentColor}`,
       }}
     >
-      {sport === "skiing" ? <SkiCard seg={seg} /> : <DefaultCard seg={seg} />}
+      {sport === "skiing" ? <SkiCard seg={seg} t={t} /> : <DefaultCard seg={seg} t={t} />}
     </div>
   );
 }
 
 // ─── Cycling / Running ──────────────────────────────────────────────────────
 
-function DefaultCard({ seg }: { seg: WeatherSegment }) {
+function DefaultCard({ seg, t }: { seg: WeatherSegment; t: ReturnType<typeof useLanguage>["t"] }) {
   const hasRain = seg.weather.precipitation > 0;
   const rainColor = precipitationColor(seg.weather.precipitation);
 
@@ -75,10 +77,10 @@ function DefaultCard({ seg }: { seg: WeatherSegment }) {
         </span>
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="text-xs font-semibold" style={{ color: seg.color }}>
-            {windClassLabel(seg.windClass)}
+            {t.wind[seg.windClass]}
           </span>
           <span className="text-xs text-gray-400">
-            {seg.weather.windSpeed.toFixed(1)} m/s · {windStrengthLabel(seg.windStrength)}
+            {seg.weather.windSpeed.toFixed(1)} m/s · {t.windStrength[seg.windStrength]}
           </span>
         </div>
         <WindArrow windFrom={seg.weather.windDirection} color={seg.color} />
@@ -87,7 +89,7 @@ function DefaultCard({ seg }: { seg: WeatherSegment }) {
       {hasRain && (
         <div className="flex items-center gap-1.5 text-xs">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: rainColor }} />
-          <span style={{ color: rainColor }}>{seg.weather.precipitation.toFixed(1)} mm/t</span>
+          <span style={{ color: rainColor }}>{seg.weather.precipitation.toFixed(1)} {t.segments.mmPerHour}</span>
         </div>
       )}
 
@@ -98,8 +100,9 @@ function DefaultCard({ seg }: { seg: WeatherSegment }) {
 
 // ─── Skiing ─────────────────────────────────────────────────────────────────
 
-function SkiCard({ seg }: { seg: WeatherSegment }) {
+function SkiCard({ seg, t }: { seg: WeatherSegment; t: ReturnType<typeof useLanguage>["t"] }) {
   const ski = classifySkiConditions(seg.weather);
+  const skiLabel = t.ski.label[ski.labelKey] + (ski.freshSnow ? ` – ${t.ski.freshSnow}` : "");
   const feelsLike = skiFeelsLike(seg.weather.temperature, seg.weather.windSpeed);
   const snowIcon = snowCoverageIcon(seg.weather.symbolCode, seg.weather.temperature);
   const isSnowing = seg.weather.precipitation > 0 && seg.weather.temperature < 2;
@@ -122,12 +125,12 @@ function SkiCard({ seg }: { seg: WeatherSegment }) {
             {Math.round(seg.weather.temperature)}°
           </span>
           {feelsLike !== seg.weather.temperature && (
-            <span className="text-xs text-gray-400">Feels like {feelsLike}°</span>
+            <span className="text-xs text-gray-400">{t.segments.feelsLike}{feelsLike}°</span>
           )}
         </div>
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="text-xs font-semibold" style={{ color: ski.color }}>
-            {ski.label}
+            {skiLabel}
           </span>
           <span className="text-xs text-gray-400">
             💨 {seg.weather.windSpeed.toFixed(1)} m/s
@@ -136,15 +139,15 @@ function SkiCard({ seg }: { seg: WeatherSegment }) {
       </div>
 
       <div className="text-xs bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1.5">
-        <span className="text-gray-400">Wax: </span>
-        <span className="text-gray-700 font-medium">{ski.waxHint}</span>
+        <span className="text-gray-400">{t.segments.wax}</span>
+        <span className="text-gray-700 font-medium">{t.ski.wax[ski.waxHintKey]}</span>
       </div>
 
       {seg.weather.precipitation > 0 && (
         <div className="flex items-center gap-1.5 text-xs">
           <span>{isSnowing ? "❄️" : "🌧️"}</span>
           <span className={isSnowing ? "text-blue-500" : "text-blue-400"}>
-            {isSnowing ? "Snow" : "Rain"} {seg.weather.precipitation.toFixed(1)} mm/h
+            {isSnowing ? t.segments.snow : t.segments.rain} {seg.weather.precipitation.toFixed(1)} {t.segments.mmPerHour}
           </span>
         </div>
       )}

@@ -4,13 +4,8 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { SportType, UploadResponse } from "@/types";
 import { MobileUploadGuide } from "@/components/route/MobileUploadGuide";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import clsx from "clsx";
-
-const UPLOAD_SPORTS: { id: SportType; label: string; emoji: string }[] = [
-  { id: "cycling", label: "Cycling", emoji: "🚴" },
-  { id: "running", label: "Hiking · Running", emoji: "🥾" },
-  { id: "skiing", label: "Cross Country", emoji: "⛷️" },
-];
 
 const BOX_SPORT_SYMBOLS = ["🏃", "🚴", "🥾", "⛷️"];
 
@@ -20,6 +15,12 @@ interface Props {
 
 export function RouteImporter({ onSuccess }: Props) {
   const router = useRouter();
+  const { t } = useLanguage();
+  const UPLOAD_SPORTS: { id: SportType; label: string; emoji: string }[] = [
+    { id: "cycling", label: t.sport.cycling, emoji: "🚴" },
+    { id: "running", label: t.sport.hikingRunning, emoji: "🥾" },
+    { id: "skiing", label: t.sport.crossCountry, emoji: "⛷️" },
+  ];
   const [sport, setSport] = useState<SportType>("cycling");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -61,10 +62,10 @@ export function RouteImporter({ onSuccess }: Props) {
         }
       } catch (err) {
         setStatus("error");
-        setErrorMsg(err instanceof Error ? err.message : "Unknown error");
+        setErrorMsg(err instanceof Error ? err.message : t.importer.unknownError);
       }
     },
-    [router, onSuccess, sport]
+    [router, onSuccess, sport, t]
   );
 
   // Staging a file just holds it locally — the actual upload only fires once
@@ -74,13 +75,13 @@ export function RouteImporter({ onSuccess }: Props) {
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (!ext || !["gpx", "tcx", "fit"].includes(ext)) {
       setStatus("error");
-      setErrorMsg("Only GPX, TCX, and FIT files are supported");
+      setErrorMsg(t.importer.onlySupported);
       return;
     }
     setStatus("idle");
     setErrorMsg(null);
     setPendingFile(file);
-  }, []);
+  }, [t]);
 
   return (
     <div className="w-full max-w-md space-y-3">
@@ -102,20 +103,20 @@ export function RouteImporter({ onSuccess }: Props) {
               📄 {pendingFile.name}
             </p>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-400">Click or drop to choose a different file</p>
+              <p className="text-xs text-gray-400">{t.importer.clickToChangeFile}</p>
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetFile(); }}
                 className="text-xs text-gray-400 underline hover:text-gray-600"
               >
-                Clear
+                {t.importer.clear}
               </button>
             </div>
           </>
         ) : (
           <>
-            <p className="text-gray-800 font-medium text-xs text-center max-w-xs">
-              Drop your GPX/TCX/FIT file here to check weather conditions along the way
+            <p className="text-sm text-gray-500 text-center max-w-xs">
+              {t.importer.orDropHint}
             </p>
             <div className="flex items-center gap-2 text-base">
               {BOX_SPORT_SYMBOLS.map((emoji) => (
@@ -136,7 +137,7 @@ export function RouteImporter({ onSuccess }: Props) {
       {pendingFile && (
         <div className="space-y-3">
           <p className="text-sm text-gray-500 text-center">
-            Pick your activity. It adjusts the pace slider and other map features, like weather timing and ski wax tips.
+            {t.importer.pickActivity}
           </p>
 
           <div className="flex gap-1 bg-gray-100 rounded-xl p-1 text-sm border border-gray-200">
@@ -164,7 +165,7 @@ export function RouteImporter({ onSuccess }: Props) {
             disabled={status === "uploading"}
             className="w-full bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-60"
           >
-            {status === "uploading" ? "Uploading…" : "Confirm activity →"}
+            {status === "uploading" ? t.importer.uploading : t.importer.confirmActivity}
           </button>
         </div>
       )}
@@ -175,7 +176,7 @@ export function RouteImporter({ onSuccess }: Props) {
 
       {status === "saved" && (
         <p className="text-center text-green-600 text-sm font-medium">
-          Route saved — find it in your saved routes above.
+          {t.importer.routeSaved}
         </p>
       )}
       {status === "error" && errorMsg && (

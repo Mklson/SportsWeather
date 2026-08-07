@@ -1,5 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      // Old default Vercel domain and the secondary aeroute.online brand
+      // domain both fold into the one canonical aeroute.no URL instead of
+      // serving duplicate content. The aeroute.no <-> www.aeroute.no pairing
+      // is handled by Vercel's own domain-redirect setting, not here — doing
+      // it in both places risks an infinite redirect loop if they ever
+      // disagree on direction.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "sports-weather.vercel.app" }],
+        destination: "https://aeroute.no/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "aeroute.online" }],
+        destination: "https://aeroute.no/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.aeroute.online" }],
+        destination: "https://aeroute.no/:path*",
+        permanent: true,
+      },
+    ];
+  },
   experimental: {
     serverComponentsExternalPackages: ["xml2js", "fit-file-parser"],
   },

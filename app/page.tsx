@@ -131,7 +131,7 @@ export default async function HomePage({
         <p className="text-xs text-gray-400 text-center max-w-xs">
           {t.front.cookieNotice}
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+        <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
           <AboutDeveloper />
           <span className="text-gray-300">·</span>
           <FeedbackButton variant="link" />

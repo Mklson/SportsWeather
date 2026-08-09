@@ -113,6 +113,7 @@ const no = {
   },
   feedback: {
     buttonLabel: "Gi tilbakemelding",
+    shortLabel: "Tilbakemelding",
     ariaLabel: "Tilbakemelding",
     title: "Gi tilbakemelding",
     intro: "Har du forslag til forbedringer, eller funnet en feil? Send meg en beskjed.",
@@ -525,6 +526,7 @@ const en: typeof no = {
   },
   feedback: {
     buttonLabel: "Send feedback",
+    shortLabel: "Feedback",
     ariaLabel: "Feedback",
     title: "Send feedback",
     intro: "Got a suggestion for improvement, or found a bug? Send me a message.",

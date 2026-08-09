@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/Modal";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
-type Status = "idle" | "sending" | "sent" | "error";
+type Status = "idle" | "sending" | "sent" | "error" | "rateLimited";
 
 interface Props {
   variant?: "icon" | "link";
@@ -33,6 +33,10 @@ export function FeedbackButton({ variant = "icon" }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
       });
+      if (res.status === 429) {
+        setStatus("rateLimited");
+        return;
+      }
       if (!res.ok) throw new Error();
       setStatus("sent");
       setMessage("");
@@ -79,6 +83,9 @@ export function FeedbackButton({ variant = "icon" }: Props) {
             />
             {status === "error" && (
               <p className="text-sm text-red-600">{t.feedback.error}</p>
+            )}
+            {status === "rateLimited" && (
+              <p className="text-sm text-red-600">{t.feedback.rateLimited}</p>
             )}
             <button
               type="submit"

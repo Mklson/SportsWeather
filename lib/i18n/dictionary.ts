@@ -121,6 +121,7 @@ const no = {
     sending: "Sender…",
     sent: "Takk! Meldingen din er sendt.",
     error: "Kunne ikke sende meldingen. Prøv igjen.",
+    rateLimited: "For mange meldinger sendt nylig. Prøv igjen om litt.",
   },
   notFound: {
     title: "Fant ikke ruten",
@@ -532,6 +533,7 @@ const en: typeof no = {
     sending: "Sending…",
     sent: "Thanks! Your message has been sent.",
     error: "Could not send the message. Please try again.",
+    rateLimited: "Too many messages sent recently. Please try again in a bit.",
   },
   notFound: {
     title: "Route not found",

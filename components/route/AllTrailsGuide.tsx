@@ -30,6 +30,10 @@ export function AllTrailsGuide() {
       <Modal open={open} onClose={() => setOpen(false)} title={t.guides.allTrails.title}>
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
+            {t.guides.allTrails.description}
+          </p>
+
+          <p className="text-sm text-gray-500">
             {t.guides.allTrails.intro}
           </p>
 

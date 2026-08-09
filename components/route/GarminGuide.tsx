@@ -31,6 +31,10 @@ export function GarminGuide() {
       <Modal open={open} onClose={() => setOpen(false)} title={t.guides.garmin.title}>
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
+            {t.guides.garmin.description}
+          </p>
+
+          <p className="text-sm text-gray-500">
             {t.guides.garmin.intro}
           </p>
 

@@ -37,6 +37,10 @@ export function UTNoGuide() {
       <Modal open={open} onClose={() => setOpen(false)} title={t.guides.utNo.title}>
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
+            {t.guides.utNo.description}
+          </p>
+
+          <p className="text-sm text-gray-500">
             {t.guides.utNo.intro}
           </p>
 

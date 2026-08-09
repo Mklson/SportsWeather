@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { SportType, UploadResponse } from "@/types";
-import { MobileUploadGuide } from "@/components/route/MobileUploadGuide";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import clsx from "clsx";
 
@@ -169,10 +168,6 @@ export function RouteImporter({ onSuccess }: Props) {
           </button>
         </div>
       )}
-
-      <div className="text-center">
-        <MobileUploadGuide />
-      </div>
 
       {status === "saved" && (
         <p className="text-center text-green-600 text-sm font-medium">

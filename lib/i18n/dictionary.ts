@@ -232,7 +232,7 @@ const no = {
   importer: {
     onlySupported: "Kun GPX-, TCX- og FIT-filer støttes",
     dropHint: "Last opp GPX/TCX/FIT-filen din her",
-    orDropHint: "Eller last opp GPX/TCX/FIT-filen din her",
+    orDropHint: "Last opp GPX/TCX/FIT-filen din her",
     clickToChangeFile: "Klikk eller slipp for å velge en annen fil",
     clear: "Fjern",
     pickActivity: "Velg aktivitet. Det justerer fartsslideren og andre kartfunksjoner, som værtiming og smøretips.",
@@ -243,6 +243,7 @@ const no = {
   },
   guides: {
     strava: {
+      description: "Strava er en treningsapp der du logger og deler økter innen løping, sykling og mer.",
       manualSteps: [
         "Åpne aktiviteten på strava.com",
         "Klikk «⋯» → «Eksporter GPX»",
@@ -256,6 +257,7 @@ const no = {
       openDashboard: "Åpne Strava dashboard ↗",
     },
     garmin: {
+      description: "Garmin Connect er Garmins plattform for å synkronisere og se aktiviteter fra klokken eller sykkelcomputeren din.",
       steps: [
         "Åpne aktiviteten i Garmin Connect",
         "Klikk «⋯» → «Eksporter til GPX»",
@@ -268,6 +270,7 @@ const no = {
       openConnect: "Åpne Garmin Connect ↗",
     },
     allTrails: {
+      description: "AllTrails er en app for å finne turstier, med kart og anmeldelser for turer over hele verden.",
       steps: [
         "Åpne turen i AllTrails",
         "Klikk «Download» → «GPX»",
@@ -280,6 +283,7 @@ const no = {
       openAllTrails: "Åpne AllTrails ↗",
     },
     utNo: {
+      description: "UT.no er en norsk side for å finne turer, med et søkbart kart over turstier og skiløyper.",
       steps: [
         "Finn en tur på UT.no sitt kart",
         "Last ned den som GPX",
@@ -289,22 +293,6 @@ const no = {
       title: "🥾 Finn en rute på UT.no",
       intro: "UT.no har rutesøk innebygd i sitt eget kart. Finn en tur der, last den ned som GPX, og ta den med hit.",
       openMap: "Åpne UT.no-kartet ↗",
-    },
-    mobileUpload: {
-      linkLabel: "GPX/TCX/FIT: slik gjør du det",
-      title: "Laste opp en rutefil fra telefonen",
-      iphone: "📱 iPhone",
-      android: "🤖 Android",
-      stepsIphone: [
-        "Eksporter ruten som GPX/TCX/FIT fra appen din",
-        "Trykk «Del» og velg «Lagre i Filer»",
-        "Kom tilbake hit og last opp filen fra Filer",
-      ],
-      stepsAndroid: [
-        "Eksporter ruten som GPX/TCX/FIT fra appen din",
-        "Last den ned til «Nedlastinger»",
-        "Kom tilbake hit og last opp filen",
-      ],
     },
   },
   mobileBar: {
@@ -655,7 +643,7 @@ const en: typeof no = {
   importer: {
     onlySupported: "Only GPX, TCX, and FIT files are supported",
     dropHint: "Drop your GPX/TCX/FIT file here",
-    orDropHint: "Or drop your GPX/TCX/FIT file here",
+    orDropHint: "Drop your GPX/TCX/FIT file here",
     clickToChangeFile: "Click or drop to choose a different file",
     clear: "Clear",
     pickActivity: "Pick your activity. It adjusts the pace slider and other map features, like weather timing and ski wax tips.",
@@ -666,6 +654,7 @@ const en: typeof no = {
   },
   guides: {
     strava: {
+      description: "Strava is a fitness app for logging and sharing activities like running and cycling.",
       manualSteps: [
         "Open the activity on strava.com",
         "Click «⋯» → «Export GPX»",
@@ -679,6 +668,7 @@ const en: typeof no = {
       openDashboard: "Open Strava dashboard ↗",
     },
     garmin: {
+      description: "Garmin Connect is Garmin's platform for syncing and reviewing activities from your watch or bike computer.",
       steps: [
         "Open the activity in Garmin Connect",
         "Click «⋯» → «Export to GPX»",
@@ -691,6 +681,7 @@ const en: typeof no = {
       openConnect: "Open Garmin Connect ↗",
     },
     allTrails: {
+      description: "AllTrails is a trail-discovery app with maps and reviews for hikes worldwide.",
       steps: [
         "Open the trail in AllTrails",
         "Click «Download» → «GPX»",
@@ -703,6 +694,7 @@ const en: typeof no = {
       openAllTrails: "Open AllTrails ↗",
     },
     utNo: {
+      description: "UT.no is a Norwegian site for finding trips, with a searchable map of hiking and ski trails.",
       steps: [
         "Find a trip on UT.no's map",
         "Download it as GPX",
@@ -712,22 +704,6 @@ const en: typeof no = {
       title: "🥾 Find a route on UT.no",
       intro: "UT.no has route search built into its own map. Find a trip there, download it as a GPX, then bring it back here.",
       openMap: "Open UT.no map ↗",
-    },
-    mobileUpload: {
-      linkLabel: "GPX/TCX/FIT: how to",
-      title: "Uploading a route file from your phone",
-      iphone: "📱 iPhone",
-      android: "🤖 Android",
-      stepsIphone: [
-        "Export the route as GPX/TCX/FIT from your app",
-        "Tap «Share» and choose «Save to Files»",
-        "Come back here and upload the file from Files",
-      ],
-      stepsAndroid: [
-        "Export the route as GPX/TCX/FIT from your app",
-        "Download it to «Downloads»",
-        "Come back here and upload the file",
-      ],
     },
   },
   mobileBar: {

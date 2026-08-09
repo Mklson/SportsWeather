@@ -30,6 +30,10 @@ export function StravaGuide() {
       <Modal open={open} onClose={() => setOpen(false)} title={t.guides.strava.title}>
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
+            {t.guides.strava.description}
+          </p>
+
+          <p className="text-sm text-gray-500">
             {t.guides.strava.betaNotice}
           </p>
 

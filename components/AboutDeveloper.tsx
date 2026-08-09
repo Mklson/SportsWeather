@@ -13,7 +13,7 @@ export function AboutDeveloper() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+        className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors whitespace-nowrap"
       >
         {t.front.aboutDeveloper}
       </button>

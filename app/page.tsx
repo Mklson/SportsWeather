@@ -131,16 +131,16 @@ export default async function HomePage({
         <p className="text-xs text-gray-400 text-center max-w-xs">
           {t.front.cookieNotice}
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
           <AboutDeveloper />
           <span className="text-gray-300">·</span>
           <FeedbackButton variant="link" />
           <span className="text-gray-300">·</span>
-          <Link href="/personvern" className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors">
+          <Link href="/personvern" className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors whitespace-nowrap">
             {t.front.personvern}
           </Link>
           <span className="text-gray-300">·</span>
-          <Link href="/login?next=/admin" className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors">
+          <Link href="/login?next=/admin" className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors whitespace-nowrap">
             {t.front.admin}
           </Link>
         </div>

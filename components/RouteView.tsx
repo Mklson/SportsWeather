@@ -60,6 +60,8 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
   const [mapBounds, setMapBounds] = useState<{ west: number; south: number; east: number; north: number } | null>(null);
   const [cleared, setCleared] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  // Vertical pointer on the Oversikt chart — mirrored as a dot on the map.
+  const [pointerSegment, setPointerSegment] = useState<WeatherSegment | null>(null);
 
   async function handleSave() {
     setSaveState("saving");
@@ -270,6 +272,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             onStravaSegmentClick={handleStravaSegmentClick}
             onBoundsChange={handleBoundsChange}
             reversed={reversed}
+            pointerCoordinate={pointerSegment?.coordinate ?? null}
           />
         </div>
         <MobileControlBar
@@ -290,6 +293,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
           onToggleStarredOnly={handleToggleStarredOnly}
           starredCount={starredCount}
           totalCount={stravaSegments.length}
+          onOverviewPointerChange={setPointerSegment}
         />
         </div>
       </div>
@@ -309,6 +313,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             onStravaSegmentClick={handleStravaSegmentClick}
             onBoundsChange={handleBoundsChange}
             reversed={reversed}
+            pointerCoordinate={pointerSegment?.coordinate ?? null}
           />
         </div>
         <aside className="w-80 flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
@@ -378,7 +383,7 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
             {/* Route overview chart */}
             <div className="border-b border-gray-200 bg-white">
               <p className="px-4 pt-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.overview.title}</p>
-              <RouteOverviewChart segments={segments} />
+              <RouteOverviewChart segments={segments} onPointerChange={setPointerSegment} />
             </div>
 
             {/* Legend */}

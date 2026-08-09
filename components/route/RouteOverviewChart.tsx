@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { WeatherSegment } from "@/types";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { getDictionary } from "@/lib/i18n/dictionary";
@@ -31,7 +31,12 @@ function compassLabel(deg: number, t: ReturnType<typeof getDictionary>): string 
   return t.overview.compass[COMPASS_DIRS[idx]];
 }
 
-export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] }) {
+interface Props {
+  segments: WeatherSegment[];
+  onPointerChange?: (segment: WeatherSegment | null) => void;
+}
+
+export function RouteOverviewChart({ segments, onPointerChange }: Props) {
   const { t } = useLanguage();
   const svgRef = useRef<SVGSVGElement>(null);
   const [pointerPct, setPointerPct] = useState<number | null>(null);
@@ -110,6 +115,14 @@ export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] })
     }
     return { km, segment: nearest };
   }, [pointerPct, chart, segments]);
+
+  // Mirror the pointer up to the parent (so the map can show a matching dot) and
+  // clear it on unmount — the mobile sheet unmounts this component when the user
+  // switches to a different panel, which should also drop the map marker.
+  useEffect(() => {
+    onPointerChange?.(pointer?.segment ?? null);
+    return () => onPointerChange?.(null);
+  }, [pointer, onPointerChange]);
 
   function updatePointer(clientX: number) {
     const svg = svgRef.current;

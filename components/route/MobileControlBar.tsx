@@ -45,6 +45,7 @@ interface Props {
   onToggleStarredOnly: () => void;
   starredCount: number;
   totalCount: number;
+  onOverviewPointerChange?: (segment: WeatherSegment | null) => void;
 }
 
 export function MobileControlBar({
@@ -65,6 +66,7 @@ export function MobileControlBar({
   onToggleStarredOnly,
   starredCount,
   totalCount,
+  onOverviewPointerChange,
 }: Props) {
   const { t, lang } = useLanguage();
   const dateLocale = lang === "no" ? nb : enUS;
@@ -217,7 +219,7 @@ export function MobileControlBar({
             {openPanel === "conditions" ? (
               <ConditionsPanel segments={weatherSegments} />
             ) : openPanel === "overview" ? (
-              <RouteOverviewChart segments={weatherSegments} />
+              <RouteOverviewChart segments={weatherSegments} onPointerChange={onOverviewPointerChange} />
             ) : (
               <SegmentsPanel
                 stravaConnected={stravaConnected}

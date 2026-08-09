@@ -62,6 +62,7 @@ interface Props {
   onBoundsChange?: (bounds: { west: number; south: number; east: number; north: number }) => void;
   reversed?: boolean;
   showRoute?: boolean;
+  pointerCoordinate?: { lat: number; lon: number } | null;
 }
 
 export function RouteMap({
@@ -76,6 +77,7 @@ export function RouteMap({
   onBoundsChange,
   reversed = false,
   showRoute = true,
+  pointerCoordinate = null,
 }: Props) {
   const { t } = useLanguage();
   const [basemap, setBasemap] = useState<Basemap>("outdoors");
@@ -90,6 +92,7 @@ export function RouteMap({
   const popupRef           = useRef<mapboxgl.Popup | null>(null);
   const wxMarkersRef       = useRef<mapboxgl.Marker[]>([]);
   const stravaMarkersRef   = useRef<mapboxgl.Marker[]>([]);
+  const pointerMarkerRef   = useRef<mapboxgl.Marker | null>(null);
   const pendingRef         = useRef<(() => void) | null>(null);
 
   // Latest-value refs so style-reload callbacks see current props without deps
@@ -132,6 +135,8 @@ export function RouteMap({
         r.current.forEach((m) => m.remove());
         r.current = [];
       });
+      pointerMarkerRef.current?.remove();
+      pointerMarkerRef.current = null;
     }
     // Remove any orphaned Mapbox canvas that map.remove() may have missed
     containerRef.current.querySelectorAll(".mapboxgl-canvas-container").forEach((el) => el.remove());
@@ -358,6 +363,32 @@ export function RouteMap({
     );
     map.fitBounds(bounds, { padding: 80, duration: 600, maxZoom: 16 });
   }, [activeStravaSegmentId, stravaSegments, route.coordinates]);
+
+  // ── Dot marker mirroring the Oversikt chart's vertical pointer ──────────
+  // No flyTo/popup here (unlike the active-segment effect below) — this fires
+  // continuously while the user drags the chart, and panning the map along
+  // with it would fight the gesture.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) return;
+
+    if (!pointerCoordinate) {
+      pointerMarkerRef.current?.remove();
+      pointerMarkerRef.current = null;
+      return;
+    }
+
+    if (!pointerMarkerRef.current) {
+      const el = document.createElement("div");
+      el.style.cssText =
+        "width:14px;height:14px;border-radius:9999px;background:#111827;" +
+        "border:2.5px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);pointer-events:none;";
+      pointerMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" });
+    }
+    pointerMarkerRef.current
+      .setLngLat([pointerCoordinate.lon, pointerCoordinate.lat])
+      .addTo(map);
+  }, [pointerCoordinate]);
 
   // ── Fly + popup on active segment ──────────────────────────────────────
   useEffect(() => {

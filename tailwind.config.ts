@@ -26,6 +26,8 @@ const config: Config = {
           "green-dark": "#2e7d32",
           "green-soft": "#eaf6ea",
           "green-border": "#bfe3c0",
+          cream: "#faf3e0",
+          "cream-border": "#e6d9a8",
         },
       },
       fontFamily: {

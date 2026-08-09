@@ -325,6 +325,9 @@ const no = {
     wind: "Vind",
     km: "km",
     noData: "Ingen værdata ennå for denne ruten.",
+    tapHint: "Trykk på grafen for å se detaljer",
+    closePointer: "Skjul detaljer",
+    compass: { n: "N", ne: "NØ", e: "Ø", se: "SØ", s: "S", sw: "SV", w: "V", nw: "NV" },
   },
   segments: {
     connectStrava: "Koble til Strava fra din side for å se segmenter langs ruten",
@@ -748,6 +751,9 @@ const en: typeof no = {
     wind: "Wind",
     km: "km",
     noData: "No weather data yet for this route.",
+    tapHint: "Tap the chart for details",
+    closePointer: "Hide details",
+    compass: { n: "N", ne: "NE", e: "E", se: "SE", s: "S", sw: "SW", w: "W", nw: "NW" },
   },
   segments: {
     connectStrava: "Connect to Strava from your dashboard to see segments along the route",

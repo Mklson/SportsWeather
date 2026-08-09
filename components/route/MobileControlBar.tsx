@@ -298,12 +298,12 @@ function BarButton({
       onClick={onClick}
       style={{ touchAction: "manipulation" }}
       className={clsx(
-        "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-center transition-colors min-w-0",
+        "flex flex-col items-center justify-start gap-0.5 py-1.5 rounded-xl text-center transition-colors min-w-0",
         active ? "bg-brand-green-soft text-brand-green-dark" : "active:bg-gray-100 text-gray-600"
       )}
     >
-      <span className="text-base leading-none">{icon}</span>
       <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400 truncate w-full">{label}</span>
+      <span className="text-base leading-none">{icon}</span>
       <span className="text-xs font-bold tabular-nums truncate w-full">{value}</span>
       {subValue && (
         <span className="text-[10px] font-semibold tabular-nums truncate w-full leading-tight opacity-80">{subValue}</span>

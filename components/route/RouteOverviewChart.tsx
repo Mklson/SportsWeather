@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { WeatherSegment } from "@/types";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { getDictionary } from "@/lib/i18n/dictionary";
 
 // Internal coordinate system — the <svg> scales uniformly (no preserveAspectRatio
 // override) so these proportions hold at any container width without distorting
@@ -23,8 +24,17 @@ function niceStep(raw: number): number {
   return TICK_STEP_CANDIDATES.find((c) => c >= raw) ?? TICK_STEP_CANDIDATES[TICK_STEP_CANDIDATES.length - 1];
 }
 
+const COMPASS_DIRS = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
+
+function compassLabel(deg: number, t: ReturnType<typeof getDictionary>): string {
+  const idx = Math.round((((deg % 360) + 360) % 360) / 45) % 8;
+  return t.overview.compass[COMPASS_DIRS[idx]];
+}
+
 export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] }) {
   const { t } = useLanguage();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [pointerPct, setPointerPct] = useState<number | null>(null);
 
   const chart = useMemo(() => {
     if (segments.length === 0) return null;
@@ -83,8 +93,41 @@ export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] })
     const ticks: number[] = [];
     for (let km = 0; km <= totalKm + 0.001; km += tickStep) ticks.push(Math.round(km * 10) / 10);
 
-    return { totalKm, xOf, tempPoints, elePath, hasElevation, rainBars, arrows, ticks };
+    return { totalKm, xOf, yTemp, tempPoints, elePath, hasElevation, rainBars, arrows, ticks };
   }, [segments]);
+
+  const pointer = useMemo(() => {
+    if (pointerPct === null || !chart || segments.length === 0) return null;
+    const km = pointerPct * chart.totalKm;
+    let nearest = segments[0];
+    let best = Infinity;
+    for (const s of segments) {
+      const d = Math.abs((s.startKm + s.endKm) / 2 - km);
+      if (d < best) {
+        best = d;
+        nearest = s;
+      }
+    }
+    return { km, segment: nearest };
+  }, [pointerPct, chart, segments]);
+
+  function updatePointer(clientX: number) {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    if (rect.width === 0) return;
+    setPointerPct(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)));
+  }
+
+  function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updatePointer(e.clientX);
+  }
+
+  function handlePointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (e.buttons === 0) return;
+    updatePointer(e.clientX);
+  }
 
   if (!chart) {
     return (
@@ -96,7 +139,13 @@ export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] })
 
   return (
     <div className="px-3 py-3">
-      <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className="w-full h-auto block">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        className="w-full h-auto block touch-none"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+      >
         {chart.hasElevation && <path d={chart.elePath} fill="#a8a29e" opacity={0.45} />}
 
         {chart.rainBars.map((b, i) => (
@@ -130,7 +179,51 @@ export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] })
             {km}
           </text>
         ))}
+
+        {pointer && (
+          <g pointerEvents="none">
+            <line
+              x1={chart.xOf(pointer.km)}
+              x2={chart.xOf(pointer.km)}
+              y1={0}
+              y2={CHART_BOTTOM}
+              stroke="#111827"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+            <circle
+              cx={chart.xOf(pointer.km)}
+              cy={chart.yTemp(pointer.segment.weather.temperature)}
+              r={3.5}
+              fill="#ef4444"
+              stroke="white"
+              strokeWidth={1.5}
+            />
+          </g>
+        )}
       </svg>
+
+      {pointer ? (
+        <div className="flex items-center justify-between gap-2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-[11px] font-semibold text-gray-700">
+          <span className="tabular-nums text-gray-400 font-medium shrink-0">
+            {pointer.km.toFixed(1)} {t.overview.km}
+          </span>
+          <span className="tabular-nums">{Math.round(pointer.segment.weather.temperature)}°C</span>
+          <span className="tabular-nums">{pointer.segment.weather.precipitation.toFixed(1)} mm/h</span>
+          <span className="tabular-nums whitespace-nowrap">
+            {pointer.segment.weather.windSpeed.toFixed(1)} m/s {compassLabel(pointer.segment.weather.windDirection, t)}
+          </span>
+          <button
+            onClick={() => setPointerPct(null)}
+            aria-label={t.overview.closePointer}
+            className="shrink-0 text-gray-400 active:text-gray-600 font-normal"
+          >
+            ✕
+          </button>
+        </div>
+      ) : (
+        <p className="text-center text-[10px] text-gray-300 mt-1">{t.overview.tapHint}</p>
+      )}
 
       <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1 text-[10px] font-medium text-gray-500 mt-1">
         <LegendItem color="#ef4444" label={t.overview.temperature} />

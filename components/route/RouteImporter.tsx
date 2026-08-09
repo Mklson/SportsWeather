@@ -114,7 +114,7 @@ export function RouteImporter({ onSuccess }: Props) {
           </>
         ) : (
           <>
-            <p className="text-sm text-gray-500 text-center max-w-xs">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide text-center max-w-xs">
               {t.importer.orDropHint}
             </p>
             <div className="flex items-center gap-2 text-base">

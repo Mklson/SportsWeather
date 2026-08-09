@@ -34,11 +34,15 @@ const no = {
   front: {
     intro1: "Se vind, nedbør og temperatur langs ruten din.",
     intro2: "Planlegg det perfekte tidspunktet — sykling, løping, tur eller ski.",
+    weatherSource: "Værdata fra {{yrLink}}.",
     importFrom: "Importer en rute fra",
     createAccountText: "Opprett en gratis konto for å lagre rutene dine og finne dem igjen fra din side når som helst.",
     cookieNotice: "Vi bruker kun nødvendige informasjonskapsler for å holde deg innlogget — ingen sporing eller analyse.",
     personvern: "Personvern",
     admin: "Admin",
+    aboutDeveloper: "Om utvikleren",
+    aboutDeveloperTitle: "Om utvikleren",
+    aboutDeveloperText: "Jeg er pappa og bor i Norge, og elsker å være ute i naturen — løping, tur, svømming, sykling og ski, rett og slett det meste. Å planlegge etter været er en viktig del av det, spesielt når jeg er ute med familien. Det var akkurat den kombinasjonen — gleden ved friluftsliv og behovet for å planlegge etter forholdene — som ga meg inspirasjonen og motivasjonen til å lage AEROUTE.",
     sampleRoute: "Prøv en eksempelrute",
     stravaErrors: {
       denied: "Du avbrøt tilkoblingen til Strava.",
@@ -106,6 +110,17 @@ const no = {
   dashboard: {
     savedRoutes: "Lagrede ruter",
     addRoute: "Legg til en rute",
+  },
+  feedback: {
+    buttonLabel: "Gi tilbakemelding",
+    ariaLabel: "Tilbakemelding",
+    title: "Gi tilbakemelding",
+    intro: "Har du forslag til forbedringer, eller funnet en feil? Send meg en beskjed.",
+    placeholder: "Skriv tilbakemeldingen din her…",
+    send: "Send",
+    sending: "Sender…",
+    sent: "Takk! Meldingen din er sendt.",
+    error: "Kunne ikke sende meldingen. Prøv igjen.",
   },
   notFound: {
     title: "Fant ikke ruten",
@@ -442,11 +457,15 @@ const en: typeof no = {
   front: {
     intro1: "See wind, rain, and temperature along your route.",
     intro2: "Plan the perfect time to go — cycling, running, hiking, or skiing.",
+    weatherSource: "Weather data from {{yrLink}}.",
     importFrom: "Import a route from",
     createAccountText: "Create a free account to save your routes and find them anytime from your dashboard.",
     cookieNotice: "We only use essential cookies to keep you logged in — no tracking or analytics.",
     personvern: "Privacy",
     admin: "Admin",
+    aboutDeveloper: "About the developer",
+    aboutDeveloperTitle: "About the developer",
+    aboutDeveloperText: "I'm a father living in Norway, and I love being outdoors — running, hiking, swimming, cycling, skiing, pretty much all of it. Planning around the weather is a big part of that, especially when I'm out with my family. That combination — the love of being in nature and the need to plan around the conditions — is what gave me the inspiration and motivation to build AEROUTE.",
     sampleRoute: "Try a sample route",
     stravaErrors: {
       denied: "You cancelled the Strava connection.",
@@ -514,6 +533,17 @@ const en: typeof no = {
   dashboard: {
     savedRoutes: "Saved routes",
     addRoute: "Add a route",
+  },
+  feedback: {
+    buttonLabel: "Send feedback",
+    ariaLabel: "Feedback",
+    title: "Send feedback",
+    intro: "Got a suggestion for improvement, or found a bug? Send me a message.",
+    placeholder: "Write your feedback here…",
+    send: "Send",
+    sending: "Sending…",
+    sent: "Thanks! Your message has been sent.",
+    error: "Could not send the message. Please try again.",
   },
   notFound: {
     title: "Route not found",

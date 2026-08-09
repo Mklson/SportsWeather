@@ -8,6 +8,7 @@ import { StravaGuide } from "@/components/route/StravaGuide";
 import { AllTrailsGuide } from "@/components/route/AllTrailsGuide";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { AboutDeveloper } from "@/components/AboutDeveloper";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDictionary, interpolate, type Lang } from "@/lib/i18n/dictionary";
@@ -39,6 +40,8 @@ export default async function HomePage({
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  const [weatherSourcePre, weatherSourcePost] = t.front.weatherSource.split("{{yrLink}}");
+
   const featuredRouteIds = await getFeaturedRouteIds();
   const featuredRoutes = (
     await Promise.all(featuredRouteIds.map((id) => getRoute(id)))
@@ -58,6 +61,18 @@ export default async function HomePage({
         {t.front.intro1}
         <br />
         {t.front.intro2}
+      </p>
+      <p className="text-xs text-gray-400 text-center max-w-lg -mt-6">
+        {weatherSourcePre}
+        <a
+          href="https://www.yr.no"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-500"
+        >
+          yr.no
+        </a>
+        {weatherSourcePost}
       </p>
 
       {errorMsg && (
@@ -116,6 +131,8 @@ export default async function HomePage({
           {t.front.cookieNotice}
         </p>
         <div className="flex items-center gap-3">
+          <AboutDeveloper />
+          <span className="text-gray-200">·</span>
           <Link href="/personvern" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
             {t.front.personvern}
           </Link>

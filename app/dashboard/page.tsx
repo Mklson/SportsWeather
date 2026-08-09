@@ -7,6 +7,7 @@ import { SavedRoutes } from "@/components/SavedRoutes";
 import { DashboardRouteImporter } from "@/components/DashboardRouteImporter";
 import Image from "next/image";
 import { LogoutButton } from "@/components/LogoutButton";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { getDictionary, type Lang } from "@/lib/i18n/dictionary";
 
 export default async function DashboardPage() {
@@ -34,6 +35,7 @@ export default async function DashboardPage() {
           <span className="text-white text-sm font-semibold hidden sm:block truncate max-w-[200px]">
             {user.email}
           </span>
+          <FeedbackButton />
           <LogoutButton />
         </div>
       </header>

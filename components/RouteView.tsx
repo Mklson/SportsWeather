@@ -38,11 +38,13 @@ interface Props {
   backHref?: string;
   initialSegments?: WeatherSegment[];
   canSave?: boolean;
+  initialStartTime?: Date;
 }
 
-export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, stravaConnected = false, backHref = "/", initialSegments, canSave = false }: Props) {
+export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, stravaConnected = false, backHref = "/", initialSegments, canSave = false, initialStartTime }: Props) {
   const { t } = useLanguage();
   const [startTime, setStartTime] = useState<Date>(() => {
+    if (initialStartTime) return initialStartTime;
     const d = new Date();
     d.setMinutes(0, 0, 0);
     return d;
@@ -66,7 +68,10 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
 
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
   async function handleShare() {
-    const url = window.location.href;
+    const shareUrl = new URL(window.location.href);
+    shareUrl.searchParams.set("speedKmh", String(speedKmh));
+    shareUrl.searchParams.set("startTime", startTime.toISOString());
+    const url = shareUrl.toString();
     if (navigator.share) {
       try {
         await navigator.share({ title: route.name, url });

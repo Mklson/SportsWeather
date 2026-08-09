@@ -8,7 +8,7 @@ import type { SportType } from "@/types";
 
 interface Props {
   params: { id: string };
-  searchParams: { sport?: string };
+  searchParams: { sport?: string; speedKmh?: string; startTime?: string };
 }
 
 export default async function RoutePage({ params, searchParams }: Props) {
@@ -20,6 +20,12 @@ export default async function RoutePage({ params, searchParams }: Props) {
     (route.sport && validSports.includes(route.sport) ? route.sport : null) ??
     (validSports.includes(searchParams.sport as SportType) ? (searchParams.sport as SportType) : null) ??
     "cycling";
+
+  const sharedSpeedKmh = searchParams.speedKmh ? Number(searchParams.speedKmh) : NaN;
+  const initialSpeedKmh = Number.isFinite(sharedSpeedKmh) ? sharedSpeedKmh : (route.default_speed_kmh ?? undefined);
+
+  const sharedStartTime = searchParams.startTime ? new Date(searchParams.startTime) : undefined;
+  const initialStartTime = sharedStartTime && !isNaN(sharedStartTime.getTime()) ? sharedStartTime : undefined;
 
   const stravaConnected = !!(
     cookies().get("strava_access_token")?.value ||
@@ -49,7 +55,8 @@ export default async function RoutePage({ params, searchParams }: Props) {
         sport: route.sport ?? undefined,
       }}
       initialSport={sport}
-      initialSpeedKmh={route.default_speed_kmh ?? undefined}
+      initialSpeedKmh={initialSpeedKmh}
+      initialStartTime={initialStartTime}
       stravaConnected={stravaConnected}
       backHref={backHref}
       canSave={canSave}

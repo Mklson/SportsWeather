@@ -416,6 +416,7 @@ const no = {
     loginWithStrava: "Logg inn med Strava",
     importFromStrava: "Importer fra Strava",
     disconnectStrava: "Koble fra Strava",
+    poweredByStrava: "Aktiviteter og ruter hentet med Strava API",
     routeType: {
       cycling: "Sykling",
       running: "Løping",
@@ -842,6 +843,7 @@ const en: typeof no = {
     loginWithStrava: "Log in with Strava",
     importFromStrava: "Import from Strava",
     disconnectStrava: "Disconnect Strava",
+    poweredByStrava: "Activities and routes fetched via the Strava API",
     routeType: {
       cycling: "Cycling",
       running: "Running",

@@ -38,6 +38,15 @@ export async function exchangeStravaCode(
   return res.json();
 }
 
+/** Revokes the app's grant on Strava's side — called on disconnect so the
+ *  athlete no longer shows AEROUTE as a connected app in their Strava settings. */
+export async function deauthorizeStrava(accessToken: string): Promise<void> {
+  const res = await fetch(`https://www.strava.com/oauth/deauthorize?access_token=${encodeURIComponent(accessToken)}`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`Strava deauthorize failed: ${res.status}`);
+}
+
 export async function refreshStravaToken(
   refreshToken: string
 ): Promise<{ access_token: string; refresh_token: string }> {

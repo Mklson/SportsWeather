@@ -104,7 +104,7 @@ export default async function StravaActivitiesPage({
 
   return (
     <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold text-gray-900">{t.stravaActivity.importFromStrava}</h1>
         <a
           href="/api/strava/logout"
@@ -113,6 +113,9 @@ export default async function StravaActivitiesPage({
           {t.stravaActivity.disconnectStrava}
         </a>
       </div>
+      <p className="text-xs font-medium mb-6" style={{ color: "#FC4C02" }}>
+        {t.stravaActivity.poweredByStrava}
+      </p>
       <StravaImportPage
         activities={activities.map((a) => ({
           id: a.id,

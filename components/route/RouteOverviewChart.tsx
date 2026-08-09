@@ -18,10 +18,23 @@ const CHART_H = CHART_BOTTOM - CHART_TOP;
 const MAX_ARROWS = 16;
 const RAIN_HEIGHT_FRACTION = 0.6; // cap rain bars short of full chart height so temp/elevation stay legible
 
+// Left margin for the temperature axis, right margin for the elevation axis —
+// the plot area sits between them. Precipitation doesn't get its own axis: a
+// third numeric scale on a chart this narrow would be unreadable, and its
+// exact value is already in the pointer readout.
+const PLOT_LEFT = 28;
+const PLOT_RIGHT = VIEW_W - 32;
+
 const TICK_STEP_CANDIDATES = [0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200];
 
 function niceStep(raw: number): number {
   return TICK_STEP_CANDIDATES.find((c) => c >= raw) ?? TICK_STEP_CANDIDATES[TICK_STEP_CANDIDATES.length - 1];
+}
+
+/** Evenly spaced axis ticks between lo/hi, rounded for display. */
+function axisTicks(lo: number, hi: number, count: number): number[] {
+  if (hi <= lo) return [Math.round(lo)];
+  return Array.from({ length: count }, (_, i) => Math.round(lo + ((hi - lo) * i) / (count - 1)));
 }
 
 const COMPASS_DIRS = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
@@ -45,7 +58,8 @@ export function RouteOverviewChart({ segments, onPointerChange }: Props) {
     if (segments.length === 0) return null;
 
     const totalKm = segments[segments.length - 1].endKm;
-    const xOf = (km: number) => (totalKm > 0 ? (km / totalKm) * VIEW_W : 0);
+    const xOf = (km: number) =>
+      totalKm > 0 ? PLOT_LEFT + (km / totalKm) * (PLOT_RIGHT - PLOT_LEFT) : PLOT_LEFT;
 
     const temps = segments.map((s) => s.weather.temperature);
     const minTemp = Math.min(...temps);
@@ -64,6 +78,11 @@ export function RouteOverviewChart({ segments, onPointerChange }: Props) {
 
     const maxPrec = Math.max(1, ...segments.map((s) => s.weather.precipitation));
     const yPrec = (p: number) => CHART_BOTTOM - (p / maxPrec) * CHART_H * RAIN_HEIGHT_FRACTION;
+
+    const tempTicks = axisTicks(tempLo, tempHi, 4).map((v) => ({ value: v, y: yTemp(v) }));
+    const eleTicks = hasElevation
+      ? axisTicks(minEle, maxEle, 3).map((v) => ({ value: v, y: yEle(v) }))
+      : [];
 
     const tempPoints = segments
       .map((s) => `${xOf((s.startKm + s.endKm) / 2)},${yTemp(s.weather.temperature)}`)
@@ -98,7 +117,7 @@ export function RouteOverviewChart({ segments, onPointerChange }: Props) {
     const ticks: number[] = [];
     for (let km = 0; km <= totalKm + 0.001; km += tickStep) ticks.push(Math.round(km * 10) / 10);
 
-    return { totalKm, xOf, yTemp, tempPoints, elePath, hasElevation, rainBars, arrows, ticks };
+    return { totalKm, xOf, yTemp, tempPoints, elePath, hasElevation, rainBars, arrows, ticks, tempTicks, eleTicks };
   }, [segments]);
 
   const pointer = useMemo(() => {
@@ -153,11 +172,14 @@ export function RouteOverviewChart({ segments, onPointerChange }: Props) {
   return (
     <div className="px-3 py-3">
       {pointer ? (
-        <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-[11px] font-semibold text-gray-700">
+        <div className="flex items-center justify-between flex-wrap gap-x-2 gap-y-1 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-[11px] font-semibold text-gray-700">
           <span className="tabular-nums text-gray-400 font-medium shrink-0">
             {pointer.km.toFixed(1)} {t.overview.km}
           </span>
           <span className="tabular-nums">{Math.round(pointer.segment.weather.temperature)}°C</span>
+          {pointer.segment.coordinate.ele !== undefined && (
+            <span className="tabular-nums">↑{Math.round(pointer.segment.coordinate.ele)} m</span>
+          )}
           <span className="tabular-nums">{pointer.segment.weather.precipitation.toFixed(1)} mm/h</span>
           <span className="tabular-nums whitespace-nowrap">
             {pointer.segment.weather.windSpeed.toFixed(1)} m/s {compassLabel(pointer.segment.weather.windDirection, t)}
@@ -215,11 +237,31 @@ export function RouteOverviewChart({ segments, onPointerChange }: Props) {
           </g>
         ))}
 
-        <line x1={0} y1={CHART_BOTTOM} x2={VIEW_W} y2={CHART_BOTTOM} stroke="#e5e7eb" strokeWidth={1} />
+        <line x1={PLOT_LEFT} y1={CHART_BOTTOM} x2={PLOT_RIGHT} y2={CHART_BOTTOM} stroke="#e5e7eb" strokeWidth={1} />
         {chart.ticks.map((km) => (
           <text key={km} x={chart.xOf(km)} y={VIEW_H - 5} fontSize={9} fill="#9ca3af" textAnchor="middle">
             {km}
           </text>
+        ))}
+
+        {/* Left axis: temperature (°C) */}
+        {chart.tempTicks.map((tick) => (
+          <g key={`t${tick.value}`}>
+            <line x1={PLOT_LEFT - 4} x2={PLOT_LEFT} y1={tick.y} y2={tick.y} stroke="#fca5a5" strokeWidth={1} />
+            <text x={PLOT_LEFT - 6} y={tick.y + 3} fontSize={8} fill="#ef4444" textAnchor="end">
+              {tick.value}°
+            </text>
+          </g>
+        ))}
+
+        {/* Right axis: elevation (m) */}
+        {chart.eleTicks.map((tick) => (
+          <g key={`e${tick.value}`}>
+            <line x1={PLOT_RIGHT} x2={PLOT_RIGHT + 4} y1={tick.y} y2={tick.y} stroke="#c4c0ba" strokeWidth={1} />
+            <text x={PLOT_RIGHT + 6} y={tick.y + 3} fontSize={8} fill="#a8a29e" textAnchor="start">
+              {tick.value}m
+            </text>
+          </g>
         ))}
 
         {pointer && (

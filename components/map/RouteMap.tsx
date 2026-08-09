@@ -718,8 +718,12 @@ function buildWindField(
   sport: SportType
 ): Array<{ lat: number; lon: number; seg: WeatherSegment }> {
   // Running/hiking and cross-country routes are typically shorter than cycling
-  // routes, so the arrow grid sits 50% denser (1.0km → ~0.67km step).
-  const density = sport === "cycling" ? 1 : 1.5;
+  // routes, so the arrow grid sits 50% denser (1.0km → ~0.67km step). Short
+  // cycling routes (<30km) get the same doubled density — at 1km spacing a
+  // 15-20km loop only shows a handful of arrows.
+  const totalKm = segments[segments.length - 1]?.endKm ?? 0;
+  const isShortCyclingRoute = sport === "cycling" && totalKm > 0 && totalKm < 30;
+  const density = sport === "cycling" ? (isShortCyclingRoute ? 2 : 1) : 1.5;
   const BUFFER_KM = 0.8;
   const STEP_KM   = 1.0 / density;
 

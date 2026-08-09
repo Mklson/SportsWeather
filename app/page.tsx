@@ -104,7 +104,7 @@ export default async function HomePage({
           {t.nav.goToDashboard}
         </Link>
       ) : (
-        <div className="flex flex-col items-center gap-3 w-full max-w-md rounded-2xl border border-brand-cream-border bg-brand-cream px-5 py-4">
+        <div className="flex flex-col items-center gap-3 w-full max-w-md rounded-2xl border border-brand-green-border bg-brand-green-soft/60 px-5 py-4">
           <p className="text-sm text-gray-600 text-center max-w-xs">
             {t.front.createAccountText}
           </p>

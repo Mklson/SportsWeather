@@ -139,10 +139,39 @@ export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] })
 
   return (
     <div className="px-3 py-3">
+      {pointer ? (
+        <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-[11px] font-semibold text-gray-700">
+          <span className="tabular-nums text-gray-400 font-medium shrink-0">
+            {pointer.km.toFixed(1)} {t.overview.km}
+          </span>
+          <span className="tabular-nums">{Math.round(pointer.segment.weather.temperature)}°C</span>
+          <span className="tabular-nums">{pointer.segment.weather.precipitation.toFixed(1)} mm/h</span>
+          <span className="tabular-nums whitespace-nowrap">
+            {pointer.segment.weather.windSpeed.toFixed(1)} m/s {compassLabel(pointer.segment.weather.windDirection, t)}
+          </span>
+          <button
+            onClick={() => setPointerPct(null)}
+            aria-label={t.overview.closePointer}
+            className="shrink-0 text-gray-400 active:text-gray-600 font-normal"
+          >
+            ✕
+          </button>
+        </div>
+      ) : (
+        <p className="text-center text-[10px] text-gray-300">{t.overview.tapHint}</p>
+      )}
+
+      <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1 text-[10px] font-medium text-gray-500 mt-1">
+        <LegendItem color="#ef4444" label={t.overview.temperature} />
+        <LegendItem color="#3b82f6" label={t.overview.rain} />
+        {chart.hasElevation && <LegendItem color="#a8a29e" label={t.overview.elevation} />}
+        <WindLegendItem label={t.overview.wind} />
+      </div>
+
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className="w-full h-auto block touch-none"
+        className="w-full h-auto block touch-none mt-2"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
       >
@@ -202,35 +231,6 @@ export function RouteOverviewChart({ segments }: { segments: WeatherSegment[] })
           </g>
         )}
       </svg>
-
-      {pointer ? (
-        <div className="flex items-center justify-between gap-2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-[11px] font-semibold text-gray-700">
-          <span className="tabular-nums text-gray-400 font-medium shrink-0">
-            {pointer.km.toFixed(1)} {t.overview.km}
-          </span>
-          <span className="tabular-nums">{Math.round(pointer.segment.weather.temperature)}°C</span>
-          <span className="tabular-nums">{pointer.segment.weather.precipitation.toFixed(1)} mm/h</span>
-          <span className="tabular-nums whitespace-nowrap">
-            {pointer.segment.weather.windSpeed.toFixed(1)} m/s {compassLabel(pointer.segment.weather.windDirection, t)}
-          </span>
-          <button
-            onClick={() => setPointerPct(null)}
-            aria-label={t.overview.closePointer}
-            className="shrink-0 text-gray-400 active:text-gray-600 font-normal"
-          >
-            ✕
-          </button>
-        </div>
-      ) : (
-        <p className="text-center text-[10px] text-gray-300 mt-1">{t.overview.tapHint}</p>
-      )}
-
-      <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1 text-[10px] font-medium text-gray-500 mt-1">
-        <LegendItem color="#ef4444" label={t.overview.temperature} />
-        <LegendItem color="#3b82f6" label={t.overview.rain} />
-        {chart.hasElevation && <LegendItem color="#a8a29e" label={t.overview.elevation} />}
-        <WindLegendItem label={t.overview.wind} />
-      </div>
     </div>
   );
 }

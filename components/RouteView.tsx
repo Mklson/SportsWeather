@@ -9,6 +9,7 @@ import { TimeSlider } from "./TimeSlider";
 import { SpeedSlider } from "./SpeedSlider";
 import { SkiWaxBar } from "./route/SkiWaxBar";
 import { WindBreakdownBar } from "./route/WindBreakdownBar";
+import { RouteOverviewChart } from "./route/RouteOverviewChart";
 import { StravaSegmentList } from "./route/StravaSegmentList";
 import { useWeather } from "@/hooks/useWeather";
 import { DEFAULT_SPEED_KMH } from "@/lib/route-sampler";
@@ -372,6 +373,12 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 coords={route.coordinates}
               />
               <WindBreakdownBar segments={segments} />
+            </div>
+
+            {/* Route overview chart */}
+            <div className="border-b border-gray-200 bg-white">
+              <p className="px-4 pt-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.overview.title}</p>
+              <RouteOverviewChart segments={segments} />
             </div>
 
             {/* Legend */}

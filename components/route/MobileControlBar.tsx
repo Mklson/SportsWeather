@@ -237,47 +237,50 @@ export function MobileControlBar({
         </div>
       )}
 
-      {/* Sticky bar / collapsed handle */}
+      {/* Sticky bar / collapsed handle — floats as a translucent rounded pill,
+          inset from the screen edges, so the map stays visible behind it. */}
       <div
         ref={barRef}
-        className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-2xl shadow-2xl"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="absolute bottom-0 left-0 right-0 z-20 px-3"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
       >
-        {barVisible ? (
-          <>
+        <div className="bg-white/75 backdrop-blur-xl rounded-[28px] shadow-2xl ring-1 ring-black/5 overflow-hidden">
+          {barVisible ? (
+            <>
+              <motion.div
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={0.3}
+                onDragEnd={handleSwipeEnd}
+                onClick={() => setBarVisible(false)}
+                style={{ touchAction: "none" }}
+                className="flex justify-center py-1.5 cursor-grab active:cursor-grabbing"
+              >
+                <div className="w-10 h-1 rounded-full bg-gray-300" />
+              </motion.div>
+              <div className="grid grid-cols-5 gap-1 px-2 pb-2">
+                <BarButton icon="🕐" label={t.mobileBar.start} value={timeGlance} active={openPanel === "time"} onClick={() => togglePanel("time")} />
+                <BarButton icon="⏱️" label={t.mobileBar.duration} value={paceGlance} subValue={totalDurationLabel} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
+                <BarButton icon="📊" label={t.mobileBar.overview} value={distanceGlance} subValue={elevationGlance} active={openPanel === "overview"} onClick={() => togglePanel("overview")} />
+                <BarButton icon="🌤️" label={t.mobileBar.conditions} value={conditionsGlance} active={openPanel === "conditions"} onClick={() => togglePanel("conditions")} />
+                <BarButton icon="🚩" label={t.mobileBar.segments} value={segmentsGlance} active={openPanel === "segments"} onClick={() => togglePanel("segments")} />
+              </div>
+            </>
+          ) : (
             <motion.div
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={0.3}
               onDragEnd={handleSwipeEnd}
-              onClick={() => setBarVisible(false)}
+              onClick={() => setBarVisible(true)}
               style={{ touchAction: "none" }}
-              className="flex justify-center py-1.5 cursor-grab active:cursor-grabbing"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-4 cursor-grab active:cursor-grabbing"
             >
               <div className="w-10 h-1 rounded-full bg-gray-300" />
+              <span className="text-[11px] font-medium text-gray-500 truncate max-w-[70vw]">{route.name}</span>
             </motion.div>
-            <div className="grid grid-cols-5 gap-1 px-2 pb-2">
-              <BarButton icon="🕐" label={t.mobileBar.start} value={timeGlance} active={openPanel === "time"} onClick={() => togglePanel("time")} />
-              <BarButton icon="⏱️" label={t.mobileBar.duration} value={paceGlance} subValue={totalDurationLabel} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
-              <BarButton icon="🌤️" label={t.mobileBar.conditions} value={conditionsGlance} active={openPanel === "conditions"} onClick={() => togglePanel("conditions")} />
-              <BarButton icon="🚩" label={t.mobileBar.segments} value={segmentsGlance} active={openPanel === "segments"} onClick={() => togglePanel("segments")} />
-              <BarButton icon="📊" label={t.mobileBar.overview} value={distanceGlance} subValue={elevationGlance} active={openPanel === "overview"} onClick={() => togglePanel("overview")} />
-            </div>
-          </>
-        ) : (
-          <motion.div
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={0.3}
-            onDragEnd={handleSwipeEnd}
-            onClick={() => setBarVisible(true)}
-            style={{ touchAction: "none" }}
-            className="flex flex-col items-center gap-0.5 py-1.5 cursor-grab active:cursor-grabbing"
-          >
-            <div className="w-10 h-1 rounded-full bg-gray-300" />
-            <span className="text-[11px] font-medium text-gray-500 truncate max-w-[70vw]">{route.name}</span>
-          </motion.div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

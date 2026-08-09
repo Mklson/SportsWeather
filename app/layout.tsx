@@ -10,10 +10,26 @@ import "./globals.css";
 // page was silently rendering in the OS system font.
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
+const title = "AEROUTE – Route Weather Planner";
+const description = "See weather along your route – tailwind, rain and temperature visualized on map";
+
 export const metadata: Metadata = {
-  title: "AEROUTE – Route Weather Planner",
-  description: "See weather along your route – tailwind, rain and temperature visualized on map",
+  metadataBase: new URL("https://aeroute.no"),
+  title,
+  description,
   icons: { icon: "/Logo visual.png", apple: "/Logo visual.png" },
+  openGraph: {
+    title,
+    description,
+    url: "https://aeroute.no",
+    siteName: "AEROUTE",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export const viewport: Viewport = {

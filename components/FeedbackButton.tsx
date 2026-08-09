@@ -6,7 +6,11 @@ import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
-export function FeedbackButton() {
+interface Props {
+  variant?: "icon" | "link";
+}
+
+export function FeedbackButton({ variant = "icon" }: Props) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -39,15 +43,25 @@ export function FeedbackButton() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={t.feedback.ariaLabel}
-        className="text-white/80 hover:text-white transition-colors text-lg leading-none px-1"
-        title={t.feedback.buttonLabel}
-      >
-        💬
-      </button>
+      {variant === "link" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+        >
+          💬 {t.feedback.buttonLabel}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={t.feedback.ariaLabel}
+          className="text-white/80 hover:text-white transition-colors text-lg leading-none px-1"
+          title={t.feedback.buttonLabel}
+        >
+          💬
+        </button>
+      )}
 
       <Modal open={open} onClose={handleClose} title={t.feedback.title}>
         {status === "sent" ? (

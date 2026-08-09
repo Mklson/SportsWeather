@@ -10,10 +10,6 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { message } = await request.json();
 
   if (typeof message !== "string" || !message.trim()) {
@@ -21,14 +17,15 @@ export async function POST(request: Request) {
   }
 
   const trimmed = message.trim().slice(0, MAX_MESSAGE_LENGTH);
+  const from = user?.email ?? "Anonymous (not logged in)";
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   const { error } = await resend.emails.send({
     from: "AEROUTE Feedback <onboarding@resend.dev>",
     to: process.env.ADMIN_EMAIL!,
-    replyTo: user.email,
+    replyTo: user?.email,
     subject: "New AEROUTE feedback",
-    text: `From: ${user.email}\n\n${trimmed}`,
+    text: `From: ${from}\n\n${trimmed}`,
   });
 
   if (error) {

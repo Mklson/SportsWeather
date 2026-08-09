@@ -9,6 +9,7 @@ import { AllTrailsGuide } from "@/components/route/AllTrailsGuide";
 import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { AboutDeveloper } from "@/components/AboutDeveloper";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDictionary, interpolate, type Lang } from "@/lib/i18n/dictionary";
@@ -126,18 +127,20 @@ export default async function HomePage({
 
       <FeaturedRoutes routes={featuredRoutes} />
 
-      <footer className="w-full flex flex-col items-center gap-1.5 pb-4">
-        <p className="text-xs text-gray-300 text-center max-w-xs">
+      <footer className="w-full flex flex-col items-center gap-2 pb-4">
+        <p className="text-xs text-gray-400 text-center max-w-xs">
           {t.front.cookieNotice}
         </p>
         <div className="flex items-center gap-3">
           <AboutDeveloper />
-          <span className="text-gray-200">·</span>
-          <Link href="/personvern" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
+          <span className="text-gray-300">·</span>
+          <FeedbackButton variant="link" />
+          <span className="text-gray-300">·</span>
+          <Link href="/personvern" className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors">
             {t.front.personvern}
           </Link>
-          <span className="text-gray-200">·</span>
-          <Link href="/login?next=/admin" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
+          <span className="text-gray-300">·</span>
+          <Link href="/login?next=/admin" className="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors">
             {t.front.admin}
           </Link>
         </div>

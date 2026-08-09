@@ -22,8 +22,8 @@ const RAIN_HEIGHT_FRACTION = 0.6; // cap rain bars short of full chart height so
 // the plot area sits between them. Precipitation doesn't get its own axis: a
 // third numeric scale on a chart this narrow would be unreadable, and its
 // exact value is already in the pointer readout.
-const PLOT_LEFT = 28;
-const PLOT_RIGHT = VIEW_W - 32;
+const PLOT_LEFT = 34;
+const PLOT_RIGHT = VIEW_W - 58;
 
 const TICK_STEP_CANDIDATES = [0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200];
 
@@ -247,8 +247,8 @@ export function RouteOverviewChart({ segments, onPointerChange }: Props) {
         {/* Left axis: temperature (°C) */}
         {chart.tempTicks.map((tick) => (
           <g key={`t${tick.value}`}>
-            <line x1={PLOT_LEFT - 4} x2={PLOT_LEFT} y1={tick.y} y2={tick.y} stroke="#fca5a5" strokeWidth={1} />
-            <text x={PLOT_LEFT - 6} y={tick.y + 3} fontSize={8} fill="#ef4444" textAnchor="end">
+            <line x1={PLOT_LEFT - 5} x2={PLOT_LEFT} y1={tick.y} y2={tick.y} stroke="#fca5a5" strokeWidth={1} />
+            <text x={PLOT_LEFT - 7} y={tick.y + 5} fontSize={15} fill="#ef4444" textAnchor="end">
               {tick.value}°
             </text>
           </g>
@@ -257,8 +257,8 @@ export function RouteOverviewChart({ segments, onPointerChange }: Props) {
         {/* Right axis: elevation (m) */}
         {chart.eleTicks.map((tick) => (
           <g key={`e${tick.value}`}>
-            <line x1={PLOT_RIGHT} x2={PLOT_RIGHT + 4} y1={tick.y} y2={tick.y} stroke="#c4c0ba" strokeWidth={1} />
-            <text x={PLOT_RIGHT + 6} y={tick.y + 3} fontSize={8} fill="#a8a29e" textAnchor="start">
+            <line x1={PLOT_RIGHT} x2={PLOT_RIGHT + 5} y1={tick.y} y2={tick.y} stroke="#c4c0ba" strokeWidth={1} />
+            <text x={PLOT_RIGHT + 7} y={tick.y + 5} fontSize={15} fill="#a8a29e" textAnchor="start">
               {tick.value}m
             </text>
           </g>

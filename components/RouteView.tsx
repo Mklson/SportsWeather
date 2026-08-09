@@ -352,6 +352,13 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
               >
                 <ResetIcon /> {t.route.resetMap}
               </button>
+              <button
+                onClick={handleShare}
+                title={t.route.shareTitle}
+                className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
+              >
+                {shareState === "copied" ? <>✓ {t.route.copied}</> : <><ShareIcon /> {t.route.share}</>}
+              </button>
             </div>
             {/* Header */}
             <div className="p-4 border-b border-gray-200 bg-white">
@@ -504,10 +511,15 @@ function SourceBadge({ source, t }: { source: Route["source"]; t: ReturnType<typ
   );
 }
 
+// Matches the map's wind-arrow icon (loadMapImages/windArrow in RouteMap.tsx)
+// so the legend reads as "this is what those arrows mean," not an unrelated shape.
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-3 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <line x1="12" y1="21" x2="12" y2="5" stroke={color} strokeWidth="3" strokeLinecap="round" />
+        <polyline points="7,11 12,5 17,11" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
       <span className="text-gray-500">{label}</span>
     </div>
   );

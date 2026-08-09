@@ -18,9 +18,10 @@ import { VerticalDragSlider } from "./VerticalDragSlider";
 import { ConditionsPanel } from "./ConditionsPanel";
 import { SegmentsPanel } from "./SegmentsPanel";
 import { SkiWaxBar } from "./SkiWaxBar";
+import { RouteOverviewChart } from "./RouteOverviewChart";
 import { summarizeConditions, weatherEmoji } from "@/lib/weather-display";
 
-type OpenPanel = "time" | "pace" | "conditions" | "segments" | null;
+type OpenPanel = "time" | "pace" | "conditions" | "segments" | "overview" | null;
 
 const HANDLE_HEIGHT = 30;
 const SWIPE_DISTANCE = 32;
@@ -103,6 +104,8 @@ export function MobileControlBar({
     ? `${weatherEmoji(conditionsSummary.dominantSymbolCode)} ${Math.round(conditionsSummary.avgTempC)}°`
     : "—";
   const segmentsGlance = stravaConnected ? String(totalCount) : "—";
+  const distanceGlance = `${route.distanceKm.toFixed(1)} km`;
+  const elevationGlance = route.elevationGainM ? `↑${Math.round(route.elevationGainM)} m` : undefined;
 
   const base = useMemo(() => getBaseHour(), []);
   const timeOffset = Math.max(0, Math.min(DEFAULT_RANGE_HOURS, dateToHourOffset(startTime, base)));
@@ -114,7 +117,7 @@ export function MobileControlBar({
   const totalDurationLabel = formatDuration(estimatedHours, lang);
 
   const isDock = openPanel === "time" || openPanel === "pace";
-  const isSheet = openPanel === "conditions" || openPanel === "segments";
+  const isSheet = openPanel === "conditions" || openPanel === "segments" || openPanel === "overview";
 
   return (
     <>
@@ -197,7 +200,11 @@ export function MobileControlBar({
         >
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
             <span className="font-semibold text-gray-900 text-sm">
-              {openPanel === "conditions" ? t.mobileBar.conditions : t.mobileBar.segments}
+              {openPanel === "conditions"
+                ? t.mobileBar.conditions
+                : openPanel === "overview"
+                ? t.mobileBar.overview
+                : t.mobileBar.segments}
             </span>
             <button
               onClick={() => setOpenPanel(null)}
@@ -209,6 +216,8 @@ export function MobileControlBar({
           <div className="flex-1 min-h-0 overflow-y-auto">
             {openPanel === "conditions" ? (
               <ConditionsPanel segments={weatherSegments} />
+            ) : openPanel === "overview" ? (
+              <RouteOverviewChart segments={weatherSegments} />
             ) : (
               <SegmentsPanel
                 stravaConnected={stravaConnected}
@@ -247,11 +256,12 @@ export function MobileControlBar({
             >
               <div className="w-10 h-1 rounded-full bg-gray-300" />
             </motion.div>
-            <div className="grid grid-cols-4 gap-1 px-2 pb-2">
+            <div className="grid grid-cols-5 gap-1 px-2 pb-2">
               <BarButton icon="🕐" label={t.mobileBar.start} value={timeGlance} active={openPanel === "time"} onClick={() => togglePanel("time")} />
               <BarButton icon="⏱️" label={t.mobileBar.duration} value={paceGlance} subValue={totalDurationLabel} active={openPanel === "pace"} onClick={() => togglePanel("pace")} />
               <BarButton icon="🌤️" label={t.mobileBar.conditions} value={conditionsGlance} active={openPanel === "conditions"} onClick={() => togglePanel("conditions")} />
               <BarButton icon="🚩" label={t.mobileBar.segments} value={segmentsGlance} active={openPanel === "segments"} onClick={() => togglePanel("segments")} />
+              <BarButton icon="📊" label={t.mobileBar.overview} value={distanceGlance} subValue={elevationGlance} active={openPanel === "overview"} onClick={() => togglePanel("overview")} />
             </div>
           </>
         ) : (

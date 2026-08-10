@@ -83,8 +83,6 @@ export default async function HomePage({
         </div>
       )}
 
-      <InstallPrompt />
-
       <div className="flex flex-col items-center gap-6 w-full max-w-md">
         <div className="flex flex-col items-center gap-2 w-full">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t.front.importFrom}</p>
@@ -129,6 +127,8 @@ export default async function HomePage({
       )}
 
       <FeaturedRoutes routes={featuredRoutes} />
+
+      <InstallPrompt />
 
       <footer className="w-full flex flex-col items-center gap-2 pb-4">
         <p className="text-xs text-gray-400 text-center max-w-xs">

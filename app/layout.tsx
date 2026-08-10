@@ -17,7 +17,21 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://aeroute.no"),
   title,
   description,
-  icons: { icon: "/Logo visual.png", apple: "/Logo visual.png" },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
+  // Standalone display (no Safari chrome) and a proper name/icon when a user
+  // adds the site to their home screen — iOS has no install-prompt API, so
+  // this only takes effect once they do that manually via the share sheet.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AEROUTE",
+  },
   openGraph: {
     title,
     description,

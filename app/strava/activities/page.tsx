@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { listStravaActivities, listStravaRoutes } from "@/lib/strava";
 import { StravaImportPage } from "@/components/route/StravaImportPage";
 import { getDictionary, type Lang } from "@/lib/i18n/dictionary";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function StravaActivitiesPage({
   searchParams,
@@ -15,6 +16,20 @@ export default async function StravaActivitiesPage({
   const cookieLang = cookieStore.get("lang")?.value;
   const lang: Lang = cookieLang === "en" ? "en" : "no";
   const t = getDictionary(lang);
+
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const backHref = user ? "/dashboard" : "/";
+  const backLink = (
+    <a
+      href={backHref}
+      className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+    >
+      ← {backHref === "/dashboard" ? t.route.dashboard : t.route.home}
+    </a>
+  );
 
   if (!token) redirect("/api/strava/refresh");
 
@@ -53,6 +68,7 @@ export default async function StravaActivitiesPage({
 
       return (
         <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
+          <div className="self-start">{backLink}</div>
           <p className="text-yellow-600 text-center font-medium">
             {t.stravaActivity.rateLimitReached}
           </p>
@@ -80,6 +96,7 @@ export default async function StravaActivitiesPage({
     // Already retried, or some other error — show manual re-auth.
     return (
       <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto flex flex-col items-center justify-center gap-4">
+        <div className="self-start">{backLink}</div>
         <p className="text-red-600 text-center">
           {t.stravaActivity.couldNotLoad}
         </p>
@@ -104,6 +121,7 @@ export default async function StravaActivitiesPage({
 
   return (
     <main className="min-h-screen bg-gray-50 p-4 max-w-5xl mx-auto">
+      <div className="mb-3">{backLink}</div>
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold text-gray-900">{t.stravaActivity.importFromStrava}</h1>
         <a

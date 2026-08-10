@@ -173,7 +173,12 @@ function RouteRow({
           <button
             onClick={onConfirm}
             title={t.saved.deleteRouteTitle}
-            className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto ml-1"
+            // Hiding this behind :hover (via group-hover) below the sm breakpoint made the whole
+            // row need two taps on touch devices: iOS/Android treat the first tap on a link inside
+            // a hover-styled ancestor as "trigger hover", not "click", so the row only navigated on
+            // the second tap. Keeping it always visible on touch (no sm: prefix) removes that
+            // ambiguous hover state; the hover-reveal is preserved for mouse users at sm+.
+            className="relative z-10 shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-100 pointer-events-auto sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 sm:pointer-events-none sm:group-hover:pointer-events-auto sm:focus:pointer-events-auto ml-1"
             aria-label={t.saved.deleteRouteTitle}
           >
             <TrashIcon />

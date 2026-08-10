@@ -35,13 +35,26 @@ function niceStep(raw: number): number {
  * Whole-number axis ticks spaced by a "nice" round step (so consecutive ticks
  * are always the same distance apart — e.g. 16/18/20, never 16/17/19/20, which
  * rounding evenly-spaced fractional ticks to integers used to produce).
+ *
+ * Picks the smallest candidate step that still keeps the tick count at or
+ * below targetCount. Deriving the step from (hi-lo)/(targetCount-1) and
+ * rounding up to the next candidate looks equivalent but isn't: since ticks
+ * are anchored to the first in-range multiple of the step rather than to lo
+ * itself, a range that falls awkwardly between two candidate steps can lose
+ * most of its span before the first tick, leaving room for only one.
  */
 function axisTicks(lo: number, hi: number, targetCount: number): number[] {
   if (hi <= lo) return [Math.round(lo)];
-  const step = niceStep((hi - lo) / (targetCount - 1));
+  const step = TICK_STEP_CANDIDATES.find((c) => {
+    const count = Math.floor(hi / c) - Math.ceil(lo / c) + 1;
+    return count >= 1 && count <= targetCount;
+  });
+  // Range narrower than even the finest candidate step (e.g. a near-flat
+  // temperature) — no step's multiples land inside it, so show the midpoint.
+  if (step === undefined) return [Math.round((lo + hi) / 2) || 0];
   const start = Math.ceil(lo / step) * step;
   const ticks: number[] = [];
-  for (let v = start; v <= hi + 1e-9; v += step) ticks.push(Math.round(v * 10) / 10);
+  for (let v = start; v <= hi + 1e-9; v += step) ticks.push(Math.round(v * 10) / 10 || 0);
   return ticks;
 }
 

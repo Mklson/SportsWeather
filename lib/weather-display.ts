@@ -68,11 +68,39 @@ export function windBreakdown(segments: WeatherSegment[]): WindBreakdown | null 
   return { tailPct, crossPct, headPct };
 }
 
+export type PrecipType = "rain" | "sleet" | "snow" | "mixed";
+
+// MET's symbolCode already distinguishes rain/sleet/snow (same substrings
+// weatherEmoji keys off) — classify by that instead of by temperature, since
+// a forecast can call for snow near 0°C on a route that averages far warmer
+// (or vice versa) and the symbol is the source of truth either way.
+function classifyPrecipType(segments: WeatherSegment[]): PrecipType | null {
+  const wet = segments.filter((s) => s.weather.precipitation > 0.1);
+  if (wet.length === 0) return null;
+
+  let hasRain = false;
+  let hasSleet = false;
+  let hasSnow = false;
+  for (const s of wet) {
+    const c = s.weather.symbolCode.toLowerCase();
+    if (c.includes("snow")) hasSnow = true;
+    else if (c.includes("sleet")) hasSleet = true;
+    else hasRain = true;
+  }
+
+  const kinds = [hasRain, hasSleet, hasSnow].filter(Boolean).length;
+  if (kinds > 1) return "mixed";
+  if (hasSnow) return "snow";
+  if (hasSleet) return "sleet";
+  return "rain";
+}
+
 export interface ConditionsSummary {
   wind: WindBreakdown | null;
   avgTempC: number;
   dominantSymbolCode: string;
   wetSegmentPct: number; // % of segments with meaningful precipitation
+  wetPrecipType: PrecipType | null; // null when wetSegmentPct is 0
 }
 
 // Precipitation is a rate (mm/hour) sampled at each segment's estimated arrival time,
@@ -96,5 +124,5 @@ export function summarizeConditions(segments: WeatherSegment[]): ConditionsSumma
     if (count > maxCount) { maxCount = count; dominantSymbolCode = code; }
   });
 
-  return { wind: windBreakdown(segments), avgTempC, dominantSymbolCode, wetSegmentPct };
+  return { wind: windBreakdown(segments), avgTempC, dominantSymbolCode, wetSegmentPct, wetPrecipType: classifyPrecipType(segments) };
 }

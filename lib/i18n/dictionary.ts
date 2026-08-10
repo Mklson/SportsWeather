@@ -309,9 +309,27 @@ const no = {
   },
   conditions: {
     dryWholeWay: "Tørt hele veien",
-    mostlyDry: "For det meste tørt — kort periode med regn eller snø mulig",
-    wetPercent: "Regn eller snø forventet langs ~{{pct}}% av ruten",
-    wetMost: "Vått for det meste av ruten",
+    // Keyed by the actual forecast symbol (rain/sleet/snow/mixed) rather than a
+    // generic "regn eller snø" — the symbol code already tells us which it is,
+    // so a route sitting at 15°C shouldn't be told to expect snow.
+    mostlyDry: {
+      rain: "For det meste tørt — kort periode med regn mulig",
+      sleet: "For det meste tørt — kort periode med sludd mulig",
+      snow: "For det meste tørt — kort periode med snø mulig",
+      mixed: "For det meste tørt — kort periode med regn eller snø mulig",
+    },
+    wetPercent: {
+      rain: "Regn forventet langs ~{{pct}}% av ruten",
+      sleet: "Sludd forventet langs ~{{pct}}% av ruten",
+      snow: "Snø forventet langs ~{{pct}}% av ruten",
+      mixed: "Nedbør (regn/snø) forventet langs ~{{pct}}% av ruten",
+    },
+    wetMost: {
+      rain: "Regn for det meste av ruten",
+      sleet: "Sludd for det meste av ruten",
+      snow: "Snø for det meste av ruten",
+      mixed: "Vått (regn/snø) for det meste av ruten",
+    },
     noData: "Ingen værdata ennå for denne ruten.",
     wind: "Vind",
     noWindData: "Ingen vinddata",
@@ -736,9 +754,24 @@ const en: typeof no = {
   },
   conditions: {
     dryWholeWay: "Dry the whole way",
-    mostlyDry: "Mostly dry — a brief spell of rain or snow possible",
-    wetPercent: "Rain or snow expected along ~{{pct}}% of the route",
-    wetMost: "Wet for most of the route",
+    mostlyDry: {
+      rain: "Mostly dry — a brief spell of rain possible",
+      sleet: "Mostly dry — a brief spell of sleet possible",
+      snow: "Mostly dry — a brief spell of snow possible",
+      mixed: "Mostly dry — a brief spell of rain or snow possible",
+    },
+    wetPercent: {
+      rain: "Rain expected along ~{{pct}}% of the route",
+      sleet: "Sleet expected along ~{{pct}}% of the route",
+      snow: "Snow expected along ~{{pct}}% of the route",
+      mixed: "Precipitation (rain/snow) expected along ~{{pct}}% of the route",
+    },
+    wetMost: {
+      rain: "Rain for most of the route",
+      sleet: "Sleet for most of the route",
+      snow: "Snow for most of the route",
+      mixed: "Wet (rain/snow) for most of the route",
+    },
     noData: "No weather data yet for this route.",
     wind: "Wind",
     noWindData: "No wind data",

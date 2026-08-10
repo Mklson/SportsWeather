@@ -1,16 +1,20 @@
 "use client";
 
 import type { WeatherSegment } from "@/types";
-import { summarizeConditions, weatherEmoji } from "@/lib/weather-display";
+import { summarizeConditions, weatherEmoji, type PrecipType } from "@/lib/weather-display";
 import { WindBreakdownBar } from "./WindBreakdownBar";
 import { getDictionary, interpolate } from "@/lib/i18n/dictionary";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
-function precipSummary(wetSegmentPct: number, t: ReturnType<typeof getDictionary>): string {
-  if (wetSegmentPct === 0) return t.conditions.dryWholeWay;
-  if (wetSegmentPct < 20) return t.conditions.mostlyDry;
-  if (wetSegmentPct < 60) return interpolate(t.conditions.wetPercent, { pct: wetSegmentPct });
-  return t.conditions.wetMost;
+function precipSummary(
+  wetSegmentPct: number,
+  wetPrecipType: PrecipType | null,
+  t: ReturnType<typeof getDictionary>
+): string {
+  if (wetSegmentPct === 0 || !wetPrecipType) return t.conditions.dryWholeWay;
+  if (wetSegmentPct < 20) return t.conditions.mostlyDry[wetPrecipType];
+  if (wetSegmentPct < 60) return interpolate(t.conditions.wetPercent[wetPrecipType], { pct: wetSegmentPct });
+  return t.conditions.wetMost[wetPrecipType];
 }
 
 // Content-only — no chrome/backdrop of its own, rendered inside
@@ -42,7 +46,7 @@ export function ConditionsPanel({ segments }: { segments: WeatherSegment[] }) {
         <span className="text-3xl leading-none">{weatherEmoji(summary.dominantSymbolCode)}</span>
         <div>
           <p className="text-lg font-bold text-gray-900 tabular-nums">{Math.round(summary.avgTempC)}°C {t.conditions.average}</p>
-          <p className="text-sm text-gray-500">{precipSummary(summary.wetSegmentPct, t)}</p>
+          <p className="text-sm text-gray-500">{precipSummary(summary.wetSegmentPct, summary.wetPrecipType, t)}</p>
         </div>
       </div>
     </div>

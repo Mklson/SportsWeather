@@ -10,6 +10,7 @@ import { FeaturedRoutes } from "@/components/FeaturedRoutes";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { AboutDeveloper } from "@/components/AboutDeveloper";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { getRoute, getFeaturedRouteIds } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDictionary, interpolate, type Lang } from "@/lib/i18n/dictionary";
@@ -81,6 +82,8 @@ export default async function HomePage({
           {errorMsg}
         </div>
       )}
+
+      <InstallPrompt />
 
       <div className="flex flex-col items-center gap-6 w-full max-w-md">
         <div className="flex flex-col items-center gap-2 w-full">

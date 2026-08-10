@@ -15,6 +15,14 @@ const no = {
     unknownError: "Ukjent feil",
     other: "Annet",
   },
+  install: {
+    bannerText: "Legg AEROUTE til på hjem-skjermen for rask tilgang",
+    install: "Installer",
+    iosTitle: "Legg til på Hjem-skjerm",
+    iosStep1: "Trykk på Del-ikonet i Safaris verktøylinje",
+    iosStep2: "Bla ned og trykk på «Legg til på Hjem-skjerm»",
+    iosStep3: "Trykk på «Legg til» øverst til høyre",
+  },
   sport: {
     cycling: "Sykling",
     running: "Løping",
@@ -459,6 +467,14 @@ const en: typeof no = {
     saved: "Saved",
     unknownError: "Unknown error",
     other: "Other",
+  },
+  install: {
+    bannerText: "Add AEROUTE to your home screen for quick access",
+    install: "Install",
+    iosTitle: "Add to Home Screen",
+    iosStep1: "Tap the Share icon in Safari's toolbar",
+    iosStep2: "Scroll down and tap \"Add to Home Screen\"",
+    iosStep3: "Tap \"Add\" in the top-right corner",
   },
   sport: {
     cycling: "Cycling",

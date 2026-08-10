@@ -8,6 +8,7 @@ import { DashboardRouteImporter } from "@/components/DashboardRouteImporter";
 import Image from "next/image";
 import { LogoutButton } from "@/components/LogoutButton";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { getDictionary, type Lang } from "@/lib/i18n/dictionary";
 
 export default async function DashboardPage() {
@@ -41,6 +42,10 @@ export default async function DashboardPage() {
       </header>
 
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8 flex flex-col gap-10">
+        <div className="flex justify-center">
+          <InstallPrompt />
+        </div>
+
         {/* Saved routes — front and center */}
         <section>
           <div className="flex items-center justify-between mb-3">

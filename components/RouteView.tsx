@@ -318,16 +318,17 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
         </div>
         <aside className="w-80 flex flex-col bg-gray-50 border-l border-gray-200 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]">
           <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-            {/* Back navigation */}
-            <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
+            {/* Back navigation — flex-wrap so a narrow sidebar drops items onto a second
+                row as whole units instead of individual button labels breaking mid-word. */}
+            <div className="flex items-center justify-between gap-x-2 gap-y-1 flex-wrap px-4 py-2.5 border-b border-gray-200 bg-white">
               <div className="flex items-center gap-2">
-                <button onClick={() => { window.location.href = backHref; }} className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
+                <button onClick={() => { window.location.href = backHref; }} className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
                   ← {backHref === "/dashboard" ? t.route.dashboard : t.route.home}
                 </button>
                 {stravaConnected && (
                   <>
                     <span className="text-gray-300">|</span>
-                    <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
+                    <Link href="/strava/activities" prefetch={false} className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors">
                       ← {t.route.strava}
                     </Link>
                   </>
@@ -337,28 +338,30 @@ export function RouteView({ route, initialSport = "cycling", initialSpeedKmh, st
                 <button
                   onClick={handleSave}
                   disabled={saveState === "saving"}
-                  className="text-xs font-medium text-brand-navy hover:text-brand-navy-dark transition-colors disabled:opacity-50"
+                  className="whitespace-nowrap text-xs font-medium text-brand-navy hover:text-brand-navy-dark transition-colors disabled:opacity-50"
                 >
                   {saveState === "saving" ? t.route.saving : t.route.saveToAccount}
                 </button>
               )}
               {saveState === "saved" && (
-                <span className="text-xs font-medium text-green-600">{t.route.saved}</span>
+                <span className="whitespace-nowrap text-xs font-medium text-green-600">{t.route.saved}</span>
               )}
-              <button
-                onClick={resetMap}
-                title={t.route.clearMapTitle}
-                className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
-              >
-                <ResetIcon /> {t.route.resetMap}
-              </button>
-              <button
-                onClick={handleShare}
-                title={t.route.shareTitle}
-                className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
-              >
-                {shareState === "copied" ? <>✓ {t.route.copied}</> : <><ShareIcon /> {t.route.share}</>}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={resetMap}
+                  title={t.route.clearMapTitle}
+                  className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  <ResetIcon /> {t.route.resetMap}
+                </button>
+                <button
+                  onClick={handleShare}
+                  title={t.route.shareTitle}
+                  className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  {shareState === "copied" ? <>✓ {t.route.copied}</> : <><ShareIcon /> {t.route.share}</>}
+                </button>
+              </div>
             </div>
             {/* Header */}
             <div className="p-4 border-b border-gray-200 bg-white">

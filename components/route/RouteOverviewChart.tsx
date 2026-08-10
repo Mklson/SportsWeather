@@ -31,10 +31,18 @@ function niceStep(raw: number): number {
   return TICK_STEP_CANDIDATES.find((c) => c >= raw) ?? TICK_STEP_CANDIDATES[TICK_STEP_CANDIDATES.length - 1];
 }
 
-/** Evenly spaced axis ticks between lo/hi, rounded for display. */
-function axisTicks(lo: number, hi: number, count: number): number[] {
+/**
+ * Whole-number axis ticks spaced by a "nice" round step (so consecutive ticks
+ * are always the same distance apart — e.g. 16/18/20, never 16/17/19/20, which
+ * rounding evenly-spaced fractional ticks to integers used to produce).
+ */
+function axisTicks(lo: number, hi: number, targetCount: number): number[] {
   if (hi <= lo) return [Math.round(lo)];
-  return Array.from({ length: count }, (_, i) => Math.round(lo + ((hi - lo) * i) / (count - 1)));
+  const step = niceStep((hi - lo) / (targetCount - 1));
+  const start = Math.ceil(lo / step) * step;
+  const ticks: number[] = [];
+  for (let v = start; v <= hi + 1e-9; v += step) ticks.push(Math.round(v * 10) / 10);
+  return ticks;
 }
 
 const COMPASS_DIRS = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;

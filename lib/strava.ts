@@ -225,3 +225,46 @@ export function decodePolyline(encoded: string): Coordinate[] {
   const decoded = polyline.decode(encoded);
   return decoded.map(([lat, lon]) => ({ lat, lon }));
 }
+
+/**
+ * Fetches lat/lon + altitude for an activity from Strava's streams endpoint.
+ * The summary polyline used elsewhere carries no elevation at all, which is
+ * why elevation was missing entirely for Strava-imported routes. Returns null
+ * (caller should fall back to decodePolyline) if the activity has no
+ * elevation data or the request fails for any reason.
+ */
+export async function getActivityLatLngElevation(
+  accessToken: string,
+  activityId: number
+): Promise<Coordinate[] | null> {
+  const res = await fetch(
+    `${STRAVA_API}/activities/${activityId}/streams?keys=latlng,altitude&key_by_type=true&resolution=medium`,
+    { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" }
+  );
+  if (!res.ok) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = await res.json();
+  const latlng: [number, number][] | undefined = data.latlng?.data;
+  const altitude: number[] | undefined = data.altitude?.data;
+  if (!latlng?.length || !altitude?.length || latlng.length !== altitude.length) return null;
+  return latlng.map(([lat, lon], i) => ({ lat, lon, ele: altitude[i] }));
+}
+
+/** Same as getActivityLatLngElevation but for a saved route (streams endpoint
+ *  returns an array of typed streams rather than a key_by_type object). */
+export async function getRouteLatLngElevation(
+  accessToken: string,
+  routeId: number
+): Promise<Coordinate[] | null> {
+  const res = await fetch(`${STRAVA_API}/routes/${routeId}/streams?resolution=medium`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const streams: any[] = await res.json();
+  const latlng = streams.find((s) => s.type === "latlng")?.data as [number, number][] | undefined;
+  const altitude = streams.find((s) => s.type === "altitude")?.data as number[] | undefined;
+  if (!latlng?.length || !altitude?.length || latlng.length !== altitude.length) return null;
+  return latlng.map(([lat, lon], i) => ({ lat, lon, ele: altitude[i] }));
+}

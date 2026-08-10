@@ -3,6 +3,7 @@ import {
   listStravaActivities,
   getStravaActivity,
   decodePolyline,
+  getActivityLatLngElevation,
   stravaActivityTypeToSport,
 } from "@/lib/strava";
 import { saveRoute } from "@/lib/db/client";
@@ -65,7 +66,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const coordinates = decodePolyline(encoded);
+    // The summary polyline has no elevation; fetch it from the streams
+    // endpoint and fall back to the flat polyline if that's unavailable.
+    const coordinates =
+      (await getActivityLatLngElevation(token, activityId).catch(() => null)) ?? decodePolyline(encoded);
     const distanceKm = totalDistanceKm(coordinates);
     const elevationGainM = totalElevationGain(coordinates);
 

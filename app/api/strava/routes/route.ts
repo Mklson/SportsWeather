@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listStravaRoutes, getStravaRoute, decodePolyline, stravaRouteTypeToSport } from "@/lib/strava";
+import {
+  listStravaRoutes,
+  getStravaRoute,
+  decodePolyline,
+  getRouteLatLngElevation,
+  stravaRouteTypeToSport,
+} from "@/lib/strava";
 import { saveRoute } from "@/lib/db/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { totalDistanceKm, totalElevationGain } from "@/lib/route-sampler";
@@ -59,7 +65,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Route has no polyline data" }, { status: 422 });
     }
 
-    const coordinates = decodePolyline(encoded);
+    // The summary polyline has no elevation; fetch it from the streams
+    // endpoint and fall back to the flat polyline if that's unavailable.
+    const coordinates =
+      (await getRouteLatLngElevation(token, routeId).catch(() => null)) ?? decodePolyline(encoded);
     const distanceKm = totalDistanceKm(coordinates);
     const elevationGainM = totalElevationGain(coordinates);
 

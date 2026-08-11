@@ -146,10 +146,14 @@ export function MobileControlBar({
 
       {/* Left-edge docked vertical slider — time/pace. Left (not right) and offset
           below the top-2/left-2 basemap/3D toggle so the two never overlap; fully
-          opaque so nothing (e.g. a map control) can bleed through it. */}
+          opaque so nothing (e.g. a map control) can bleed through it. Kept 20px
+          off the true screen edge (not left-0) because a drag starting flush
+          against x=0 collides with Android/browser edge-swipe gestures
+          (system back-navigation, DuckDuckGo's swipe-to-switch-tabs) which steal
+          the touch before our pointer/drag handling ever sees it. */}
       {isDock && (
         <div
-          className="absolute left-0 z-20 w-14 bg-white border-r border-gray-200 shadow-xl"
+          className="absolute left-5 z-20 w-14 bg-white border-r border-gray-200 shadow-xl rounded-r-xl"
           style={{ top: 48, bottom: barHeight }}
         >
           {openPanel === "time" ? (

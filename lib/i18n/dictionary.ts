@@ -45,7 +45,7 @@ const no = {
     weatherSource: "Værdata fra {{yrLink}}.",
     importFrom: "Importer en rute fra",
     createAccountText: "Opprett en gratis konto for å lagre rutene dine og finne dem igjen fra din side når som helst.",
-    cookieNotice: "Vi bruker kun nødvendige informasjonskapsler for å holde deg innlogget — ingen sporing eller analyse.",
+    cookieNotice: "Vi bruker kun nødvendige informasjonskapsler for å holde deg innlogget — ingen sporing, og ingen informasjonskapsler til analyse.",
     personvern: "Personvern",
     admin: "Admin",
     aboutDeveloper: "Om utvikleren",
@@ -166,7 +166,7 @@ const no = {
         body: ["Vi deler ikke opplysninger for markedsføringsformål. Følgende databehandlere brukes for å drifte tjenesten:"],
         list: [
           { body: "Supabase — konto, innlogging og database." },
-          { body: "Vercel — hosting av nettsiden." },
+          { body: "Vercel — hosting av nettsiden, og anonym, cookiefri trafikkstatistikk (Vercel Web Analytics)." },
           { body: "MET Norway (api.met.no) — værdata basert på koordinater og tidspunkt (ikke personopplysninger)." },
           { body: "Strava — kun hvis du selv velger å koble til kontoen din." },
         ],
@@ -174,7 +174,7 @@ const no = {
       {
         heading: "5. Informasjonskapsler (cookies)",
         body: [
-          "AEROUTE bruker kun nødvendige informasjonskapsler som kreves for at tjenesten skal fungere: én for å holde deg innlogget (Supabase), og korte, midlertidige cookies som brukes under selve Strava-tilkoblingen. Disse er unntatt samtykkekravet i ekomloven §2-7b fordi de er strengt nødvendige for funksjonaliteten du har bedt om. Vi bruker ingen cookies til analyse, sporing eller markedsføring.",
+          "AEROUTE bruker kun nødvendige informasjonskapsler som kreves for at tjenesten skal fungere: én for å holde deg innlogget (Supabase), og korte, midlertidige cookies som brukes under selve Strava-tilkoblingen. Disse er unntatt samtykkekravet i ekomloven §2-7b fordi de er strengt nødvendige for funksjonaliteten du har bedt om. Vi bruker ingen cookies til analyse, sporing eller markedsføring. Vi bruker derimot Vercel Web Analytics til anonym, aggregert trafikkstatistikk (sidevisninger og besøkstall) — dette skjer uten informasjonskapsler og uten lagring av opplysninger som identifiserer deg personlig.",
         ],
       },
       {
@@ -498,7 +498,7 @@ const en: typeof no = {
     weatherSource: "Weather data from {{yrLink}}.",
     importFrom: "Import a route from",
     createAccountText: "Create a free account to save your routes and find them anytime from your dashboard.",
-    cookieNotice: "We only use essential cookies to keep you logged in — no tracking or analytics.",
+    cookieNotice: "We only use essential cookies to keep you logged in — no tracking, and no cookies for analytics.",
     personvern: "Privacy",
     admin: "Admin",
     aboutDeveloper: "About the developer",
@@ -619,7 +619,7 @@ const en: typeof no = {
         body: ["We do not share data for marketing purposes. The following data processors are used to run the service:"],
         list: [
           { body: "Supabase — account, login, and database." },
-          { body: "Vercel — website hosting." },
+          { body: "Vercel — website hosting, and anonymous, cookieless traffic statistics (Vercel Web Analytics)." },
           { body: "MET Norway (api.met.no) — weather data based on coordinates and time (not personal data)." },
           { body: "Strava — only if you choose to connect your account." },
         ],
@@ -627,7 +627,7 @@ const en: typeof no = {
       {
         heading: "5. Cookies",
         body: [
-          "AEROUTE only uses cookies that are strictly necessary for the service to function: one to keep you logged in (Supabase), and short-lived, temporary cookies used during the Strava connection itself. These are exempt from the consent requirement in the Norwegian Electronic Communications Act §2-7b because they are strictly necessary for the functionality you have requested. We use no cookies for analytics, tracking, or marketing.",
+          "AEROUTE only uses cookies that are strictly necessary for the service to function: one to keep you logged in (Supabase), and short-lived, temporary cookies used during the Strava connection itself. These are exempt from the consent requirement in the Norwegian Electronic Communications Act §2-7b because they are strictly necessary for the functionality you have requested. We use no cookies for analytics, tracking, or marketing. We do use Vercel Web Analytics for anonymous, aggregated traffic statistics (page views and visitor counts) — this happens without cookies and without storing any information that identifies you personally.",
         ],
       },
       {
